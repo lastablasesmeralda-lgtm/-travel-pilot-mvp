@@ -22,15 +22,15 @@ export default function LoginScreen() {
                     </View>
 
                     <Text style={{ color: '#FFF', fontSize: 24, fontWeight: '900', marginBottom: 8 }}>
-                        Travel‑Pilot Assistant
+                        Travel‑Pilot 2
                     </Text>
                     <Text style={{ color: '#AAA', fontSize: 13, marginBottom: 16 }}>
                         Tu copiloto de IA para retrasos, reclamaciones y planes de emergencia.
                     </Text>
                     <View style={{ marginBottom: 20 }}>
-                        <Text style={{ color: '#FFF', fontSize: 13, marginBottom: 6 }}>• Detecta problemas en tus vuelos antes de que te afecten.</Text>
-                        <Text style={{ color: '#FFF', fontSize: 13, marginBottom: 6 }}>• Reclama tu compensación sin papeleo ni llamadas.</Text>
-                        <Text style={{ color: '#FFF', fontSize: 13 }}>• Te propone rutas y hoteles alternativos en minutos.</Text>
+                        <Text style={{ color: '#FFF', fontSize: 13, marginBottom: 6 }}>• Monitorización de Radar en tiempo real.</Text>
+                        <Text style={{ color: '#FFF', fontSize: 13, marginBottom: 6 }}>• Gestión de Reclamaciones LegalShield™.</Text>
+                        <Text style={{ color: '#FFF', fontSize: 13 }}>• Protocolos de Contingencia mediante IA.</Text>
                     </View>
 
                     <Text style={{ color: 'white', fontWeight: 'bold', marginBottom: 4 }}>

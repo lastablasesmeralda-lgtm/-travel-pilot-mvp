@@ -15,7 +15,7 @@ export default function RadarScreen() {
         <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20 }}>
 
             <View style={{ backgroundColor: '#111', borderRadius: 16, padding: 16, marginBottom: 16 }}>
-                <Text style={{ color: '#666', fontSize: 10, fontWeight: 'bold', marginBottom: 8 }}>🔍 BUSCAR TU VUELO</Text>
+                <Text style={{ color: '#666', fontSize: 10, fontWeight: 'bold', marginBottom: 8 }}>🔍 ENCUENTRA TU VUELO</Text>
                 <View style={{ flexDirection: 'row' }}>
                     <TextInput
                         placeholder="Ej: IB3166, BA0117..."
@@ -48,7 +48,7 @@ export default function RadarScreen() {
                 <View style={{ backgroundColor: '#111', borderRadius: 16, padding: 16, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: getStatusColor(flightData.status) }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                         <Text style={{ color: '#666', fontSize: 10, fontWeight: 'bold' }}>✈️ {flightData.airline?.toUpperCase()}</Text>
-                        <Text style={{ color: '#666', fontSize: 10 }}>EN VIVO · DATOS OFICIALES</Text>
+                        <Text style={{ color: '#666', fontSize: 10 }}>VIGILANCIA REAL · SATÉLITE</Text>
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Text style={{ color: '#FFF', fontSize: 22, fontWeight: '900' }}>{flightData.flightNumber}</Text>
@@ -99,7 +99,7 @@ export default function RadarScreen() {
             ) : !searchError && !isSearching && (
                 <View style={{ backgroundColor: '#111', borderRadius: 16, padding: 24, marginBottom: 16, alignItems: 'center' }}>
                     <Text style={{ fontSize: 30, marginBottom: 10 }}>✈️</Text>
-                    <Text style={{ color: '#666', fontSize: 13, textAlign: 'center' }}>Introduce un código de vuelo IATA y pulsa BUSCAR para ver su estado en tiempo real.</Text>
+                    <Text style={{ color: '#666', fontSize: 13, textAlign: 'center' }}>Introduce el código de tu vuelo (ej: IB3166) y pulsa BUSCAR para que mi IA empiece a vigilarlo.</Text>
                 </View>
             )}
 
@@ -181,7 +181,7 @@ export default function RadarScreen() {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                     <Text style={{ color: '#AF52DE', fontSize: 12, fontWeight: 'bold' }}>🧠 TU ASISTENTE IA</Text>
                     <TouchableOpacity onPress={fetchAgentLogs} style={{ backgroundColor: '#1F2937', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
-                        <Text style={{ color: '#AF52DE', fontSize: 10, fontWeight: 'bold' }}>ACTUALIZAR</Text>
+                        <Text style={{ color: '#AF52DE', fontSize: 10, fontWeight: 'bold' }}>REVISAR</Text>
                     </TouchableOpacity>
                 </View>
                 <Text style={{ color: '#555', fontSize: 10, marginBottom: 12 }}>Acciones que la IA ha realizado para proteger tu viaje</Text>
@@ -189,7 +189,7 @@ export default function RadarScreen() {
                 {agentLogs.length === 0 ? (
                     <View style={{ alignItems: 'center', padding: 16 }}>
                         <Text style={{ fontSize: 24, marginBottom: 6 }}>🛡️</Text>
-                        <Text style={{ color: '#555', fontSize: 12, textAlign: 'center' }}>Tu asistente está vigilando.{'\n'}Pulsa ACTUALIZAR para ver su actividad.</Text>
+                        <Text style={{ color: '#555', fontSize: 12, textAlign: 'center' }}>Tu asistente está vigilando.{'\n'}Pulsa REVISAR para ver su actividad.</Text>
                     </View>
                 ) : (
                     agentLogs.map((log) => {

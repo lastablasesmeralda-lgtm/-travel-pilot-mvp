@@ -12,8 +12,8 @@ export default function VaultScreen() {
                 <View style={{ backgroundColor: 'rgba(39, 201, 63, 0.2)', padding: 12, borderRadius: 12, marginBottom: 15, borderWidth: 1, borderColor: '#27C93F', flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{ fontSize: 18, marginRight: 10 }}>🛡️</Text>
                     <View>
-                        <Text style={{ color: '#27C93F', fontWeight: 'bold', fontSize: 12 }}>ESCUDO LEGAL ACTIVADO</Text>
-                        <Text style={{ color: '#EEE', fontSize: 10 }}>Reclamación en curso por retraso de vuelo.</Text>
+                        <Text style={{ color: '#27C93F', fontWeight: 'bold', fontSize: 12 }}>ESCUDO DE PROTECCIÓN LEGAL</Text>
+                        <Text style={{ color: '#EEE', fontSize: 10 }}>Expediente activo por retraso de vuelo detectado.</Text>
                     </View>
                 </View>
             )}
@@ -30,7 +30,7 @@ export default function VaultScreen() {
                 <Text style={{ color: '#666', fontSize: 10 }}>Conectado con: tu email // Hace 12 min</Text>
             </TouchableOpacity>
 
-            <Text style={s.vl}>TUS DOCUMENTOS DE VIAJE</Text>
+            <Text style={s.vl}>DOCUMENTACIÓN PROTEGIDA</Text>
 
             {[
                 { t: 'PASAPORTE', s: 'ID: ESP-9283', i: 'https://images.unsplash.com/photo-1544333346-ced983050275?w=400', source: 'VAULT' },
@@ -51,7 +51,7 @@ export default function VaultScreen() {
                         <Text style={s.vt}>{d.t}</Text>
                         <Text style={s.vs}>{d.s}</Text>
                         <Text style={{ color: d.source === 'VAULT' ? '#666' : '#AF52DE', fontSize: 8, fontWeight: 'bold', marginTop: 4 }}>
-                            {d.source !== 'VAULT' ? '✨ Detectado automáticamente' : 'Subido por ti'}
+                            {d.source !== 'VAULT' ? '✨ Detección Inteligente (AI Scan)' : 'Documento Seguro'}
                         </Text>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
@@ -61,7 +61,7 @@ export default function VaultScreen() {
                 </TouchableOpacity>
             ))}
 
-            <Text style={[s.vl, { marginTop: 20 }]}>🛡️ ESCUDO LEGAL (RECLAMACIONES)</Text>
+            <Text style={[s.vl, { marginTop: 20 }]}>⚖️ GESTION DE REEMBOLSOS (EU261)</Text>
             {claims && claims.map((c, i) => (
                 <TouchableOpacity key={i} style={[s.vc, { borderLeftWidth: 3, borderLeftColor: '#27C93F', flexDirection: 'column', alignItems: 'flex-start' }]}>
                     <View style={{ flexDirection: 'row', width: '100%', alignItems: 'center', marginBottom: 5 }}>
@@ -80,6 +80,10 @@ export default function VaultScreen() {
                     </View>
                 </TouchableOpacity>
             ))}
+
+            <View style={{ marginTop: 40, opacity: 0.3, alignItems: 'center' }}>
+                <Text style={{ color: '#666', fontSize: 9 }}>VAULT ENCRIPTADO · GRADO MILITAR AES-256</Text>
+            </View>
         </View>
     );
 }

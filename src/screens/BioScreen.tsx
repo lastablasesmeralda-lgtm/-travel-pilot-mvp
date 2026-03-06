@@ -67,7 +67,6 @@ export default function BioScreen() {
                     </View>
                 </View>
 
-                <Text style={[s.b, { marginTop: 30, marginBottom: 15 }]}>NOTIFICACIONES PUSH</Text>
                 <TouchableOpacity
                     onPress={async () => {
                         if (!user?.email) return Alert.alert('Error', 'Inicia sesión primero');
@@ -79,6 +78,7 @@ export default function BioScreen() {
                                     email: user.email,
                                     title: '🔔 Prueba de Travel-Pilot',
                                     body: '¡Funciona! Tu asistente te avisará aquí de cualquier retraso.'
+                               Entry: { flight: 'TP404' }
                                 })
                             });
                             const data = await resp.json();
@@ -90,9 +90,57 @@ export default function BioScreen() {
                     }}
                     style={{ backgroundColor: '#111', padding: 16, borderRadius: 16, borderLeftWidth: 4, borderLeftColor: '#4CD964', marginBottom: 20 }}
                 >
-                    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>ENVIAR NOTIFICACIÓN DE PRUEBA</Text>
-                    <Text style={{ color: '#666', fontSize: 10, marginTop: 4 }}>Comprueba si tu dispositivo recibe alertas correctamente.</Text>
+                    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>PROBAR NOTIFICACIONES</Text>
+                    <Text style={{ color: '#666', fontSize: 10, marginTop: 4 }}>Pulsa aquí para recibir una alerta de prueba.</Text>
                 </TouchableOpacity>
+
+                <Text style={[s.b, { marginTop: 10, marginBottom: 15 }]}>📖 GUÍA DE OPERACIONES</Text>
+
+                <View style={{ marginBottom: 10 }}>
+                    <Text style={{ color: '#AF52DE', fontSize: 10, fontWeight: 'bold', marginBottom: 10, letterSpacing: 1 }}>SECCIÓN I: BÁSICOS DEL VIAJERO</Text>
+                    <View style={{ backgroundColor: '#111', borderRadius: 20, padding: 20, marginBottom: 20 }}>
+                        {[
+                            { step: '1', title: 'Centro de Operaciones', desc: 'En la pestaña VIAJE, crea tu itinerario. La IA cruzará datos de clima y aeropuertos para darte el control total del destino.' },
+                            { step: '2', title: 'Radar Centinela 24/7', desc: 'En VUELOS, guarda tu número (ej. IB3166). Activamos un radar digital que rastrea cualquier movimiento fuera de lo previsto.' },
+                            { step: '3', title: 'Alertas Inteligentes', desc: 'Sin ruidos. Solo recibirás una notificación si existe un riesgo real para tu conexión. Tu paz mental es nuestra prioridad.' },
+                            { step: '4', title: 'Escudo Legal (Vault)', desc: 'Si el retraso supera las 3h, generamos tu expediente legal al instante. Recupera hasta 600€ con un solo toque.' }
+                        ].map((item, i) => (
+                            <View key={i} style={{ flexDirection: 'row', marginBottom: 20 }}>
+                                <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#AF52DE', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
+                                    <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 10 }}>{item.step}</Text>
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 13 }}>{item.title}</Text>
+                                    <Text style={{ color: '#666', fontSize: 11, marginTop: 4, lineHeight: 16 }}>{item.desc}</Text>
+                                </View>
+                            </View>
+                        ))}
+                    </View>
+                </View>
+
+                <View style={{ marginBottom: 10 }}>
+                    <Text style={{ color: '#D4AF37', fontSize: 10, fontWeight: 'bold', marginBottom: 10, letterSpacing: 1 }}>SECCIÓN II: PROTOCOLOS DE ÉLITE</Text>
+                    <View style={{ backgroundColor: '#111', borderRadius: 20, padding: 20, marginBottom: 20, borderWidth: 1, borderColor: '#1A1500' }}>
+                        {[
+                            { step: '5', title: 'Protocolo SOS', desc: 'Asistencia táctica. La IA puede contactar con hoteles y servicios locales para avisar de tu situación en emergencias.' },
+                            { step: '6', title: 'Contingencia Táctica', desc: 'Ante un fallo, calculamos 3 realidades alternativas: rapidez vs coste. Tú decides con datos fríos en momentos de estrés.' },
+                            { step: '7', title: 'Ejecución Autónoma', desc: 'Tu asistente toma los mandos. Verás a la IA navegar y realizar gestiones pesadas por ti en tiempo real.' },
+                            { step: '8', title: 'Enlace con el Comandante', desc: 'Chat contextual por voz o texto. El núcleo Gemini conoce tu itinerario y te dará consejos expertos adaptados a tu ubicación.' },
+                            { step: '9', title: 'Privacidad Encriptada', desc: 'Tus documentos nunca salen de tu dispositivo sin permiso. Usamos encriptación de grado militar en tu Vault personal.' }
+                        ].map((item, i) => (
+                            <View key={i} style={{ flexDirection: 'row', marginBottom: 20 }}>
+                                <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#D4AF37', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
+                                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 10 }}>{item.step}</Text>
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ color: '#D4AF37', fontWeight: 'bold', fontSize: 13 }}>{item.title}</Text>
+                                    <Text style={{ color: '#666', fontSize: 11, marginTop: 4, lineHeight: 16 }}>{item.desc}</Text>
+                                </View>
+                            </View>
+                        ))}
+                    </View>
+                </View>
+
             </View>
             <View style={{ height: 120 }} />
         </ScrollView>

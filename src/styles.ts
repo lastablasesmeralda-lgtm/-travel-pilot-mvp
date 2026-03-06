@@ -39,7 +39,7 @@ export const s = StyleSheet.create({
   nav: { height: 90, flexDirection: 'row', backgroundColor: '#111', borderTopWidth: 1, borderColor: '#222', paddingBottom: 25 },
   ni: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   mf: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
-  mc: { width: '85%', backgroundColor: '#1A1A1A', padding: 20, borderRadius: 25, alignItems: 'center' },
+  mc: { width: '85%', backgroundColor: '#1A1A1A', padding: 20, borderRadius: 25, alignItems: 'center', maxHeight: '80%' },
   mt: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
   bt: { width: '100%', padding: 15, borderRadius: 12, alignItems: 'center', marginTop: 10 },
   btx: { color: '#FFF', fontWeight: 'bold' },

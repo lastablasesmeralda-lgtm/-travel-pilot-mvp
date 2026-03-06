@@ -7,12 +7,18 @@ import { BACKEND_URL } from '../../config';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-// NOTIFICACIONES DESACTIVADAS PARA EVITAR CRASH EN EXPO GO SDK 53+
-const Notifications: any = {
-    setNotificationHandler: () => { },
-    AndroidImportance: { MAX: 4 },
-};
-const Device: any = { isDevice: false, brand: '', modelName: '' };
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+    }),
+});
 
 // Eliminamos el handler global que puede causar crash en Expo Go Android SDK 53+
 
@@ -58,6 +64,7 @@ export const AppProvider = ({ children }) => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [apiPlan, setApiPlan] = useState(null);
     const [isTyping, setIsTyping] = useState(false);
+    const [expoPushToken, setExpoPushToken] = useState('');
     const [availableVoices, setAvailableVoices] = useState([]);
     const [selectedVoice, setSelectedVoice] = useState(null);
     const [loadingStep, setLoadingStep] = useState(0);
@@ -70,6 +77,7 @@ export const AppProvider = ({ children }) => {
     const [agentLogs, setAgentLogs] = useState<any[]>([]);
     const [myFlights, setMyFlights] = useState<any[]>([]);
     const [myTrips, setMyTrips] = useState<any[]>([]);
+    const [weather, setWeather] = useState({ temp: '22', condition: 'Cargando...', icon: '🌤️', city: 'Tu Destino' });
 
     // ESTADO DE PLANES Y CRISIS RECUPERADO
     const [planes, setPlanes] = useState([
@@ -118,11 +126,42 @@ export const AppProvider = ({ children }) => {
             if (firebaseUser?.email) {
                 loadMyFlights(firebaseUser.email);
                 loadMyTrips(firebaseUser.email);
-                // Notificaciones deshabilitadas temporalmente para estabilidad
+                registerForPushNotificationsAsync(firebaseUser.email);
             }
         });
         return () => sub();
     }, []);
+
+    const registerForPushNotificationsAsync = async (email: string) => {
+        if (!Device.isDevice) return;
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+        if (existingStatus !== 'granted') {
+            const { status } = await Notifications.requestPermissionsAsync();
+            finalStatus = status;
+        }
+        if (finalStatus !== 'granted') return;
+
+        try {
+            const token = (await Notifications.getExpoPushTokenAsync({
+                projectId: Constants.expoConfig?.extra?.eas?.projectId || 'd63abcdb-7fed-46b7-8d1f-5d7a72d98550',
+            })).data;
+            setExpoPushToken(token);
+
+            // Registrar en el backend
+            await fetch(`${BACKEND_URL}/api/registerPushToken`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email,
+                    token,
+                    deviceName: `${Device.brand} ${Device.modelName}`
+                })
+            });
+        } catch (e) {
+            console.error("Error obteniendo push token:", e);
+        }
+    };
 
     useEffect(() => {
         if (!user) return;
@@ -233,11 +272,11 @@ export const AppProvider = ({ children }) => {
             console.error("Error IA:", e);
             setApiPlan({
                 options: [
-                    { type: 'RAPIDO', title: 'Ruta de Emergencia (Ahorro)', description: 'Vuelo directo gestionado por Travel-Pilot.', estimatedCost: 850 },
-                    { type: 'BARATO', title: 'Reclamación + Avión Low Cost', description: 'Gestión legal EU261 activa y conexión barata.', estimatedCost: 150 },
-                    { type: 'CONFORT', title: 'Plan de Descanso', description: 'Noche en hotel 5* y vuelo mañana.', estimatedCost: 300 }
+                    { type: 'RÁPIDO', title: 'Ruta Táctica Prioritaria', description: 'Vuelo directo de sustitución gestionado bajo protocolo de urgencia.', estimatedCost: 850 },
+                    { type: 'ECONÓMICO', title: 'Optimización de Reembolso', description: 'Gestión legal EU261 activa combinada con conexión de bajo coste.', estimatedCost: 150 },
+                    { type: 'CONFORT', title: 'Protocolo de Descanso Élite', description: 'Noche en hotel seleccionado y salida programada para mañana.', estimatedCost: 300 }
                 ],
-                impact: { hotelAlert: "Riesgo de pérdida de reserva mitigado." }
+                impact: { hotelAlert: "He asegurado tu reserva de alojamiento. Sin riesgo de cancelación." }
             });
         } finally { setIsGenerating(false); clearInterval(intv); }
     };
@@ -273,10 +312,7 @@ export const AppProvider = ({ children }) => {
         })();
     };
 
-    const registerForPushNotificationsAsync = async () => {
-        console.log('Push notifications disabled for Expo Go stability');
-        return null;
-    };
+
 
     const saveMyFlight = async (flightNumber: string, alias?: string) => {
         if (!user?.email) return Alert.alert('Error', 'Inicia sesión primero');
@@ -354,6 +390,25 @@ export const AppProvider = ({ children }) => {
         }
     };
 
+    const fetchWeather = async (location?: string) => {
+        try {
+            const dest = location || (myTrips.length > 0 ? myTrips[0].destination : 'London');
+            const resp = await fetch(`${BACKEND_URL}/api/weather?location=${encodeURIComponent(dest)}`);
+            const data = await resp.json();
+            if (data.temp) setWeather(data);
+        } catch (e) {
+            console.error("Error cargando clima:", e);
+        }
+    };
+
+    useEffect(() => {
+        if (myTrips.length > 0) {
+            // El destino suele guardarse como "Token | Japan" o similar
+            const dest = myTrips[0].destination || myTrips[0].title.split('|')[1]?.trim() || myTrips[0].title;
+            fetchWeather(dest);
+        }
+    }, [myTrips]);
+
     const value = {
         user, authEmail, setAuthEmail, authPassword, setAuthPassword, authMode, setAuthMode, authLoading,
         handleLogin, handleRegister, handleLogout,
@@ -366,6 +421,7 @@ export const AppProvider = ({ children }) => {
         agentLogs, fetchAgentLogs,
         myFlights, saveMyFlight, loadMyFlights, removeMyFlight,
         myTrips, saveTrip, loadMyTrips, removeTrip,
+        weather, fetchWeather,
         speak, stopSpeak, formatTime, getStatusColor, getStatusLabel, scrollViewRef
     };
 

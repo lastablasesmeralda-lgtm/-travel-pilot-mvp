@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StatusBar, TouchableOpacity, Text, Animated, Alert } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
@@ -10,7 +10,13 @@ import GlobalOverlays from './src/GlobalOverlays';
 import { s } from './src/styles';
 
 function RootComponent() {
-  const { user, setShowSOSMenu, setShowChat, sosPulse, compensationEligible } = useAppContext();
+  const { user, setShowSOSMenu, setShowChat, sosPulse, compensationEligible, speak } = useAppContext();
+
+  useEffect(() => {
+    if (user && compensationEligible) {
+      speak("Atención: He detectado un retraso eligible para compensación legal. Tienes derecho a reclamar hasta seiscientos euros. He activado tu escudo legal.");
+    }
+  }, [compensationEligible, !!user]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0A0A0A' }} edges={['top', 'left', 'right']}>

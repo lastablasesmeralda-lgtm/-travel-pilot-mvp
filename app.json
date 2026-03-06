@@ -2,7 +2,7 @@
   "expo": {
     "name": "Travel-Pilot",
     "slug": "travel-pilot",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -20,6 +20,11 @@
         "backgroundColor": "#0A0A0A"
       },
       "package": "com.lastablasesmeralda.travelpilot"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "d63abcdb-7fed-46b7-8d1f-5d7a72d98550"
+      }
     }
   }
 }
