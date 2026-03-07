@@ -77,8 +77,8 @@ export default function BioScreen() {
                                 body: JSON.stringify({
                                     email: user.email,
                                     title: '🔔 Prueba de Travel-Pilot',
-                                    body: '¡Funciona! Tu asistente te avisará aquí de cualquier retraso.'
-                               Entry: { flight: 'TP404' }
+                                    body: '¡Funciona! Tu asistente te avisará aquí de cualquier retraso.',
+                                    entry: { flight: 'TP404' }
                                 })
                             });
                             const data = await resp.json();
