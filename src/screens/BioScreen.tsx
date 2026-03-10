@@ -1,11 +1,12 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
 import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
 import { BACKEND_URL } from '../../config';
 
 export default function BioScreen() {
     const { availableVoices, selectedVoice, setSelectedVoice, user } = useAppContext();
+    const [showGuide, setShowGuide] = useState(false);
 
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} showsVerticalScrollIndicator={false}>
@@ -94,52 +95,90 @@ export default function BioScreen() {
                     <Text style={{ color: '#666', fontSize: 10, marginTop: 4 }}>Pulsa aquí para recibir una alerta de prueba.</Text>
                 </TouchableOpacity>
 
-                <Text style={[s.b, { marginTop: 10, marginBottom: 15 }]}>📖 GUÍA DE OPERACIONES</Text>
+                <Text style={[s.b, { marginTop: 10, marginBottom: 15 }]}>📖 CENTRO DE INFORMACIÓN</Text>
 
-                <View style={{ marginBottom: 10 }}>
-                    <Text style={{ color: '#AF52DE', fontSize: 10, fontWeight: 'bold', marginBottom: 10, letterSpacing: 1 }}>SECCIÓN I: BÁSICOS DEL VIAJERO</Text>
-                    <View style={{ backgroundColor: '#111', borderRadius: 20, padding: 20, marginBottom: 20 }}>
-                        {[
-                            { step: '1', title: 'Centro de Operaciones', desc: 'En la pestaña VIAJE, crea tu itinerario. La IA cruzará datos de clima y aeropuertos para darte el control total del destino.' },
-                            { step: '2', title: 'Radar Centinela 24/7', desc: 'En VUELOS, guarda tu número (ej. IB3166). Activamos un radar digital que rastrea cualquier movimiento fuera de lo previsto.' },
-                            { step: '3', title: 'Alertas Inteligentes', desc: 'Sin ruidos. Solo recibirás una notificación si existe un riesgo real para tu conexión. Tu paz mental es nuestra prioridad.' },
-                            { step: '4', title: 'Escudo Legal (Vault)', desc: 'Si el retraso supera las 3h, generamos tu expediente legal al instante. Recupera hasta 600€ con un solo toque.' }
-                        ].map((item, i) => (
-                            <View key={i} style={{ flexDirection: 'row', marginBottom: 20 }}>
-                                <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#AF52DE', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
-                                    <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 10 }}>{item.step}</Text>
-                                </View>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 13 }}>{item.title}</Text>
-                                    <Text style={{ color: '#666', fontSize: 11, marginTop: 4, lineHeight: 16 }}>{item.desc}</Text>
-                                </View>
-                            </View>
-                        ))}
+                <TouchableOpacity
+                    onPress={() => setShowGuide(true)}
+                    style={{
+                        backgroundColor: '#111',
+                        padding: 20,
+                        borderRadius: 20,
+                        borderWidth: 1,
+                        borderColor: '#AF52DE',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: 30
+                    }}
+                >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(175, 82, 222, 0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
+                            <Text style={{ fontSize: 20 }}>📖</Text>
+                        </View>
+                        <View>
+                            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>GUÍA DE OPERACIONES</Text>
+                            <Text style={{ color: '#666', fontSize: 10 }}>Familiarízate con los 9 protocolos clave</Text>
+                        </View>
                     </View>
-                </View>
+                    <Text style={{ color: '#AF52DE', fontSize: 18, fontWeight: 'bold' }}>→</Text>
+                </TouchableOpacity>
 
-                <View style={{ marginBottom: 10 }}>
-                    <Text style={{ color: '#D4AF37', fontSize: 10, fontWeight: 'bold', marginBottom: 10, letterSpacing: 1 }}>SECCIÓN II: PROTOCOLOS DE ÉLITE</Text>
-                    <View style={{ backgroundColor: '#111', borderRadius: 20, padding: 20, marginBottom: 20, borderWidth: 1, borderColor: '#1A1500' }}>
-                        {[
-                            { step: '5', title: 'Protocolo SOS', desc: 'Asistencia táctica. La IA puede contactar con hoteles y servicios locales para avisar de tu situación en emergencias.' },
-                            { step: '6', title: 'Contingencia Táctica', desc: 'Ante un fallo, calculamos 3 realidades alternativas: rapidez vs coste. Tú decides con datos fríos en momentos de estrés.' },
-                            { step: '7', title: 'Ejecución Autónoma', desc: 'Tu asistente toma los mandos. Verás a la IA navegar y realizar gestiones pesadas por ti en tiempo real.' },
-                            { step: '8', title: 'Enlace con el Comandante', desc: 'Chat contextual por voz o texto. El núcleo Gemini conoce tu itinerario y te dará consejos expertos adaptados a tu ubicación.' },
-                            { step: '9', title: 'Privacidad Encriptada', desc: 'Tus documentos nunca salen de tu dispositivo sin permiso. Usamos encriptación de grado militar en tu Vault personal.' }
-                        ].map((item, i) => (
-                            <View key={i} style={{ flexDirection: 'row', marginBottom: 20 }}>
-                                <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#D4AF37', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
-                                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 10 }}>{item.step}</Text>
+                <Modal visible={showGuide} animationType="slide" transparent={true}>
+                    <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', paddingTop: 60 }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, marginBottom: 20 }}>
+                            <Text style={{ color: '#FFF', fontSize: 20, fontWeight: '900' }}>GUÍA DE OPERACIONES</Text>
+                            <TouchableOpacity onPress={() => setShowGuide(false)} style={{ backgroundColor: '#222', width: 34, height: 34, borderRadius: 17, justifyContent: 'center', alignItems: 'center' }}>
+                                <Text style={{ color: '#666', fontSize: 16 }}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView contentContainerStyle={{ padding: 25 }}>
+                            <Text style={{ color: '#AF52DE', fontSize: 10, fontWeight: 'bold', marginBottom: 15, letterSpacing: 1 }}>FASE I: CONFIGURACIÓN Y VIGILANCIA</Text>
+                            {[
+                                { step: '1', title: 'Centro de Operaciones', desc: 'En la pestaña VIAJE, crea tu itinerario. La IA cruzará datos de clima y aeropuertos para darte el control total del destino.' },
+                                { step: '2', title: 'Radar Centinela 24/7', desc: 'En VUELOS, guarda tu número. Activamos un radar digital que rastrea cualquier movimiento fuera de lo previsto.' },
+                                { step: '3', title: 'Alertas Inteligentes', desc: 'Sin ruidos. Solo recibirás una notificación si existe un riesgo real para tu conexión. Tu paz mental es nuestra prioridad.' },
+                                { step: '4', title: 'Escudo Legal (Vault)', desc: 'Si el retraso supera las 3h, generamos tu expediente legal al instante. Recupera hasta 600€ con un solo toque.' }
+                            ].map((item, i) => (
+                                <View key={i} style={{ flexDirection: 'row', marginBottom: 25 }}>
+                                    <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#AF52DE', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
+                                        <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 11 }}>{item.step}</Text>
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>{item.title}</Text>
+                                        <Text style={{ color: '#999', fontSize: 12, marginTop: 4, lineHeight: 18 }}>{item.desc}</Text>
+                                    </View>
                                 </View>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={{ color: '#D4AF37', fontWeight: 'bold', fontSize: 13 }}>{item.title}</Text>
-                                    <Text style={{ color: '#666', fontSize: 11, marginTop: 4, lineHeight: 16 }}>{item.desc}</Text>
+                            ))}
+
+                            <Text style={{ color: '#D4AF37', fontSize: 10, fontWeight: 'bold', marginTop: 15, marginBottom: 15, letterSpacing: 1 }}>FASE II: PROTOCOLOS DE ÉLITE</Text>
+                            {[
+                                { step: '5', title: 'Protocolo SOS', desc: 'Asistencia táctica. La IA puede contactar con hoteles y servicios locales para avisar de tu situación en emergencias.' },
+                                { step: '6', title: 'Contingencia Táctica', desc: 'Ante un fallo, calculamos 3 realidades alternativas: rapidez vs coste. Tú decides con datos fríos.' },
+                                { step: '7', title: 'Ejecución Autónoma', desc: 'Tu asistente toma los mandos. Verás a la IA navegar y realizar gestiones pesadas por ti en tiempo real.' },
+                                { step: '8', title: 'Enlace con el Comandante', desc: 'Chat contextual por voz o texto. El núcleo Gemini conoce tu itinerario y te dará consejos expertos.' },
+                                { step: '9', title: 'Privacidad Encriptada', desc: 'Tus documentos nunca salen de tu dispositivo sin permiso. Encriptación de grado militar AES-256.' }
+                            ].map((item, i) => (
+                                <View key={i} style={{ flexDirection: 'row', marginBottom: 25 }}>
+                                    <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#D4AF37', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
+                                        <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 11 }}>{item.step}</Text>
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ color: '#D4AF37', fontWeight: 'bold', fontSize: 14 }}>{item.title}</Text>
+                                        <Text style={{ color: '#999', fontSize: 12, marginTop: 4, lineHeight: 18 }}>{item.desc}</Text>
+                                    </View>
                                 </View>
-                            </View>
-                        ))}
+                            ))}
+
+                            <TouchableOpacity
+                                onPress={() => setShowGuide(false)}
+                                style={{ backgroundColor: '#AF52DE', padding: 18, borderRadius: 15, alignItems: 'center', marginTop: 20, marginBottom: 100 }}
+                            >
+                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>ENTENDIDO, COMANDANTE</Text>
+                            </TouchableOpacity>
+                        </ScrollView>
                     </View>
-                </View>
+                </Modal>
 
             </View>
             <View style={{ height: 120 }} />

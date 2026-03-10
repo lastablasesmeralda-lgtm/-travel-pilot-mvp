@@ -10,16 +10,7 @@ import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-        shouldShowBanner: true,
-        shouldShowList: true,
-    }),
-});
-
+// Handler se configura condicionalmente en el useEffect para evitar errores en Expo Go Android
 // Eliminamos el handler global que puede causar crash en Expo Go Android SDK 53+
 
 type AppContextType = any; // Lo dejamos genérico de momento para agilizar
@@ -82,7 +73,7 @@ export const AppProvider = ({ children }) => {
     // ESTADO DE PLANES Y CRISIS RECUPERADO
     const [planes, setPlanes] = useState([
         { id: '1', destino: 'PARÍS', status: 'OK', hora: 0, img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500', co: '48.85 N, 2.35 E' },
-        { id: '2', destino: 'TOKIO', status: 'CRITICAL', hora: 8, img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=500', co: '35.67 N, 139.65 E' }
+        { id: '2', destino: 'TOKIO', status: 'OK', hora: 8, img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=500', co: '35.67 N, 139.65 E' }
     ]);
 
     // EFECTOS INICIALES
@@ -133,6 +124,10 @@ export const AppProvider = ({ children }) => {
     }, []);
 
     const registerForPushNotificationsAsync = async (email: string) => {
+        if (Constants.appOwnership === 'expo' && Platform.OS === 'android') {
+            console.log("Notificaciones desactivadas en Expo Go (SDK 53/54 Android compatible)");
+            return;
+        }
         if (!Device.isDevice) return;
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
         let finalStatus = existingStatus;
@@ -228,24 +223,68 @@ export const AppProvider = ({ children }) => {
         } catch (e) { } finally { setIsPrefetching(false); }
     };
 
+    // ------------- NUEVA FUNCIÓN SEARCH FLIGHT CON AVIATIONSTACK REAL -------------
     const searchFlight = async () => {
-        const code = flightInput.trim();
+        const code = flightInput.trim().toUpperCase();
         if (!code) return;
-        setIsSearching(true); setSearchError(null); setFlightData(null); setPrefetchedData(null);
+        setIsSearching(true); setSearchError(null); setFlightData(null); 
+        
         try {
-            const response = await fetch(`${BACKEND_URL}/api/flightInfo?flight=${code}`);
-            if (!response.ok) {
-                const err = await response.json();
-                setSearchError(err.error || 'Vuelo no encontrado');
-                return;
+            // PON TU CLAVE DE AVIATIONSTACK AQUÍ (MANTÉN LAS COMILLAS)
+            const access_key = 'TU_API_KEY_AQUI'; 
+            
+            const url = `http://api.aviationstack.com/v1/flights?access_key=${access_key}&flight_iata=${code}`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+           if (!data.data || data.data.length === 0) {
+    if (data.error && data.error.message?.includes('monthly')) {
+        setSearchError('Límite mensual del radar de vuelos alcanzado. Vuelve a intentarlo mañana o actualiza el plan.');
+    } else {
+        setSearchError(`No hemos encontrado el vuelo ${code}.`);
+    }
+    setIsSearching(false);
+    return;
+}
+
+
+            const flight = data.data[0];
+
+            const realFlightData = {
+                airline: flight.airline.name || 'Aerolínea',
+                flightNumber: flight.flight.iata,
+                status: flight.flight_status, 
+                departure: {
+                    airport: flight.departure.airport || 'Desconocido',
+                    iata: flight.departure.iata,
+                    scheduled: flight.departure.scheduled,
+                    estimated: flight.departure.estimated || flight.departure.scheduled,
+                    delay: flight.departure.delay || 0,
+                    terminal: flight.departure.terminal,
+                    gate: flight.departure.gate
+                },
+                arrival: {
+                    airport: flight.arrival.airport || 'Desconocido',
+                    iata: flight.arrival.iata,
+                    scheduled: flight.arrival.scheduled,
+                    estimated: flight.arrival.estimated || flight.arrival.scheduled
+                }
+            };
+
+            setFlightData(realFlightData);
+
+            if (realFlightData.departure.delay >= 180) {
+                setCompensationEligible(true);
             }
-            setFlightData(await response.json());
-            prefetchPlan();
+
         } catch (e) {
-            setSearchError('Error de conexión con el servidor. Revisa el túnel ngrok.');
+            setSearchError('Error de conexión con el radar. Revisa tu API Key.');
             console.error(e);
-        } finally { setIsSearching(false); }
+        } finally { 
+            setIsSearching(false); 
+        }
     };
+    // ------------------------------------------------------------------------------
 
     const showPlan = () => {
         if (prefetchedData) { setApiPlan(prefetchedData); setShowSOS(true); }
@@ -311,8 +350,6 @@ export const AppProvider = ({ children }) => {
             } finally { setIsTyping(false); }
         })();
     };
-
-
 
     const saveMyFlight = async (flightNumber: string, alias?: string) => {
         if (!user?.email) return Alert.alert('Error', 'Inicia sesión primero');
@@ -390,22 +427,71 @@ export const AppProvider = ({ children }) => {
         }
     };
 
-    const fetchWeather = async (location?: string) => {
+        const fetchWeather = async (location?: string) => {
         try {
-            const dest = location || (myTrips.length > 0 ? myTrips[0].destination : 'London');
-            const resp = await fetch(`${BACKEND_URL}/api/weather?location=${encodeURIComponent(dest)}`);
-            const data = await resp.json();
-            if (data.temp) setWeather(data);
+            let dest = location;
+            if (!dest && myTrips && myTrips.length > 0) {
+                dest = myTrips[0].destination || myTrips[0].title.split('|')[1]?.trim() || myTrips[0].title;
+            }
+            
+            if (!dest || dest.trim() === '') {
+                setWeather({ temp: '--', condition: 'Esperando destino', icon: '🌍', city: 'Sin ruta' });
+                return;
+            }
+
+            setWeather({ temp: '...', condition: 'Buscando satélite...', icon: '📡', city: dest.toUpperCase() });
+
+            // 1. Convertimos el nombre de la ciudad a coordenadas
+            const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(dest)}&count=1&language=es&format=json`);
+            const geoData = await geoResp.json();
+            
+            if (!geoData.results || geoData.results.length === 0) {
+                 setWeather({ temp: '--', condition: 'Destino desconocido', icon: '❓', city: dest.toUpperCase() });
+                 return;
+            }
+
+            const lat = geoData.results[0].latitude;
+            const lon = geoData.results[0].longitude;
+
+            // 2. Con las coordenadas, obtenemos el clima exacto
+            const weatherResp = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+            const weatherData = await weatherResp.json();
+            
+            const current = weatherData.current_weather;
+            const temp = current.temperature;
+            const code = current.weathercode;
+
+            // 3. Traducimos el código a texto e icono visual
+            let conditionEs = 'Despejado';
+            let icon = '☀️';
+
+            if (code === 0) { conditionEs = 'Despejado'; icon = '☀️'; }
+            else if (code === 1 || code === 2 || code === 3) { conditionEs = 'Parcialmente nublado'; icon = '🌤️'; }
+            else if (code === 45 || code === 48) { conditionEs = 'Niebla'; icon = '🌫️'; }
+            else if (code >= 51 && code <= 67) { conditionEs = 'Llovizna'; icon = '🌧️'; }
+            else if (code >= 71 && code <= 77) { conditionEs = 'Nieve'; icon = '❄️'; }
+            else if (code >= 80 && code <= 82) { conditionEs = 'Lluvia'; icon = '🌧️'; }
+            else if (code >= 95 && code <= 99) { conditionEs = 'Tormenta'; icon = '⛈️'; }
+
+            setWeather({ 
+                temp: Math.round(temp).toString(), // AHORA SÍ ESTÁ ARREGLADO
+                condition: conditionEs, 
+                icon: icon, 
+                city: dest.toUpperCase() 
+            });
+            
         } catch (e) {
-            console.error("Error cargando clima:", e);
+            console.error("Error conectando al satélite:", e);
+            setWeather({ temp: '--', condition: 'Conexión satélite fallida', icon: '❌', city: location ? location.toUpperCase() : 'DESTINO' });
         }
     };
 
     useEffect(() => {
-        if (myTrips.length > 0) {
-            // El destino suele guardarse como "Token | Japan" o similar
+        if (myTrips && myTrips.length > 0) {
             const dest = myTrips[0].destination || myTrips[0].title.split('|')[1]?.trim() || myTrips[0].title;
             fetchWeather(dest);
+        } else {
+            setWeather({ temp: '--', condition: 'Añade un viaje para ver el clima', icon: '🛸', city: 'Sin ruta' });
         }
     }, [myTrips]);
 
