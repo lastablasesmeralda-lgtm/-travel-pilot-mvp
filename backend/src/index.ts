@@ -14,6 +14,10 @@ import multipart from '@fastify/multipart';
 const fastify = Fastify({ logger: true });
 fastify.register(multipart);
 
+fastify.get('/api/health', async () => {
+    return { status: 'ok', version: '2.1.0', timestamp: new Date().toISOString() };
+});
+
 const expo = new Expo();
 
 console.log('[Backend] Environment loaded. API Key present:', !!process.env.GOOGLE_API_KEY);
