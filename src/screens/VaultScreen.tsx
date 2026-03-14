@@ -2,16 +2,16 @@ import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, Image, ActivityIndicator, Alert, ScrollView, Modal } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
+import { cacheDirectory, writeAsStringAsync, EncodingType } from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
 import { BACKEND_URL } from '../../config';
 
 export default function VaultScreen() {
-    const { 
-        legalShieldActive, setViewDoc, setIsScanning, claims, flightData, 
-        compensationEligible, extraDocs, setExtraDocs, isExtracting, simulateGmailSync 
+    const {
+        legalShieldActive, setViewDoc, setIsScanning, claims, flightData,
+        compensationEligible, extraDocs, setExtraDocs, isExtracting, simulateGmailSync, user
     } = useAppContext();
 
     const [uploadingDoc, setUploadingDoc] = useState(false);
@@ -62,7 +62,7 @@ export default function VaultScreen() {
                 const uri = result.assets[0].uri;
                 const fileType = uri.split('.').pop() || 'jpg';
                 const fileName = `doc_${Date.now()}.${fileType}`;
-                
+
                 const formData = new FormData();
                 formData.append('file', {
                     uri,
@@ -200,7 +200,7 @@ export default function VaultScreen() {
                 </View>
                 <Text style={{ color: '#B0B0B0', fontSize: 19 }}>›</Text>
             </TouchableOpacity>
-            
+
             {/* ——— BOTÓN TÁCTICO: GMAIL SYNC ——— */}
             <TouchableOpacity
                 onPress={simulateGmailSync}
@@ -340,13 +340,13 @@ export default function VaultScreen() {
             </View>
 
             {/* Botón de Manual de Derechos (Siempre visible) */}
-            <TouchableOpacity 
+            <TouchableOpacity
                 onPress={() => setShowRights(true)}
-                style={{ 
-                    backgroundColor: 'rgba(175, 82, 222, 0.1)', 
-                    padding: 16, 
-                    borderRadius: 16, 
-                    borderWidth: 1, 
+                style={{
+                    backgroundColor: 'rgba(175, 82, 222, 0.1)',
+                    padding: 16,
+                    borderRadius: 16,
+                    borderWidth: 1,
                     borderColor: 'rgba(175, 82, 222, 0.4)',
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -432,7 +432,7 @@ export default function VaultScreen() {
             <Modal visible={showSignature} animationType="slide" transparent={true}>
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', padding: 25 }}>
                     <View style={{ backgroundColor: '#111', borderRadius: 24, padding: 25, borderWidth: 1, borderColor: '#333' }}>
-                        
+
                         <View style={{ alignItems: 'center', marginBottom: 20 }}>
                             <Text style={{ fontSize: 40 }}>🖊️</Text>
                             <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '900', marginTop: 10 }}>AUTORIZACIÓN LEGAL</Text>
@@ -454,7 +454,8 @@ export default function VaultScreen() {
                                     if (data === 'HAS_SIGNATURE') setHasSigned(true);
                                     if (data === 'NO_SIGNATURE') setHasSigned(false);
                                 }}
-                                source={{ html: `
+                                source={{
+                                    html: `
 <!DOCTYPE html>
 <html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>*{margin:0;padding:0;touch-action:none;}body{background:#EFEFEF;overflow:hidden;}
@@ -520,7 +521,7 @@ window.clearCanvas=function(){
 
                         {/* Botones de acción */}
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 onPress={() => {
                                     webViewRef.current?.injectJavaScript('clearCanvas();true;');
                                     setHasSigned(false);
@@ -530,7 +531,7 @@ window.clearCanvas=function(){
                                 <Text style={{ color: '#B0B0B0', fontWeight: 'bold' }}>BORRAR</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 onPress={async () => {
                                     if (!hasSigned) {
                                         Alert.alert('Firma incompleta', 'Por favor, firma de forma clara para que tenga validez legal.');
@@ -556,14 +557,14 @@ window.clearCanvas=function(){
                                                 delayMinutes: flightData?.departure?.delay || 0,
                                                 departureAirport: flightData?.departure?.airport,
                                                 arrivalAirport: flightData?.arrival?.airport,
-                                                userEmail: 'pasajero@travel-pilot.com',
+                                                userEmail: user?.email || 'pasajero@travel-pilot.com',
                                                 signatureBase64: capturedSignature,
                                             })
                                         });
                                         const json = await res.json();
                                         if (json.pdfBase64) {
-                                            const fileUri = FileSystem.cacheDirectory + `reclamacion_EU261_${Date.now()}.pdf`;
-                                            await FileSystem.writeAsStringAsync(fileUri, json.pdfBase64, { encoding: FileSystem.EncodingType.Base64 });
+                                            const fileUri = cacheDirectory + `reclamacion_EU261_${Date.now()}.pdf`;
+                                            await writeAsStringAsync(fileUri, json.pdfBase64, { encoding: EncodingType.Base64 });
                                             setSignedClaimId(`DYN-${flightData?.flightNumber}`);
                                             setShowSignature(false);
                                             const canShare = await Sharing.isAvailableAsync();
@@ -575,7 +576,7 @@ window.clearCanvas=function(){
                                         } else {
                                             Alert.alert('ERROR', json.error || 'El servidor no devolvió el PDF.');
                                         }
-                                    } catch(e) {
+                                    } catch (e) {
                                         Alert.alert('ERROR DE RED', 'No se pudo conectar con la central para generar el documento.');
                                     } finally {
                                         setGeneratingPdf(false);
@@ -589,7 +590,7 @@ window.clearCanvas=function(){
                                 }
                             </TouchableOpacity>
                         </View>
-                        
+
                         <TouchableOpacity onPress={() => setShowSignature(false)} style={{ marginTop: 25, alignItems: 'center' }}>
                             <Text style={{ color: '#FF3B30', fontSize: 13, fontWeight: 'bold' }}>CANCELAR PROCESO</Text>
                         </TouchableOpacity>
