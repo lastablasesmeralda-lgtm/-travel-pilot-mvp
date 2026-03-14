@@ -4,10 +4,10 @@
     "slug": "travel-pilot",
     "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon.jpg",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/splash.jpg",
       "resizeMode": "contain",
       "backgroundColor": "#0A0A0A"
     },
@@ -16,7 +16,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/adaptive-icon.jpg",
         "backgroundColor": "#0A0A0A"
       },
       "package": "com.lastablasesmeralda.travelpilot"
@@ -25,6 +25,17 @@
       "eas": {
         "projectId": "d63abcdb-7fed-46b7-8d1f-5d7a72d98550"
       }
-    }
+    },
+    "plugins": [
+      "@react-native-voice/voice",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableJetifier": true
+          }
+        }
+      ]
+    ]
   }
 }

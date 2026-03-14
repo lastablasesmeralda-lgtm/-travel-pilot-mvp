@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, Image, ActivityIndicator, Alert, ScrollView, Modal } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
 import { BACKEND_URL } from '../../config';
@@ -13,11 +15,13 @@ export default function VaultScreen() {
     } = useAppContext();
 
     const [uploadingDoc, setUploadingDoc] = useState(false);
+    const [generatingPdf, setGeneratingPdf] = useState(false);
     const [showRights, setShowRights] = useState(false);
     const [showSignature, setShowSignature] = useState(false);
     const [hasSigned, setHasSigned] = useState(false);
     const [signedClaimId, setSignedClaimId] = useState<string | null>(null);
     const webViewRef = useRef<WebView>(null);
+    const [capturedSignature, setCapturedSignature] = useState<string | null>(null);
 
     // Generar reclamación dinámica basada en el vuelo activo
     const dynamicClaims = React.useMemo(() => {
@@ -446,6 +450,7 @@ export default function VaultScreen() {
                                 bounces={false}
                                 onMessage={(event) => {
                                     const data = event.nativeEvent.data;
+                                    if (data.startsWith('SIG_DATA:')) { setCapturedSignature(data.replace('SIG_DATA:', '')); setHasSigned(true); return; }
                                     if (data === 'HAS_SIGNATURE') setHasSigned(true);
                                     if (data === 'NO_SIGNATURE') setHasSigned(false);
                                 }}
@@ -526,18 +531,62 @@ window.clearCanvas=function(){
                             </TouchableOpacity>
 
                             <TouchableOpacity 
-                                onPress={() => {
+                                onPress={async () => {
                                     if (!hasSigned) {
                                         Alert.alert('Firma incompleta', 'Por favor, firma de forma clara para que tenga validez legal.');
                                         return;
                                     }
-                                    setSignedClaimId(`DYN-${flightData?.flightNumber}`);
-                                    setShowSignature(false);
-                                    Alert.alert('✅ FIRMA VALIDADA', 'Tu mandato legal ha sido encriptado y enviado. Empezamos la reclamación.');
+                                    // Exportar firma como PNG base64 desde el canvas HTML
+                                    webViewRef.current?.injectJavaScript(`
+                                        (function(){
+                                          var png = document.getElementById('c').toDataURL('image/png');
+                                          window.ReactNativeWebView.postMessage('SIG_DATA:' + png);
+                                        })(); true;
+                                    `);
+                                    // Esperar un momento para recibir el mensaje del WebView
+                                    await new Promise(r => setTimeout(r, 600));
+                                    setGeneratingPdf(true);
+                                    try {
+                                        const res = await fetch(`${BACKEND_URL}/api/generateClaim`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                flightNumber: flightData?.flightNumber,
+                                                airline: flightData?.airline,
+                                                delayMinutes: flightData?.departure?.delay || 0,
+                                                departureAirport: flightData?.departure?.airport,
+                                                arrivalAirport: flightData?.arrival?.airport,
+                                                userEmail: 'pasajero@travel-pilot.com',
+                                                signatureBase64: capturedSignature,
+                                            })
+                                        });
+                                        const json = await res.json();
+                                        if (json.pdfBase64) {
+                                            const fileUri = FileSystem.cacheDirectory + `reclamacion_EU261_${Date.now()}.pdf`;
+                                            await FileSystem.writeAsStringAsync(fileUri, json.pdfBase64, { encoding: FileSystem.EncodingType.Base64 });
+                                            setSignedClaimId(`DYN-${flightData?.flightNumber}`);
+                                            setShowSignature(false);
+                                            const canShare = await Sharing.isAvailableAsync();
+                                            if (canShare) {
+                                                await Sharing.shareAsync(fileUri, { mimeType: 'application/pdf', dialogTitle: 'Enviar Reclamación EU261' });
+                                            } else {
+                                                Alert.alert('✅ PDF GENERADO', `Guardado en: ${fileUri}`);
+                                            }
+                                        } else {
+                                            Alert.alert('ERROR', json.error || 'El servidor no devolvió el PDF.');
+                                        }
+                                    } catch(e) {
+                                        Alert.alert('ERROR DE RED', 'No se pudo conectar con la central para generar el documento.');
+                                    } finally {
+                                        setGeneratingPdf(false);
+                                    }
                                 }}
                                 style={{ flex: 1, backgroundColor: hasSigned ? '#4CD964' : '#333', padding: 16, borderRadius: 12, alignItems: 'center' }}
                             >
-                                <Text style={{ color: hasSigned ? '#000' : '#666', fontWeight: '900' }}>CONFIRMAR</Text>
+                                {generatingPdf
+                                    ? <ActivityIndicator color="#000" size="small" />
+                                    : <Text style={{ color: hasSigned ? '#000' : '#666', fontWeight: '900' }}>CONFIRMAR Y ENVIAR</Text>
+                                }
                             </TouchableOpacity>
                         </View>
                         

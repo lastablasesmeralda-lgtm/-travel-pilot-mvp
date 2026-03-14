@@ -38,7 +38,7 @@ export default function AppNavigator() {
                             style={[s.ni, { flexDirection: 'column', alignItems: 'center' }]}
                         >
                             <Text style={{
-                                fontSize: 24,
+                                fontSize: 25,
                                 opacity: isFocused ? 1 : 0.6,
                                 transform: [{ scale: isFocused ? 1.1 : 1 }]
                             }}>
@@ -46,7 +46,7 @@ export default function AppNavigator() {
                             </Text>
                             <Text style={{
                                 color: isFocused ? '#AF52DE' : '#666',
-                                fontSize: 10,
+                                fontSize: 11,
                                 fontWeight: 'bold',
                                 marginTop: 4,
                                 textTransform: 'uppercase'
