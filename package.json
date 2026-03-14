@@ -6,6 +6,7 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
+    "build": "cd backend && npm install && npm run build",
     "postinstall": "patch-package && jetifier"
   },
   "dependencies": {
