@@ -879,6 +879,25 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         const pdfBytes = await pdfDoc.save();
         const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
 
+        // Registro en Base de Datos (Supabase)
+        try {
+            const { error: dbError } = await supabase
+                .from('claims')
+                .insert([{
+                    user_email: userEmail,
+                    flight_number: flightNumber,
+                    airline: airline,
+                    amount: amount,
+                    status: 'generated',
+                    created_at: new Date().toISOString()
+                }]);
+            
+            if (dbError) console.error('[Claim DB] Error registrando:', dbError);
+            else console.log('[Claim DB] ✅ Registro guardado exitosamente');
+        } catch (dbErr) {
+            console.error('[Claim DB] Error crítico:', dbErr);
+        }
+
         console.log(`[Claim] ✅ PDF generado para ${userEmail} - Vuelo ${flightNumber}`);
         return reply.send({ success: true, pdfBase64 });
 

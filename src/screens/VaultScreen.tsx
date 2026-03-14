@@ -565,19 +565,37 @@ window.clearCanvas=function(){
                                         if (json.pdfBase64) {
                                             const fileUri = cacheDirectory + `reclamacion_EU261_${Date.now()}.pdf`;
                                             await writeAsStringAsync(fileUri, json.pdfBase64, { encoding: EncodingType.Base64 });
+                                            
                                             setSignedClaimId(`DYN-${flightData?.flightNumber}`);
                                             setShowSignature(false);
-                                            const canShare = await Sharing.isAvailableAsync();
-                                            if (canShare) {
-                                                await Sharing.shareAsync(fileUri, { mimeType: 'application/pdf', dialogTitle: 'Enviar Reclamación EU261' });
-                                            } else {
-                                                Alert.alert('✅ PDF GENERADO', `Guardado en: ${fileUri}`);
-                                            }
+
+                                            // Alerta de éxito antes de compartir
+                                            Alert.alert(
+                                                '✈️ DOCUMENTO GENERADO',
+                                                'Tu reclamación ha sido registrada en el sistema central de Travel-Pilot. Ahora procedemos a enviarla a la aerolínea.',
+                                                [
+                                                    {
+                                                        text: 'CONTINUAR Y ENVIAR',
+                                                        onPress: async () => {
+                                                            const canShare = await Sharing.isAvailableAsync();
+                                                            if (canShare) {
+                                                                await Sharing.shareAsync(fileUri, { 
+                                                                    mimeType: 'application/pdf', 
+                                                                    dialogTitle: `Enviar Reclamación ${flightData?.airline}`,
+                                                                    UTI: 'com.adobe.pdf'
+                                                                });
+                                                            } else {
+                                                                Alert.alert('✅ PROCESO FINALIZADO', `El PDF legal está listo en la memoria de tu dispositivo.`);
+                                                            }
+                                                        }
+                                                    }
+                                                ]
+                                            );
                                         } else {
                                             Alert.alert('ERROR', json.error || 'El servidor no devolvió el PDF.');
                                         }
                                     } catch (e) {
-                                        Alert.alert('ERROR DE RED', 'No se pudo conectar con la central para generar el documento.');
+                                        Alert.alert('ERROR DE RED', 'La central está saturada. Por favor, inténtalo en unos minutos.');
                                     } finally {
                                         setGeneratingPdf(false);
                                     }
