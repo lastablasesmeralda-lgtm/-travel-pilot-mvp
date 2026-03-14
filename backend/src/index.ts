@@ -822,7 +822,7 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         y -= 18;
         page.drawText(`Retraso:       ${delayMinutes || 0} minutos`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
         y -= 18;
-        const amount = (delayMinutes || 0) >= 210 ? '600€' : '250€';
+        const amount = (delayMinutes || 0) >= 210 ? '600 EUR' : '250 EUR';
         page.drawText(`Compensación:  ${amount} (Reglamento EU261/2004)`, { x: 40, y, size: 10, font: fontBold, color: DARK });
 
         // Cuerpo legal
@@ -834,10 +834,10 @@ fastify.post('/api/generateClaim', async (request, reply) => {
             `Por la presente, yo, el abajo firmante, con email ${userEmail || 'N/A'}, SOLICITO`,
             `formalmente a la aerolínea ${airline || 'la aerolínea'} el pago de la compensación`,
             `económica establecida en el Reglamento (CE) n.º 261/2004 del Parlamento Europeo,`,
-            `por el retraso de ${delayMinutes || 0} minutos en el vuelo ${flightNumber || 'N/A'} (${departureAirport} → ${arrivalAirport}).`,
+            `por el retraso de ${delayMinutes || 0} minutos en el vuelo ${flightNumber || 'N/A'} (${departureAirport} -> ${arrivalAirport}).`,
             ``,
             `El reglamento establece que los pasajeros de vuelos con retraso superior a 3 horas`,
-            `tienen derecho a compensación económica de entre 250€ y 600€, según la distancia.`,
+            `tienen derecho a compensación económica de entre 250 EUR y 600 EUR, según la distancia.`,
             ``,
             `Exijo resolución en el plazo de 14 días hábiles. En caso contrario, me reservo el`,
             `derecho a acudir a la autoridad aeronáutica competente (AESA en España).`,
