@@ -131,17 +131,13 @@ fastify.post('/api/monitorFlight', async (request, reply) => {
 // ENDPOINT 2: NOTIFICAR HOTEL
 // ============================================================
 fastify.post('/api/notifyHotel', async (request, reply) => {
-    const { hotelPhone, passengerName, delayMinutes } = request.body as {
-        hotelPhone: string,
-        passengerName: string,
-        delayMinutes: number
-    };
-
     try {
-        const callSid = await notifyHotelOfDelay(hotelPhone, passengerName, delayMinutes);
+        const { hotelPhone, passengerName, delayMinutes, passengerPhone } = request.body as any;
+        const callSid = await notifyHotelOfDelay(hotelPhone, passengerName, delayMinutes, passengerPhone);
         return reply.send({ success: true, callSid });
-    } catch (error) {
-        return reply.status(500).send({ error: 'Failed to notify hotel' });
+    } catch (error: any) {
+        console.error("[Notify Hotel Error]:", error.message);
+        return reply.status(500).send({ error: error.message });
     }
 });
 
@@ -686,11 +682,14 @@ fastify.post('/api/transcribe', async (request, reply) => {
         const buffer = await data.toBuffer();
         
         // Usamos Gemini 1.5 Flash para la transcripción multimodal
+        // Cambiamos el nombre del modelo a uno más resiliente en el SDK
         const chatModel = new ChatGoogleGenerativeAI({
-            model: "gemini-1.5-flash",
+            model: "gemini-1.5-flash-latest",
             apiKey: process.env.GOOGLE_API_KEY,
-            maxRetries: 0, // Fallar rápido si hay saturación
+            maxRetries: 0, 
         });
+
+        console.log(`[Transcribe] Procesando audio de ${buffer.length} bytes...`);
 
         // @ts-ignore
         const response = await chatModel.invoke([
@@ -707,14 +706,23 @@ fastify.post('/api/transcribe', async (request, reply) => {
             }
         ]);
 
-        const transcribedText = response.content.toString().trim().replace(/^"|"$/g, '');
+        const transcribedText = response.content.toString().trim()
+            .replace(/^"|"$/g, '')
+            .replace(/^transcripción: /i, '');
+        
         console.log(`[Transcribe AI Result]: ${transcribedText}`);
         return reply.send({ text: transcribedText });
     } catch (error: any) {
         const errorMsg = error.message || String(error);
         console.error("[Transcribe Backend Error]:", errorMsg);
+        
+        // Log detallado del error de Google
+        let details = errorMsg;
+        if (errorMsg.includes("429")) details = "QUOTA_EXCEEDED";
+        if (errorMsg.includes("404")) details = "MODEL_NOT_FOUND";
+        
         require('fs').appendFileSync('backend_errors.log', `[${new Date().toISOString()}] Transcribe Error: ${errorMsg}\n`);
-        return reply.status(500).send({ error: 'Transcription failed', details: errorMsg });
+        return reply.status(500).send({ error: 'Transcription failed', details: details });
     }
 });
 
