@@ -1,0 +1,30 @@
+{
+  "name": "travel-pilot-backend",
+  "version": "1.0.0",
+  "description": "Backend for Travel-Pilot MVP",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@fastify/multipart": "^8.3.1",
+    "@google/generative-ai": "^0.24.1",
+    "@langchain/core": "^1.1.29",
+    "@langchain/google-genai": "^2.1.24",
+    "@supabase/supabase-js": "^2.98.0",
+    "dotenv": "^16.4.5",
+    "expo-server-sdk": "^6.0.0",
+    "fastify": "^4.26.2",
+    "langchain": "^1.2.28",
+    "pdf-lib": "^1.17.1",
+    "twilio": "^5.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.5"
+  }
+}
