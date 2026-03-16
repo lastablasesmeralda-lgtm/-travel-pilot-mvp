@@ -1,0 +1,10 @@
+node_modules/
+.expo/
+backend/
+dist/
+android/
+ios/
+*.apk
+*.aab
+tsc_errors.log
+compile.log
