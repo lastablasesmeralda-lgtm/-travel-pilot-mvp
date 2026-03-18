@@ -941,21 +941,24 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         console.log(`[Claim] ✅ PDF generado para ${userEmail} - Vuelo ${flightNumber}`);
 
         // Intentar guardar en BD (no bloqueante - si falla, el PDF se devuelve igual)
-        supabase
-            .from('claims')
-            .insert([{
-                user_email: userEmail,
-                flight_number: flightNumber,
-                airline: airline,
-                amount: amount,
-                status: 'generated',
-                created_at: new Date().toISOString()
-            }])
-            .then(({ error: dbError }) => {
+        (async () => {
+            try {
+                const { error: dbError } = await supabase
+                    .from('claims')
+                    .insert([{
+                        user_email: userEmail,
+                        flight_number: flightNumber,
+                        airline: airline,
+                        amount: amount,
+                        status: 'generated',
+                        created_at: new Date().toISOString()
+                    }]);
                 if (dbError) console.warn('[Claim DB] Aviso (no crítico):', dbError.message);
                 else console.log('[Claim DB] ✅ Registro guardado');
-            })
-            .catch((dbErr: any) => console.warn('[Claim DB] Sin tabla claims (no afecta al PDF):', dbErr.message));
+            } catch (dbErr: any) {
+                console.warn('[Claim DB] Sin tabla claims (no afecta al PDF):', dbErr.message);
+            }
+        })();
 
         return reply.send({ success: true, pdfBase64 });
 

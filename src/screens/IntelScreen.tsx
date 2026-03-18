@@ -117,12 +117,14 @@ Todo parece estar en orden para tu viaje. Si detectamos cualquier riesgo para tu
                     <View style={{ flex: 1 }}>
                         <Text style={{ color: '#C0C0C0', fontSize: 10, fontWeight: '900', letterSpacing: 1.5, marginBottom: 5 }}>INFORME DEL ASISTENTE</Text>
                         <Text style={{ color: '#E0E0E0', fontSize: 13, lineHeight: 20, fontStyle: 'italic', letterSpacing: 0.3 }}>
-                            {flightData?.delay >= 180 ? (
-                                <Text>🚨 <Text style={{ color: '#FF3B30', fontWeight: 'bold' }}>ALERTA CRÍTICA:</Text> Tu retraso supera las 3h. Tienes derecho a <Text style={{ color: '#4CD964', fontWeight: 'bold' }}>600€</Text>. He activado el Escudo Legal en tu sección de DOCS.</Text>
+                            {!flightData?.flightNumber ? (
+                                <Text>Estoy conectado y en espera. Añade un vuelo en la pestaña VUELOS para que empiece a vigilarlo.</Text>
+                            ) : flightData?.delay >= 180 ? (
+                                <Text>🚨 <Text style={{ color: '#FF3B30', fontWeight: 'bold' }}>ALERTA CRÍTICA:</Text> Tu retraso supera las 3h. Tienes derecho a <Text style={{ color: '#4CD964', fontWeight: 'bold' }}>600€</Text>. He activado tu compensación en la sección de DOCS.</Text>
                             ) : flightData?.delay >= 120 ? (
                                 <Text>⚠️ <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>CONSEJO DEL SISTEMA:</Text> Tienes derecho a comida y bebida. <Text style={{ fontWeight: 'bold' }}>Guarda los tickets</Text> para reclamar gastos.</Text>
                             ) : (
-                                <Text>Todo bajo control. He verificado tu vuelo <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>{flightData?.flightNumber || 'IB0123'}</Text> y no hay alertas críticas.</Text>
+                                <Text>Todo bajo control. He verificado tu vuelo <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>{flightData.flightNumber}</Text> y no hay alertas críticas.</Text>
                             )}
                         </Text>
                     </View>
