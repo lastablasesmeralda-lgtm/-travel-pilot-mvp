@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
@@ -8,7 +8,7 @@ import { BACKEND_URL } from '../../config';
 export default function BioScreen() {
     const {
         availableVoices, selectedVoice, setSelectedVoice, user,
-        setHasSeenOnboarding
+        setHasSeenOnboarding, userPhone, setUserPhone
     } = useAppContext();
     const [showGuide, setShowGuide] = useState(false);
 
@@ -54,8 +54,8 @@ export default function BioScreen() {
                         shadowColor: '#4CD964', shadowOpacity: 0.5, shadowRadius: 5
                     }} />
                     <View style={{ flex: 1 }}>
-                        <Text style={{ color: '#FFF', fontSize: 13, fontWeight: 'bold' }}>CONEXIÓN TÁCTICA ESTABLE</Text>
-                        <Text style={{ color: '#B0B0B0', fontSize: 11 }}>Sincronizado con Central Travel-Pilot</Text>
+                        <Text style={{ color: '#FFF', fontSize: 13, fontWeight: 'bold' }}>ASISTENCIA CONECTADA</Text>
+                        <Text style={{ color: '#B0B0B0', fontSize: 11 }}>Sincronizado con Travel-Pilot</Text>
                     </View>
                     <Text style={{ color: '#B0B0B0', fontSize: 11 }}>Ping: 42ms</Text>
                 </View>
@@ -69,6 +69,40 @@ export default function BioScreen() {
                     <View style={s.statBox}>
                         <Text style={{ color: '#4CD964', fontSize: 25, fontWeight: '900' }}>$320</Text>
                         <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold' }}>DINERO AHORRADO</Text>
+                    </View>
+                </View>
+
+                <Text style={[s.b, { marginTop: 30, marginBottom: 15 }]}>DATOS DE CONTACTO</Text>
+                <View style={[s.statsCard, { flexDirection: 'column', alignItems: 'flex-start' }]}>
+                    <Text style={{ color: '#B0B0B0', fontSize: 11, marginBottom: 10 }}>Número de teléfono para avisos de viaje:</Text>
+                    <View style={{ flexDirection: 'row', width: '100%', gap: 10 }}>
+                        <TextInput
+                            style={{ 
+                                flex: 1, 
+                                backgroundColor: '#1A1A1A', 
+                                borderRadius: 12, 
+                                padding: 12, 
+                                color: '#FFF', 
+                                borderWidth: 1, 
+                                borderColor: '#333' 
+                            }}
+                            placeholder="+34 600 000 000"
+                            placeholderTextColor="#555"
+                            keyboardType="phone-pad"
+                            value={userPhone}
+                            onChangeText={setUserPhone}
+                        />
+                        <TouchableOpacity 
+                            onPress={() => Alert.alert('ÉXITO', 'Número de contacto actualizado correctamente.')}
+                            style={{ 
+                                backgroundColor: '#4CD964', 
+                                borderRadius: 12, 
+                                justifyContent: 'center', 
+                                paddingHorizontal: 15 
+                            }}
+                        >
+                            <Text style={{ color: '#000', fontWeight: 'bold' }}>GUARDAR</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -185,8 +219,8 @@ export default function BioScreen() {
                             <Text style={{ fontSize: 20 }}>📖</Text>
                         </View>
                         <View>
-                            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 15 }}>GUÍA DE OPERACIONES</Text>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>Familiarízate con los 9 protocolos clave</Text>
+                            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 15 }}>GUÍA DEL VIAJERO</Text>
+                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>Familiarízate con los consejos clave</Text>
                         </View>
                     </View>
                     <Text style={{ color: '#AF52DE', fontSize: 18, fontWeight: 'bold' }}>→</Text>
@@ -195,19 +229,19 @@ export default function BioScreen() {
                 <Modal visible={showGuide} animationType="slide" transparent={true}>
                     <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', paddingTop: 60 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, marginBottom: 20 }}>
-                            <Text style={{ color: '#FFF', fontSize: 21, fontWeight: '900' }}>GUÍA DE OPERACIONES</Text>
+                            <Text style={{ color: '#FFF', fontSize: 21, fontWeight: '900' }}>GUÍA DEL VIAJERO</Text>
                             <TouchableOpacity onPress={() => setShowGuide(false)} style={{ backgroundColor: '#222', width: 34, height: 34, borderRadius: 17, justifyContent: 'center', alignItems: 'center' }}>
                                 <Text style={{ color: '#B0B0B0', fontSize: 16 }}>✕</Text>
                             </TouchableOpacity>
                         </View>
 
                         <ScrollView contentContainerStyle={{ padding: 25 }}>
-                            <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold', marginBottom: 15, letterSpacing: 1 }}>FASE I: CONFIGURACIÓN Y VIGILANCIA</Text>
+                            <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold', marginBottom: 15, letterSpacing: 1 }}>PASO I: CONFIGURACIÓN Y ASISTENCIA</Text>
                             {[
-                                { step: '1', title: 'Centro de Operaciones', desc: 'En la pestaña VIAJE, crea tu itinerario. La IA cruzará datos de clima y aeropuertos para darte el control total del destino.' },
-                                { step: '2', title: 'Radar Centinela 24/7', desc: 'En VUELOS, guarda tu número. Activamos un radar digital que rastrea cualquier movimiento fuera de lo previsto.' },
-                                { step: '3', title: 'Alertas Inteligentes', desc: 'Sin ruidos. Solo recibirás una notificación si existe un riesgo real para tu conexión. Tu paz mental es nuestra prioridad.' },
-                                { step: '4', title: 'Escudo Legal (Vault)', desc: 'Si el retraso supera las 3h, generamos tu expediente legal al instante. Recupera hasta 600€ con un solo toque.' }
+                                { step: '1', title: 'Planificación de Viaje', desc: 'En la pestaña VIAJE, crea tu itinerario. El asistente cruzará datos de clima y aeropuertos para darte el control total del destino.' },
+                                { step: '2', title: 'Vigilancia de Vuelos 24/7', desc: 'En la pestaña VUELOS, guarda tu número. Activamos un sistema inteligente que rastrea cualquier movimiento fuera de lo previsto.' },
+                                { step: '3', title: 'Notificaciones Útiles', desc: 'Sin ruidos. Solo recibirás una notificación si existe un riesgo real para tu conexión. Tu tranquilidad es nuestra prioridad.' },
+                                { step: '4', title: 'Protección al Pasajero (DOCS)', desc: 'Si el retraso supera las 3h, preparamos tu expediente de reclamación al instante en la sección DOCS. Recupera hasta 600€ con un solo toque.' }
                             ].map((item, i) => (
                                 <View key={i} style={{ flexDirection: 'row', marginBottom: 25 }}>
                                     <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#AF52DE', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
@@ -220,13 +254,13 @@ export default function BioScreen() {
                                 </View>
                             ))}
 
-                            <Text style={{ color: '#D4AF37', fontSize: 11, fontWeight: 'bold', marginTop: 15, marginBottom: 15, letterSpacing: 1 }}>FASE II: PROTOCOLOS DE ÉLITE</Text>
+                            <Text style={{ color: '#D4AF37', fontSize: 11, fontWeight: 'bold', marginTop: 15, marginBottom: 15, letterSpacing: 1 }}>PASO II: SERVICIOS PREMIUM</Text>
                             {[
-                                { step: '5', title: 'Protocolo SOS', desc: 'Asistencia táctica. La IA puede contactar con hoteles y servicios locales para avisar de tu situación en emergencias.' },
-                                { step: '6', title: 'Contingencia Táctica', desc: 'Ante un fallo, calculamos 3 realidades alternativas: rapidez vs coste. Tú decides con datos fríos.' },
-                                { step: '7', title: 'Ejecución Autónoma', desc: 'Tu asistente toma los mandos. Verás a la IA navegar y realizar gestiones pesadas por ti en tiempo real.' },
-                                { step: '8', title: 'Enlace con el Comandante', desc: 'Chat contextual por voz o texto. El núcleo Gemini conoce tu itinerario y te dará consejos expertos.' },
-                                { step: '9', title: 'Privacidad Encriptada', desc: 'Tus documentos nunca salen de tu dispositivo sin permiso. Encriptación de grado militar AES-256.' }
+                                { step: '5', title: 'Asistencia en Destino', desc: 'Soporte directo. El asistente puede contactar con hoteles y servicios locales para avisar de tu situación si lo necesitas.' },
+                                { step: '6', title: 'Planes Alternativos', desc: 'Ante un imprevisto, calculamos opciones de ruta: rapidez vs coste. Tú decides con toda la información.' },
+                                { step: '7', title: 'Gestión Inteligente', desc: 'Tu asistente se encarga de lo difícil. Podrás ver cómo realiza las gestiones pesadas por ti en tiempo real.' },
+                                { step: '8', title: 'Chat con IA Personal', desc: 'Chat contextual por voz o texto. El asistente conoce tu viaje y te dará los mejores consejos.' },
+                                { step: '9', title: 'Seguridad y Privacidad', desc: 'Tus documentos están seguros. Encriptación avanzada AES-256 para proteger toda tu información personal.' }
                             ].map((item, i) => (
                                 <View key={i} style={{ flexDirection: 'row', marginBottom: 25 }}>
                                     <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#D4AF37', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
@@ -243,7 +277,7 @@ export default function BioScreen() {
                                 onPress={() => setShowGuide(false)}
                                 style={{ backgroundColor: '#AF52DE', padding: 18, borderRadius: 15, alignItems: 'center', marginTop: 20, marginBottom: 100 }}
                             >
-                                <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 15 }}>ENTENDIDO, COMANDANTE</Text>
+                                <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 15 }}>ENTENDIDO, DE ACUERDO</Text>
                             </TouchableOpacity>
                         </ScrollView>
                     </View>

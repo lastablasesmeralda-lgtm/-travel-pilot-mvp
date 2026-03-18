@@ -3,8 +3,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { TouchableOpacity, Text } from 'react-native';
 
 import IntelScreen from '../screens/IntelScreen';
-import RadarScreen from '../screens/RadarScreen';
-import VaultScreen from '../screens/VaultScreen';
+import VuelosScreen from '../screens/RadarScreen';
+import DocsScreen from '../screens/VaultScreen';
 import BioScreen from '../screens/BioScreen';
 import { s } from '../styles';
 
@@ -17,17 +17,19 @@ export default function AppNavigator() {
             screenOptions={({ route }) => ({
                 headerShown: false,
                 tabBarStyle: {
-                    height: 90,
-                    backgroundColor: '#111',
+                    height: 95,
+                    backgroundColor: '#0F0F0F',
+                    flexDirection: 'row',
                     borderTopWidth: 1,
                     borderColor: '#222',
                     paddingBottom: 25,
+                    paddingHorizontal: 10
                 },
                 tabBarButton: (props) => {
                     let icon = '';
                     if (route.name === 'Intel') icon = '💠';
                     else if (route.name === 'Radar') icon = '🔘';
-                    else if (route.name === 'Vault') icon = '🛡️';
+                    else if (route.name === 'Vault') icon = '📄';
                     else if (route.name === 'Bio') icon = '👥';
 
                     const isFocused = props.accessibilityState?.selected;
@@ -51,9 +53,9 @@ export default function AppNavigator() {
                                 marginTop: 4,
                                 textTransform: 'uppercase'
                             }}>
-                                {route.name === 'Intel' ? 'VIAJE' :
+                                {route.name === 'Intel' ? 'INICIO' :
                                     route.name === 'Radar' ? 'VUELOS' :
-                                        route.name === 'Vault' ? 'DOCS' : 'PERFIL'}
+                                        route.name === 'Vault' ? 'DOCUMENTOS' : 'PERFIL'}
                             </Text>
                         </TouchableOpacity>
                     );
@@ -61,8 +63,8 @@ export default function AppNavigator() {
             })}
         >
             <Tab.Screen name="Intel" component={IntelScreen} />
-            <Tab.Screen name="Radar" component={RadarScreen} />
-            <Tab.Screen name="Vault" component={VaultScreen} />
+            <Tab.Screen name="Radar" component={VuelosScreen} />
+            <Tab.Screen name="Vault" component={DocsScreen} />
             <Tab.Screen name="Bio" component={BioScreen} />
         </Tab.Navigator>
     );

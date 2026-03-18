@@ -252,7 +252,7 @@ CONTEXTO:
 - Elegible reclamación EU261: {compensationEligible} ({compensationAmount}€)
 
 TAREA:
-GENERA 3 ESCENARIOS TÁCTICOS (Formato JSON):
+GENERA 3 ESCENARIOS DE ASISTENCIA (Formato JSON):
    - RÁPIDO: La forma más rápida de llegar hoy. Ejemplo: Reubicación en el próximo vuelo disponible de otra aerolínea o tren de alta velocidad.
    - ECONÓMICO: Opción barata que aprovecha la compensación EU261 ({compensationAmount}€). Ejemplo: Esperar al vuelo original pero reclamando el dinero + pase de Sala VIP.
    - CONFORT: Priorizar el descanso. Ejemplo: Reservar un hotel cerca del aeropuerto esta noche y volar mañana por la mañana tranquilos.

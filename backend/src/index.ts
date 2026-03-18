@@ -305,13 +305,13 @@ fastify.post('/api/chat', async (request, reply) => {
             maxRetries: 2, // Intentar un par de veces si Google está saturado
         });
 
-        const systemPrompt = `Eres el Comandante, un asistente personal de viajes de carne y hueso.
-        Olvídate de ser una IA. Eres un experto en logística, con mucha experiencia y un toque humano.
-        Tu misión: Resolver el problema del usuario con calma, inteligencia y empatía.
-        - Habla siempre de tú.
-        - Sé fluido, usa frases completas y naturales.
-        - NO uses listas de puntos si no es estrictamente necesario.
-        - Si el usuario tiene una crisis, razona con él como lo haría un amigo experto.
+        const systemPrompt = `Eres tu asistente personal de viajes, un humano muy directo y eficaz.
+        Tu misión: Resolver problemas con calma, inteligencia y, sobre todo, BREVEDAD.
+        - Preséntate como "tu asistente" si es necesario, nunca como una IA o términos militares.
+        - Sé extremadamente conciso. Si te dicen "hola", responde solo "Hola, ¿en qué puedo ayudarte hoy?" o similar.
+        - Ve al grano. No des explicaciones largas si no te las piden.
+        - Habla de tú, con tono amable pero profesional y rápido.
+        - Prohibido usar más de dos párrafos excepto en planes de crisis complejos.
         - Responde SIEMPRE en español.`;
 
         const messages: any[] = [["system", systemPrompt]];
@@ -467,6 +467,41 @@ fastify.post('/api/registerPushToken', async (request, reply) => {
     } catch (err: any) {
         console.error('[Push] ❌ Error registrando token:', err.message);
         return reply.status(500).send({ error: 'No se pudo registrar el token' });
+    }
+});
+
+// ============================================================
+// ENDPOINT 9.5: REGISTRAR PERFIL DE USUARIO
+// ============================================================
+fastify.post('/api/registerUser', async (request, reply) => {
+    const { email, name, phone } = request.body as {
+        email: string, name: string, phone?: string
+    };
+
+    if (!email || !name) {
+        return reply.status(400).send({ error: 'email y name son requeridos' });
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .upsert(
+                { 
+                    email: email.toLowerCase(), 
+                    name, 
+                    phone_number: phone || null, 
+                    updated_at: new Date() 
+                },
+                { onConflict: 'email' }
+            )
+            .select();
+
+        if (error) throw error;
+        console.log(`[User] ✅ Perfil táctico actualizado para ${email}`);
+        return reply.send({ success: true, user: data?.[0] });
+    } catch (err: any) {
+        console.error('[User] ❌ Error registrando usuario:', err.message);
+        return reply.status(500).send({ error: 'No se pudo registrar el perfil' });
     }
 });
 
@@ -680,23 +715,24 @@ fastify.post('/api/transcribe', async (request, reply) => {
         if (!data) return reply.status(400).send({ error: 'No audio provided' });
 
         const buffer = await data.toBuffer();
+        console.log(`[Transcribe] Recibidos ${buffer.length} bytes. Tipo: ${data.mimetype}`);
+
+        // Debug: Guardar el último audio para inspección
+        try {
+            require('fs').writeFileSync('last_audio_debug.m4a', buffer);
+        } catch(e) {}
         
-        // Usamos Gemini 1.5 Flash para la transcripción multimodal
-        // Cambiamos el nombre del modelo a uno más resiliente en el SDK
         const chatModel = new ChatGoogleGenerativeAI({
-            model: "gemini-1.5-flash-latest",
+            model: "gemini-1.5-flash",
             apiKey: process.env.GOOGLE_API_KEY,
-            maxRetries: 0, 
+            maxRetries: 1, 
         });
 
-        console.log(`[Transcribe] Procesando audio de ${buffer.length} bytes...`);
-
-        // @ts-ignore
         const response = await chatModel.invoke([
             {
                 role: "user",
                 content: [
-                    { type: "text", text: "Transcribe este audio de voz a texto. Solo devuelve el texto transcrito en español. Sé preciso." },
+                    { type: "text", text: "Eres un experto en transcripción. Transcribe el siguiente audio a texto en español. Si no hay voz inteligible, devuelve vacío. No añadas comentarios extra." },
                     {
                         type: "media",
                         mimeType: "audio/mp4",
@@ -808,25 +844,40 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         const dateStr = now.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
         page.drawText(`Fecha: ${dateStr}`, { x: 40, y: height - 115, size: 10, font: fontRegular, color: GREY });
 
+        // Sanitizador para evitar errores WinAnsi en la fuente Helvetica (ej. "→")
+        const sanitizeText = (txt: any) => {
+            if (!txt) return 'N/A';
+            return String(txt)
+                .replace(/[→\u2192]/g, '-')
+                .replace(/[^\x20-\x7E\xA0-\xFF]/g, '')
+                .trim();
+        };
+
+        const sFlight = sanitizeText(flightNumber);
+        const sAirline = sanitizeText(airline);
+        const sDep = sanitizeText(departureAirport);
+        const sArr = sanitizeText(arrivalAirport);
+        const sEmail = sanitizeText(userEmail);
+
         // Sección: datos del pasajero
         let y = height - 150;
         page.drawText('DATOS DEL PASAJERO', { x: 40, y, size: 11, font: fontBold, color: DARK });
         page.drawLine({ start: { x: 40, y: y - 5 }, end: { x: 555, y: y - 5 }, thickness: 0.5, color: GOLD });
         y -= 25;
-        page.drawText(`Email: ${userEmail || 'N/A'}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
+        page.drawText(`Email: ${sEmail}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
 
         // Sección: datos del vuelo
         y -= 45;
         page.drawText('DATOS DEL VUELO', { x: 40, y, size: 11, font: fontBold, color: DARK });
         page.drawLine({ start: { x: 40, y: y - 5 }, end: { x: 555, y: y - 5 }, thickness: 0.5, color: GOLD });
         y -= 25;
-        page.drawText(`Vuelo:         ${flightNumber || 'N/A'}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
+        page.drawText(`Vuelo:         ${sFlight}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
         y -= 18;
-        page.drawText(`Aerolínea:     ${airline || 'N/A'}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
+        page.drawText(`Aerolinea:     ${sAirline}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
         y -= 18;
-        page.drawText(`Origen:        ${departureAirport || 'N/A'}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
+        page.drawText(`Origen:        ${sDep}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
         y -= 18;
-        page.drawText(`Destino:       ${arrivalAirport || 'N/A'}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
+        page.drawText(`Destino:       ${sArr}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
         y -= 18;
         page.drawText(`Retraso:       ${delayMinutes || 0} minutos`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
         y -= 18;
@@ -839,16 +890,16 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         page.drawLine({ start: { x: 40, y: y - 5 }, end: { x: 555, y: y - 5 }, thickness: 0.5, color: GOLD });
         y -= 25;
         const body = [
-            `Por la presente, yo, el abajo firmante, con email ${userEmail || 'N/A'}, SOLICITO`,
-            `formalmente a la aerolínea ${airline || 'la aerolínea'} el pago de la compensación`,
-            `económica establecida en el Reglamento (CE) n.º 261/2004 del Parlamento Europeo,`,
-            `por el retraso de ${delayMinutes || 0} minutos en el vuelo ${flightNumber || 'N/A'} (${departureAirport} -> ${arrivalAirport}).`,
+            `Por la presente, yo, el abajo firmante, con email ${sEmail}, SOLICITO`,
+            `formalmente a la aerolinea ${sAirline} el pago de la compensacion`,
+            `economica establecida en el Reglamento (CE) n. 261/2004 del Parlamento Europeo,`,
+            `por el retraso de ${delayMinutes || 0} minutos en el vuelo ${sFlight} (${sDep} -> ${sArr}).`,
             ``,
             `El reglamento establece que los pasajeros de vuelos con retraso superior a 3 horas`,
-            `tienen derecho a compensación económica de entre 250 EUR y 600 EUR, según la distancia.`,
+            `tienen derecho a compensacion economica de entre 250 EUR y 600 EUR, segun la distancia.`,
             ``,
-            `Exijo resolución en el plazo de 14 días hábiles. En caso contrario, me reservo el`,
-            `derecho a acudir a la autoridad aeronáutica competente (AESA en España).`,
+            `Exijo resolucion en el plazo de 14 dias habiles. En caso contrario, me reservo el`,
+            `derecho a acudir a la autoridad aeronautica competente (AESA en Espana).`,
         ];
         for (const line of body) {
             page.drawText(line, { x: 40, y, size: 9.5, font: fontRegular, color: DARK });
@@ -887,26 +938,25 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         const pdfBytes = await pdfDoc.save();
         const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
 
-        // Registro en Base de Datos (Supabase)
-        try {
-            const { error: dbError } = await supabase
-                .from('claims')
-                .insert([{
-                    user_email: userEmail,
-                    flight_number: flightNumber,
-                    airline: airline,
-                    amount: amount,
-                    status: 'generated',
-                    created_at: new Date().toISOString()
-                }]);
-            
-            if (dbError) console.error('[Claim DB] Error registrando:', dbError);
-            else console.log('[Claim DB] ✅ Registro guardado exitosamente');
-        } catch (dbErr) {
-            console.error('[Claim DB] Error crítico:', dbErr);
-        }
-
         console.log(`[Claim] ✅ PDF generado para ${userEmail} - Vuelo ${flightNumber}`);
+
+        // Intentar guardar en BD (no bloqueante - si falla, el PDF se devuelve igual)
+        supabase
+            .from('claims')
+            .insert([{
+                user_email: userEmail,
+                flight_number: flightNumber,
+                airline: airline,
+                amount: amount,
+                status: 'generated',
+                created_at: new Date().toISOString()
+            }])
+            .then(({ error: dbError }) => {
+                if (dbError) console.warn('[Claim DB] Aviso (no crítico):', dbError.message);
+                else console.log('[Claim DB] ✅ Registro guardado');
+            })
+            .catch((dbErr: any) => console.warn('[Claim DB] Sin tabla claims (no afecta al PDF):', dbErr.message));
+
         return reply.send({ success: true, pdfBase64 });
 
     } catch (error: any) {

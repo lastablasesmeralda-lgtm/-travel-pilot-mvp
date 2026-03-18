@@ -22,10 +22,10 @@ function RootComponent() {
 
   useEffect(() => {
     if (user && hasSeenOnboarding === true && compensationEligible) {
-      speak("Atención: He detectado un retraso eligible para compensación legal. Tienes derecho a reclamar hasta seiscientos euros. He activado tu escudo legal.");
+      speak("Atención: He detectado un retraso que puede darte derecho a una compensación legal. Puedes reclamar hasta seiscientos euros. He activado tu asistencia legal.");
     } else if (user && hasSeenOnboarding === true && !compensationEligible) {
-      const name = user?.displayName || user?.email?.split('@')[0] || "miembro de Travel-Pilot";
-      speak(`Hola de nuevo ${name}. He restablecido la conexión. Estoy vigilando tus viajes en tiempo real.`);
+      const name = user?.displayName || user?.email?.split('@')[0] || "viajero";
+      speak(`Hola de nuevo ${name}. Todo está listo. Estoy vigilando tus vuelos para que viajes con tranquilidad.`);
     }
   }, [hasSeenOnboarding, !!user]);
 
@@ -42,7 +42,7 @@ function RootComponent() {
       ) : (
         <>
           {compensationEligible && (
-            <TouchableOpacity style={s.compBanner} onPress={() => Alert.alert('ESCUDO LEGAL', 'Tu retraso de 3h da derecho a una indemnización de hasta 600€ por el reglamento EU261. Travel-Pilot ya está gestionando el proceso.')}>
+            <TouchableOpacity style={s.compBanner} onPress={() => Alert.alert('ASISTENCIA LEGAL', 'Tu retraso de 3h da derecho a una indemnización de hasta 600€ por el reglamento EU261. Travel-Pilot ya está gestionando el proceso.')}>
               <Text style={s.compText}>⚡ COMPENSACIÓN ELEGIBLE: 600€ DETECTADOS</Text>
               <Text style={s.compSub}>REGLAMENTO EU261 · EXPEDIENTE TP-LX90</Text>
             </TouchableOpacity>
@@ -57,7 +57,7 @@ function RootComponent() {
               <View style={{ flex: 1, alignItems: 'center' }}>
                   <View style={{ backgroundColor: '#111', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, borderWidth: 1, borderColor: '#222', flexDirection: 'row', alignItems: 'center' }}>
                     <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#4CD964', marginRight: 6 }} />
-                    <Text style={{ color: '#B0B0B0', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 }}>OPERATIVO / VIGILANCIA</Text>
+                    <Text style={{ color: '#B0B0B0', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 }}>ASISTENTE / ACTIVO</Text>
                   </View>
               </View>
             </View>
@@ -65,7 +65,7 @@ function RootComponent() {
             {/* BOTONES FLOTANTES (AHORA EN POSICIONES FIJAS SUPERIORES) */}
             <View style={s.sosContainer}>
               <TouchableOpacity style={s.sos} onPress={() => setShowSOSMenu(true)}>
-                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12, textAlign: 'center' }} numberOfLines={1}>SOS</Text>
+                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 10, textAlign: 'center' }} numberOfLines={1}>AYUDA</Text>
               </TouchableOpacity>
             </View>
 

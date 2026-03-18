@@ -12,7 +12,7 @@ export default function GlobalOverlays() {
         handleSendMessage, scrollViewRef, viewDoc, isScanning, setViewDoc, scanAnim, selectedPlan, setSelectedPlan, showSOS, setShowSOS,
         isGenerating, loadingStep, apiPlan, setApiPlan, setPlanes, setShowBrowser, browserLogs, showBrowser,
         clearMessages, availableVoices, selectedVoice, setSelectedVoice,
-        isDictating, startDictation, stopDictation
+        isDictating, startDictation, stopDictation, userPhone
     } = useAppContext();
 
     const [showVoiceMenu, setShowVoiceMenu] = React.useState(false);
@@ -21,12 +21,12 @@ export default function GlobalOverlays() {
 
     return (
         <>
-            {/* MODAL SOS — ACCIONES RÁPIDAS DE EMERGENCIA */}
+            {/* MENÚ DE AYUDA — ASISTENCIA RÁPIDA */}
             <Modal visible={showSOSMenu} transparent animationType="fade">
                 <View style={[s.mf]}>
                     <SafeAreaView style={[s.mc, { width: '90%' }]}>
-                        <Text style={{ color: '#FF3B30', fontSize: 23, fontWeight: '900', marginBottom: 5 }}>🚨 SOS</Text>
-                        <Text style={{ color: '#B0B0B0', fontSize: 12, marginBottom: 20 }}>AYUDA RÁPIDA DE EMERGENCIA</Text>
+                        <Text style={{ color: '#AF52DE', fontSize: 23, fontWeight: '900', marginBottom: 5 }}>🙋 ASISTENCIA</Text>
+                        <Text style={{ color: '#B0B0B0', fontSize: 12, marginBottom: 20 }}>TU ASISTENTE PERSONAL DE VIAJE</Text>
 
                         {[
                             {
@@ -45,7 +45,8 @@ export default function GlobalOverlays() {
                                                         headers: { 'Content-Type': 'application/json' },
                                                         body: JSON.stringify({
                                                             hotelPhone: "+34623986708",
-                                                            passengerName: user?.email?.split('@')[0] || "Operativo",
+                                                            passengerName: user?.email?.split('@')[0] || "Viajero",
+                                                            passengerPhone: userPhone || "No registrado",
                                                             delayMinutes: 210
                                                         }),
                                                         signal: controller.signal
@@ -67,7 +68,7 @@ export default function GlobalOverlays() {
                             },
                             { icon: '✈️', title: 'CONTACTAR AEROLÍNEA', sub: 'Línea directa de tu compañía aérea', color: '#007AFF', action: () => { setShowSOSMenu(false); speak('Conectando con el centro de atención al cliente de tu aerolínea.'); Alert.alert('AEROLÍNEA', 'Contactando con el servicio de atención al cliente...'); } },
                             { icon: '🏥', title: 'EMERGENCIA MÉDICA', sub: 'Localizar hospitales y farmacias cercanas', color: '#FF3B30', action: () => { setShowSOSMenu(false); speak('Localizando servicios médicos cercanos.'); Alert.alert('EMERGENCIA', 'Buscando servicios médicos...'); } },
-                            { icon: '🛡️', title: 'PROTECCIÓN LEGAL', sub: 'Reclamar compensación por retraso', color: '#27C93F', action: () => { setShowSOSMenu(false); setLegalShieldActive(true); setCompensationEligible(true); setTab('Vault'); speak('Protección legal activada.'); } },
+                            { icon: '🛡️', title: 'ASISTENCIA LEGAL', sub: 'Reclamar indemnización por retraso', color: '#27C93F', action: () => { setShowSOSMenu(false); setLegalShieldActive(true); setCompensationEligible(true); setTab('Vault'); speak('Asistencia legal activada.'); } },
                             { icon: '💬', title: 'HABLAR CON ASISTENTE', sub: 'Asistente de viaje en tiempo real', color: '#AF52DE', action: () => { setShowSOSMenu(false); setShowChat(true); } },
                         ].map((item, i) => (
                             <TouchableOpacity key={i} onPress={item.action} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#111', padding: 14, borderRadius: 14, marginBottom: 8, borderLeftWidth: 3, borderLeftColor: item.color, width: '100%' }}>
@@ -120,7 +121,7 @@ export default function GlobalOverlays() {
                             {showVoiceMenu && (
                                 <View style={{ backgroundColor: '#111', padding: 10, borderBottomWidth: 1, borderColor: '#222' }}>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                                        <Text style={{ color: '#E0E0E0', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 }}>SELECCIONAR VOZ TÁCTICA</Text>
+                                        <Text style={{ color: '#E0E0E0', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 }}>SELECCIONAR VOZ DEL ASISTENTE</Text>
                                     </View>
                                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                                         {availableVoices
@@ -173,13 +174,7 @@ export default function GlobalOverlays() {
                                 )}
                             </ScrollView>
                             <View style={s.chatInputWrap}>
-                                <TouchableOpacity 
-                                    style={[s.chatBtn, { backgroundColor: isDictating ? '#FF3B30' : '#222', marginRight: 8 }]} 
-                                    onPress={isDictating ? stopDictation : startDictation}
-                                >
-                                    <Text style={{ fontSize: 18 }}>{isDictating ? '🛑' : '🎤'}</Text>
-                                </TouchableOpacity>
-                                <TextInput style={s.chatInput} placeholder={isDictating ? "ESCUCHANDO..." : "ESCRIBE TU DUDA AQUÍ..."} placeholderTextColor="#666" value={inputText} onChangeText={setInputText} />
+                                <TextInput style={s.chatInput} placeholder={"Escribe o pulsa 🎙️ en tu teclado para dictar"} placeholderTextColor="#666" value={inputText} onChangeText={setInputText} />
                                 <TouchableOpacity style={s.chatBtn} onPress={handleSendMessage}><Text style={{ color: '#FFF' }}>➤</Text></TouchableOpacity>
                             </View>
                         </SafeAreaView>
@@ -191,7 +186,7 @@ export default function GlobalOverlays() {
             <Modal visible={!!user && (!!selectedPlan || showSOS)} transparent animationType="fade">
                 <View style={s.mf}>
                     <SafeAreaView style={s.mc}>
-                        <Text style={s.mt}>OPCIONES DE VIAJE (IA)</Text>
+                        <Text style={s.mt}>OPCIONES DE VIAJE AI</Text>
                         {isGenerating ? (
                             <View style={{ marginVertical: 30, alignItems: 'center' }}>
                                 <ActivityIndicator size="large" color="#AF52DE" />
@@ -205,9 +200,9 @@ export default function GlobalOverlays() {
                         ) : (
                             <>
                                 {apiPlan?.impact && (
-                                    <View style={{ backgroundColor: '#111', width: '100%', padding: 12, borderRadius: 10, marginBottom: 15, borderWidth: 1, borderColor: apiPlan.impact.potentialLoss > 0 ? '#FF3B30' : '#4CD964' }}>
-                                        <Text style={{ color: '#FFF', fontSize: 12, fontWeight: 'bold' }}>🛡️ AVISO DEL ASISTENTE:</Text>
-                                        <Text style={{ color: '#FF3B30', fontSize: 11, marginTop: 4 }}>• {apiPlan.impact.hotelAlert}</Text>
+                                    <View style={{ backgroundColor: '#111', width: '100%', padding: 12, borderRadius: 10, marginBottom: 15, borderWidth: 1, borderColor: apiPlan.impact.potentialLoss > 0 ? '#FF9500' : '#4CD964' }}>
+                                        <Text style={{ color: '#FFF', fontSize: 12, fontWeight: 'bold' }}>✨ SUGERENCIA DEL ASISTENTE:</Text>
+                                        <Text style={{ color: '#FF9500', fontSize: 11, marginTop: 4 }}>• {apiPlan.impact.hotelAlert}</Text>
                                     </View>
                                 )}
                                 <Text style={{ color: '#B0B0B0', fontSize: 11, textAlign: 'center', marginBottom: 10 }}>HE ENCONTRADO 3 OPCIONES:</Text>
@@ -215,7 +210,7 @@ export default function GlobalOverlays() {
                                     {(apiPlan?.options || []).map((opt: any, idx: number) => (
                                         <TouchableOpacity
                                             key={idx}
-                                            style={[s.bt, { backgroundColor: opt.type === 'RAPIDO' ? '#FF3B30' : opt.type === 'BARATO' ? '#34C759' : '#AF52DE', marginTop: idx > 0 ? 10 : 0 }]}
+                                            style={[s.bt, { backgroundColor: opt.type === 'RAPIDO' ? '#FF9500' : opt.type === 'BARATO' ? '#34C759' : '#AF52DE', marginTop: idx > 0 ? 10 : 0 }]}
                                             onPress={() => {
                                                 const msg = `Análisis de ruta ${opt.title}. ${opt.description}. El coste estimado es de ${opt.estimatedCost} euros.`;
                                                 speak(msg);
@@ -246,7 +241,7 @@ export default function GlobalOverlays() {
                         </View>
                         <View style={{ flex: 1, backgroundColor: '#000', padding: 20 }}>
                             <Text style={{ color: '#27C93F', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', fontSize: 12 }}>{browserLogs.join('\n')}</Text>
-                            <View style={{ marginTop: 40, alignItems: 'center' }}><ActivityIndicator color="#27C93F" size="large" /><Text style={{ color: '#27C93F', marginTop: 15, fontWeight: 'bold' }}>AGENTE TRABAJANDO...</Text></View>
+                            <View style={{ marginTop: 40, alignItems: 'center' }}><ActivityIndicator color="#27C93F" size="large" /><Text style={{ color: '#27C93F', marginTop: 15, fontWeight: 'bold' }}>REALIZANDO GESTIONES POR TI...</Text></View>
                         </View>
                         <TouchableOpacity style={{ padding: 15, backgroundColor: '#27C93F', alignItems: 'center' }} onPress={() => { setShowBrowser(false); stopSpeak(); }}><Text style={{ color: '#000', fontWeight: 'bold' }}>FINALIZAR Y VOLVER</Text></TouchableOpacity>
                     </SafeAreaView>

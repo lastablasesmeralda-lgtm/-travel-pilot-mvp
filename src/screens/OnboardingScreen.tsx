@@ -231,6 +231,9 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
             >
                 <Text style={{ color: '#B0B0B0', fontSize: 14, fontWeight: '600' }}>SALTAR</Text>
             </TouchableOpacity>
+            <Text style={{ color: '#B0B0B0', textAlign: 'center', fontSize: 13, lineHeight: 20 }}>
+                Hola. Soy tu asistente personal de viajes. He sido diseñado para proteger tu tiempo y tus derechos ante cualquier imprevisto en tus vuelos.
+            </Text>
 
             {/* Slides */}
             <FlatList

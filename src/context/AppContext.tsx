@@ -45,7 +45,7 @@ export const AppProvider = ({ children }) => {
   ]);
   const [inputText, setInputText] = useState('');
   const [messages, setMessages] = useState<any[]>([
-    { id: '1', text: 'TRAVEL-PILOT AI CONNECTED. ¿En qué te puedo ayudar, operativo?', isUser: false }
+    { id: '1', text: 'TRAVEL-PILOT CONECTADO. Hola, soy tu asistente. ¿En qué te puedo ayudar hoy?', isUser: false }
   ]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const waveAnim = useRef(new Animated.Value(0)).current;
@@ -71,6 +71,7 @@ export const AppProvider = ({ children }) => {
   const [myTrips, setMyTrips] = useState<any[]>([]);
   const [weather, setWeather] = useState({ temp: '22', condition: 'Cargando...', icon: '🌤️', city: 'Tu Destino' });
   const [isDictating, setIsDictating] = useState(false);
+  const [userPhone, setUserPhone] = useState('');
 
   // ESTADO DE PLANES Y CRISIS RECUPERADO
   const [planes, setPlanes] = useState<any[]>([
@@ -104,6 +105,9 @@ export const AppProvider = ({ children }) => {
           const parsed = JSON.parse(savedDocs);
           if (Array.isArray(parsed)) setExtraDocs(parsed);
         }
+
+        const savedPhone = await AsyncStorage.getItem('userPhone');
+        if (savedPhone) setUserPhone(savedPhone);
       } catch (error) {
         console.error("Error loading from AsyncStorage:", error);
         setFlightData(null);
@@ -153,6 +157,12 @@ export const AppProvider = ({ children }) => {
       AsyncStorage.setItem('offline_extraDocs', JSON.stringify(extraDocs));
     }
   }, [extraDocs, isStorageReady]);
+
+  useEffect(() => {
+    if (isStorageReady) {
+      AsyncStorage.setItem('userPhone', userPhone);
+    }
+  }, [userPhone, isStorageReady]);
 
   // EFECTOS INICIALES
   useEffect(() => {
@@ -220,94 +230,97 @@ export const AppProvider = ({ children }) => {
 
   const startDictation = async () => {
     try {
+      console.log("[Audio] Iniciando flujo de grabación...");
       const { status } = await Audio.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('SISTEMA TÁCTICO', 'Se requieren permisos de micro para el dictado.');
+        Alert.alert('AVISO DE PERMISOS', 'Para poder hablar con el asistente de voz, Travel-Pilot necesita permiso para acceder a tu micrófono. Por favor, acéptalo en los ajustes si no aparece el menú.');
         return;
       }
 
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+        staysActiveInBackground: false,
       });
 
-      const { recording } = await Audio.Recording.createAsync({
-        android: {
-          extension: '.m4a',
-          outputFormat: Audio.AndroidOutputFormat.MPEG_4,
-          audioEncoder: Audio.AndroidAudioEncoder.AAC,
-          sampleRate: 44100,
-          numberOfChannels: 1,
-          bitRate: 64000,
-        },
-        ios: {
-          extension: '.m4a',
-          audioQuality: Audio.IOSAudioQuality.HIGH,
-          sampleRate: 44100,
-          numberOfChannels: 1,
-          bitRate: 64000,
-          linearPCMBitDepth: 16,
-          linearPCMIsBigEndian: false,
-          linearPCMIsFloat: false,
-        },
-        web: {}
-      });
+      // Limpiar grabación anterior si existe
+      if (recordingRef.current) {
+        try { await recordingRef.current.stopAndUnloadAsync(); } catch(e) {}
+        recordingRef.current = null;
+      }
+
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      
       recordingRef.current = recording;
       setIsDictating(true);
       Vibration.vibrate(50);
+      console.log("[Audio] Grabación en curso...");
     } catch (e: any) {
       console.error('[Voice Start Error]:', e);
       setIsDictating(false);
-      Alert.alert('SISTEMA TÁCTICO', 'Error al iniciar la grabación de audio.');
+      Alert.alert('ERROR DE HARDWARE', 'No se ha podido activar el micrófono.');
     }
   };
 
   const stopDictation = async () => {
     try {
-      if (!recordingRef.current) return;
+      if (!recordingRef.current) {
+        setIsDictating(false);
+        return;
+      }
+      
+      console.log("[Audio] Deteniendo grabación...");
       setIsDictating(false);
+      
       await recordingRef.current.stopAndUnloadAsync();
       const uri = recordingRef.current.getURI();
       recordingRef.current = null;
 
       if (uri) {
         setIsTyping(true);
+        console.log("[Audio] Analizando voz...");
         const formData = new FormData();
         // @ts-ignore
-        formData.append('audio', { uri, name: 'audio.m4a', type: 'audio/m4a' });
+        formData.append('audio', { 
+          uri, 
+          name: 'audio.m4a',
+          type: 'audio/mp4'
+        });
         
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos para transcribir
-
         try {
           const res = await fetch(`${BACKEND_URL}/api/transcribe`, {
             method: 'POST',
             body: formData,
-            signal: controller.signal,
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'multipart/form-data',
+            },
           });
-          clearTimeout(timeoutId);
+          
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
           const data = await res.json();
-          if (data.text && data.text.length > 1) {
+          if (data.text && data.text.trim().length > 0) {
             setInputText(data.text);
-            Vibration.vibrate(100);
-          } else if (data.details && data.details.includes('429')) {
-             Alert.alert('SISTEMA SATURADO', 'El cerebro de Google está descansando. Espera 30 segundos, operativo.');
+            Vibration.vibrate(50);
           } else {
-            Alert.alert('AVISO TÁCTICO', 'El Comandante no ha podido extraer texto de ese audio. Asegúrate de hablar claro y que no haya mucho ruido ambiental.');
+            console.warn("[Audio] Respuesta vacía del servidor.");
+            Alert.alert('ASISTENTE', 'No he podido entender tus palabras. ¿Puedes repetirlo un poco más claro?');
           }
         } catch (e: any) {
-          if (e.name === 'AbortError') {
-            Alert.alert('TIEMPO EXCEDIDO', 'La señal de voz es lenta hoy. Prueba con una frase más corta.');
-          } else {
-            throw e;
-          }
+          console.error("[Audio] Error en transcripción:", e);
+          Alert.alert('CONEXIÓN', 'No he podido procesar el audio. Revisa tu conexión a internet.');
         }
       }
     } catch (e: any) {
       console.error('[Voice Stop Error]:', e);
-      Alert.alert('ERROR TÁCTICO', 'Fallo en la conexión con el motor de transcripción.');
     } finally {
       setIsTyping(false);
+      setIsDictating(false);
     }
   };
 
@@ -360,7 +373,7 @@ export const AppProvider = ({ children }) => {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "🚨 URGENTE: Retraso Crítico en tu Vuelo",
-        body: "Retraso superior a 3h detectado. Tienes derecho a 600€. Escudo Legal activo en Vault.",
+        body: "Retraso superior a 3h detectado. Tienes derecho a 600€. Escudo Legal activo en DOCS.",
         sound: true,
         vibrate: [0, 500, 200, 500],
         priority: Notifications.AndroidNotificationPriority.MAX,
@@ -395,11 +408,25 @@ export const AppProvider = ({ children }) => {
   // FUNCIONES DE RED LOCAL Y AUTH
   const handleRegister = async () => {
     if (!authEmail || !authPassword || !authName) return Alert.alert('Registro', 'Introduce nombre, email y contraseña.');
+    if (authMode === 'register' && !userPhone) return Alert.alert('Registro', 'El teléfono SOS es obligatorio para el blindaje.');
+    
     try { 
       setAuthLoading(true); 
       const cred = await createUserWithEmailAndPassword(auth, authEmail, authPassword); 
       await updateProfile(cred.user, { displayName: authName });
-      Alert.alert('Registro', 'Éxito.'); 
+      
+      // PERSISTENCIA EN BACKEND (Supabase)
+      await fetch(`${BACKEND_URL}/api/registerUser`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: authEmail,
+          name: authName,
+          phone: userPhone
+        })
+      });
+
+      Alert.alert('Registro', 'Éxito. ¡Bienvenido a Travel-Pilot!'); 
     }
     catch (e: any) { Alert.alert('Error', e.message); } finally { setAuthLoading(false); }
   };
@@ -426,7 +453,7 @@ export const AppProvider = ({ children }) => {
   const stopSpeak = () => { Speech.stop(); setIsSpeaking(false); waveAnim.stopAnimation(); };
 
   const clearMessages = () => {
-    setMessages([{ id: '1', text: "Comandante a la escucha. ¿En qué puedo ayudarte?", isUser: false }]);
+    setMessages([{ id: '1', text: "Hola, estoy a tu escucha. ¿En qué puedo ayudarte?", isUser: false }]);
   };
 
   const formatTime = (iso: string | null) => {
@@ -559,10 +586,10 @@ export const AppProvider = ({ children }) => {
       } catch (error: any) {
         clearTimeout(timeoutId);
         console.error("[Frontend] Chat Error Details:", error);
-        let errorMsg = "Error de comunicación con el núcleo Gemini.";
-        if (error.name === 'AbortError') errorMsg = "El sistema está saturado y está tardando demasiado en responder. Inténtalo en unos segundos.";
+        let errorMsg = "Vaya, parece que mi conexión se ha cortado un segundo. ¿Puedes repetirme eso?";
+        if (error.name === 'AbortError') errorMsg = "Estoy tardando un poco más de lo normal en pensar. Por favor, vuelve a intentarlo ahora.";
         setMessages(prev => [...prev, { id: Date.now().toString(), text: errorMsg, isUser: false }]);
-        speak("Error de conexión táctica.");
+        speak("Perdona, he perdido la conexión un momento.");
       } finally { setIsTyping(false); }
     })();
   };
@@ -677,7 +704,7 @@ export const AppProvider = ({ children }) => {
     setIsExtracting(true);
     setTimeout(() => {
       const newDoc = {
-        t: 'CAR RENTAL',
+        t: 'COCHE DE ALQUILER',
         s: 'Sixt · Munich Airport // CONF: #G-9921',
         i: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=400',
         source: 'GMAIL',
@@ -706,7 +733,8 @@ export const AppProvider = ({ children }) => {
     hasSeenOnboarding, setHasSeenOnboarding,
     isExtracting, simulateGmailSync, extraDocs, setExtraDocs,
     speak, stopSpeak, formatTime, getStatusColor, getStatusLabel, scrollViewRef,
-    clearMessages, isDictating, startDictation, stopDictation
+    clearMessages, isDictating, startDictation, stopDictation,
+    userPhone, setUserPhone
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -8,7 +8,7 @@ import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
 import { BACKEND_URL } from '../../config';
 
-export default function VaultScreen() {
+export default function DocsScreen() {
     const {
         legalShieldActive, setViewDoc, setIsScanning, claims, flightData,
         compensationEligible, extraDocs, setExtraDocs, isExtracting, simulateGmailSync, user
@@ -47,7 +47,7 @@ export default function VaultScreen() {
         try {
             const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (permissionResult.granted === false) {
-                Alert.alert("PERMISO DENEGADO", "Se requiere acceso a la galería para subir documentos, operativo.");
+                Alert.alert("PERMISO DENEGADO", "Se requiere acceso a la galería para subir tus documentos.");
                 return;
             }
 
@@ -80,10 +80,10 @@ export default function VaultScreen() {
                 if (response.ok) {
                     setExtraDocs([
                         {
-                            t: 'NUEVO DOCUMENTO TÁCTICO',
+                            t: 'NUEVO DOCUMENTO',
                             s: 'Subido por usuario',
                             i: data.url,
-                            source: 'VAULT',
+                            source: 'DOCS',
                             icon: '🖼️',
                             verified: true
                         },
@@ -107,7 +107,7 @@ export default function VaultScreen() {
             t: 'PASAPORTE',
             s: 'ID: ESP-9283 · Vigente',
             i: 'https://images.unsplash.com/photo-1544333346-ced983050275?w=400',
-            source: 'VAULT',
+            source: 'DOCS',
             icon: '🪪',
             verified: true,
         },
@@ -125,14 +125,6 @@ export default function VaultScreen() {
             i: 'https://images.unsplash.com/photo-1551882547-ff43c630f5e1?w=400',
             source: 'OUTLOOK',
             icon: '🏨',
-            verified: true,
-        },
-        {
-            t: 'COCHE DE ALQUILER',
-            s: 'Sixt · Munich Airport // CONF: #G-9921',
-            i: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=400',
-            source: 'VAULT',
-            icon: '🚗',
             verified: true,
         },
         ...(Array.isArray(extraDocs) ? extraDocs : []),
@@ -176,7 +168,7 @@ export default function VaultScreen() {
                 activeOpacity={0.7}
                 onPress={() => Alert.alert(
                     "📊 ESTADO DEL ASISTENTE",
-                    "ESTADO: Operativo\nConectado a: tu email y datos de vuelo\nÚLTIMA ACTUALIZACIÓN: Hace 12 min\n\nTu asistente está vigilando 3 documentos detectados y comprobando tu conexión en tiempo real.",
+                    "ESTADO: Activo y Protegido\nConectado a: tu email y datos de vuelo\nÚLTIMA ACTUALIZACIÓN: Reciente\n\nTu asistente está vigilando 3 documentos detectados y comprobando tu conexión en tiempo real.",
                     [{ text: "ENTENDIDO", style: "default" }]
                 )}
                 style={{
@@ -201,7 +193,7 @@ export default function VaultScreen() {
                 <Text style={{ color: '#B0B0B0', fontSize: 19 }}>›</Text>
             </TouchableOpacity>
 
-            {/* ——— BOTÓN TÁCTICO: GMAIL SYNC ——— */}
+            {/* ——— SINCRONIZACIÓN DE EMAIL ——— */}
             <TouchableOpacity
                 onPress={simulateGmailSync}
                 disabled={isExtracting}
@@ -301,7 +293,7 @@ export default function VaultScreen() {
                         <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '800' }}>{d.t || 'Documento'}</Text>
                         <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 3 }}>{d.s || 'Sin detalles'}</Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                            {d.source && d.source !== 'VAULT' ? (
+                            {d.source && d.source !== 'DOCS' ? (
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: '#AF52DE', marginRight: 5 }} />
                                     <Text style={{ color: '#AF52DE', fontSize: 9, fontWeight: 'bold' }}>DETECTADO EN {d.source}</Text>
@@ -355,7 +347,7 @@ export default function VaultScreen() {
                 }}
             >
                 <Text style={{ fontSize: 18, marginRight: 10 }}>📖</Text>
-                <Text style={{ color: '#AF52DE', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 }}>MANUAL DE DERECHOS TÁCTICOS EU261</Text>
+                <Text style={{ color: '#AF52DE', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 }}>GUÍA DE DERECHOS DEL PASAJERO EU261</Text>
             </TouchableOpacity>
 
             {dynamicClaims.length === 0 ? (
@@ -428,7 +420,7 @@ export default function VaultScreen() {
                 ))
             )}
 
-            {/* ——— MODAL DE FIRMA TÁCTICA ——— */}
+            {/* ——— AUTORIZACIÓN DE FIRMA ——— */}
             <Modal visible={showSignature} animationType="slide" transparent={true}>
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', padding: 25 }}>
                     <View style={{ backgroundColor: '#111', borderRadius: 24, padding: 25, borderWidth: 1, borderColor: '#333' }}>
@@ -617,7 +609,7 @@ window.clearCanvas=function(){
                 </View>
             </Modal>
 
-            {/* ——— MODAL DE DERECHOS TÁCTICOS ——— */}
+            {/* ——— MANUAL DE DERECHOS ——— */}
             <Modal visible={showRights} animationType="slide" transparent={true}>
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', paddingTop: 60 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, marginBottom: 20 }}>
@@ -646,7 +638,7 @@ window.clearCanvas=function(){
                         ))}
 
                         <View style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)', padding: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)', marginTop: 10 }}>
-                            <Text style={{ color: '#D4AF37', fontWeight: 'bold', fontSize: 14 }}>💡 RECORDATORIO TÁCTICO</Text>
+                            <Text style={{ color: '#D4AF37', fontWeight: 'bold', fontSize: 14 }}>💡 ATENCIÓN</Text>
                             <Text style={{ color: '#B0B0B0', fontSize: 12, marginTop: 8, lineHeight: 18 }}>
                                 Las "circunstancias extraordinarias" (clima extremo, huelgas de controladores) pueden anular la compensación económica, pero NUNCA el derecho a comida, bebida u hotel.
                             </Text>
@@ -664,7 +656,7 @@ window.clearCanvas=function(){
 
             {/* ——— PIE DE PÁGINA ENCRIPTADO ——— */}
             <View style={{ marginTop: 30, opacity: 0.7, alignItems: 'center' }}>
-                <Text style={{ color: '#B0B0B0', fontSize: 10, letterSpacing: 1 }}>SEGURIDAD ENCRIPTADA · GRADO MILITAR AES-256</Text>
+                <Text style={{ color: '#B0B0B0', fontSize: 10, letterSpacing: 1 }}>PROTECCIÓN ENCRIPTADA · AES-256</Text>
             </View>
         </ScrollView>
     );

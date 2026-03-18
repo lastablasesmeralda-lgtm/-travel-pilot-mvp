@@ -2,7 +2,7 @@
   "expo": {
     "name": "Travel-Pilot",
     "slug": "travel-pilot",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.jpg",
     "userInterfaceStyle": "dark",
@@ -19,7 +19,8 @@
         "foregroundImage": "./assets/adaptive-icon.jpg",
         "backgroundColor": "#0A0A0A"
       },
-      "package": "com.lastablasesmeralda.travelpilot"
+      "package": "com.lastablasesmeralda.travelpilot",
+      "permissions": ["RECORD_AUDIO"]
     },
     "extra": {
       "eas": {

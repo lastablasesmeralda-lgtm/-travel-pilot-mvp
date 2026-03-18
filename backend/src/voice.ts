@@ -16,14 +16,15 @@ const client = (accountSid && authToken) ? twilio(accountSid, authToken) : null;
  * @param hotelPhoneNumber The phone number of the target hotel (e.g. "+1234567890")
  * @param passengerName Name of the passenger
  * @param delayMinutes How long the flight is delayed
+ * @param passengerPhone The contact number of the passenger
  */
-export async function notifyHotelOfDelay(hotelPhoneNumber: string, passengerName: string, delayMinutes: number) {
+export async function notifyHotelOfDelay(hotelPhoneNumber: string, passengerName: string, delayMinutes: number, passengerPhone: string = "No registrado") {
     if (!client) {
         console.warn("[Voice API] Twilio credentials not fully set. Mocking voice call.");
         return "mock_call_sid_12345";
     }
 
-    console.log(`[Voice API] Initiating call to hotel ${hotelPhoneNumber} for passenger ${passengerName}...`);
+    console.log(`[Voice API] Initiating call to hotel ${hotelPhoneNumber} for passenger ${passengerName} (${passengerPhone})...`);
 
     try {
         // TwiML (Twilio Markup Language) to dictate what the voice bot says
@@ -33,6 +34,7 @@ export async function notifyHotelOfDelay(hotelPhoneNumber: string, passengerName
                     Hola. Esta es una llamada automatizada de Travel Pilot en nombre de su huésped, ${passengerName}.
                     Su vuelo se ha retrasado ${delayMinutes} minutos. 
                     Aún llegarán esta noche, por favor mantengan su reserva activa. 
+                    Si necesitan contactar con el pasajero, su número es: ${passengerPhone.split('').join(' ')}.
                     Gracias. Hasta luego.
                 </Say>
             </Response>

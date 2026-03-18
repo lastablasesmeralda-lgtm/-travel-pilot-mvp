@@ -6,7 +6,8 @@ import { useAppContext } from '../context/AppContext';
 export default function LoginScreen() {
     const {
         user, authEmail, setAuthEmail, authName, setAuthName, authPassword, setAuthPassword,
-        authMode, setAuthMode, authLoading, handleLogin, handleRegister, handleLogout
+        authMode, setAuthMode, authLoading, handleLogin, handleRegister, handleLogout,
+        userPhone, setUserPhone
     } = useAppContext();
 
     return (
@@ -58,7 +59,7 @@ export default function LoginScreen() {
                         </Text>
                     </View>
                     <Text style={{ color: '#888', fontSize: 12, marginBottom: 16, marginLeft: 16 }}>
-                        {authMode === 'login' ? 'Inicia sesión para activar tu vigilancia táctica.' : 'Crea tu perfil táctico para empezar el blindaje.'}
+                        {authMode === 'login' ? 'Inicia sesión para activar tu asistente inteligente.' : 'Crea tu perfil para empezar a viajar tranquilo.'}
                     </Text>
 
                     <TextInput
@@ -72,13 +73,23 @@ export default function LoginScreen() {
                     />
 
                     {authMode === 'register' && (
-                        <TextInput
-                            placeholder="Nombre completo"
-                            placeholderTextColor="#444"
-                            value={authName}
-                            onChangeText={setAuthName}
-                            style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 12, paddingVertical: 12, borderRadius: 10, marginTop: 12, borderWidth: 1, borderColor: '#333', fontSize: 14 }}
-                        />
+                        <>
+                            <TextInput
+                                placeholder="Nombre completo"
+                                placeholderTextColor="#444"
+                                value={authName}
+                                onChangeText={setAuthName}
+                                style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 12, paddingVertical: 12, borderRadius: 10, marginTop: 12, borderWidth: 1, borderColor: '#333', fontSize: 14 }}
+                            />
+                            <TextInput
+                                placeholder="Teléfono de contacto (ej: +34...)"
+                                placeholderTextColor="#444"
+                                value={userPhone}
+                                onChangeText={setUserPhone}
+                                keyboardType="phone-pad"
+                                style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 12, paddingVertical: 12, borderRadius: 10, marginTop: 12, borderWidth: 1, borderColor: '#AF52DE', fontSize: 14 }}
+                            />
+                        </>
                     )}
 
                     <TextInput
@@ -115,10 +126,10 @@ export default function LoginScreen() {
                 </View>
             ) : (
                 <View style={{ padding: 40, alignItems: 'center', marginTop: 100, backgroundColor: '#111', borderRadius: 16, borderWidth: 1, borderColor: '#222' }}>
-                    <Text style={{ color: '#E0E0E0', fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>SISTEMA ACTIVO</Text>
-                    <Text style={{ color: '#888', marginBottom: 30 }}>Operativo: {user.email}</Text>
+                    <Text style={{ color: '#E0E0E0', fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>ASISTENCIA ACTIVA</Text>
+                    <Text style={{ color: '#888', marginBottom: 30 }}>Usuario: {user.email}</Text>
                     <TouchableOpacity onPress={handleLogout} style={{ backgroundColor: '#333', paddingVertical: 12, paddingHorizontal: 30, borderRadius: 8 }}>
-                        <Text style={{ color: '#E0E0E0', fontWeight: 'bold' }}>CERRAR SISTEMA</Text>
+                        <Text style={{ color: '#E0E0E0', fontWeight: 'bold' }}>CERRAR SESIÓN</Text>
                     </TouchableOpacity>
                 </View>
             )}

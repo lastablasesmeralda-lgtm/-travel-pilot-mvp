@@ -33,14 +33,16 @@ export const s = StyleSheet.create({
   vt: { color: '#FFF', fontWeight: 'bold' },
   vs: { color: '#B0B0B0', fontSize: 11 },
   vl: { color: '#FFF', marginBottom: 10, fontWeight: 'bold' },
-  sosContainer: { position: 'absolute', top: 58, left: 28, zIndex: 100 },
+  sosContainer: { position: 'absolute', top: 46, left: 28, zIndex: 100 },
   sos: { 
     width: 52, height: 52, borderRadius: 26, backgroundColor: '#FF3B30', 
     justifyContent: 'center', alignItems: 'center', 
     shadowColor: '#FF3B30', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.9, shadowRadius: 15, elevation: 15,
     borderWidth: 1.5, borderColor: 'rgba(255, 59, 48, 0.5)'
   },
-  sosChat: { position: 'absolute', top: 58, right: 15, width: 52, height: 52, borderRadius: 26, backgroundColor: '#222', borderWidth: 1, borderColor: '#AF52DE', justifyContent: 'center', alignItems: 'center', zIndex: 100 },
+  sosBtn: { position: 'absolute', bottom: 125, left: 20, width: 65, height: 65, borderRadius: 33, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#FF3B30', elevation: 10, shadowColor: '#FF3B30', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 8 },
+  chatBubble: { position: 'absolute', bottom: 125, right: 20, width: 65, height: 65, borderRadius: 33, backgroundColor: '#AF52DE', justifyContent: 'center', alignItems: 'center', elevation: 10, shadowColor: '#AF52DE', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 8 },
+  sosChat: { position: 'absolute', top: 46, right: 15, width: 52, height: 52, borderRadius: 26, backgroundColor: '#222', borderWidth: 1, borderColor: '#AF52DE', justifyContent: 'center', alignItems: 'center', zIndex: 100 },
   topPanel: { position: 'absolute', top: 64, left: 0, right: 0, alignItems: 'center', zIndex: 90 },
   nav: { height: 90, flexDirection: 'row', backgroundColor: '#111', borderTopWidth: 1, borderColor: '#222', paddingBottom: 25 },
   ni: { flex: 1, justifyContent: 'center', alignItems: 'center' },
