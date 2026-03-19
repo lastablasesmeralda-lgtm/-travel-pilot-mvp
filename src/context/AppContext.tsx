@@ -233,7 +233,11 @@ export const AppProvider = ({ children }) => {
       console.log("[Audio] Iniciando flujo de grabación...");
       const { status } = await Audio.requestPermissionsAsync();
       if (status !== 'granted') {
+<<<<<<< HEAD
+        Alert.alert('AVISO', 'Se requieren permisos de micrófono para que pueda escucharte.');
+=======
         Alert.alert('AVISO DE PERMISOS', 'Para poder hablar con el asistente de voz, Travel-Pilot necesita permiso para acceder a tu micrófono. Por favor, acéptalo en los ajustes si no aparece el menú.');
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
         return;
       }
 
@@ -262,7 +266,11 @@ export const AppProvider = ({ children }) => {
     } catch (e: any) {
       console.error('[Voice Start Error]:', e);
       setIsDictating(false);
+<<<<<<< HEAD
+      Alert.alert('AVISO', 'Error al iniciar la grabación de audio. Revisa los permisos.');
+=======
       Alert.alert('ERROR DE HARDWARE', 'No se ha podido activar el micrófono.');
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
     }
   };
 
@@ -306,10 +314,18 @@ export const AppProvider = ({ children }) => {
           const data = await res.json();
           if (data.text && data.text.trim().length > 0) {
             setInputText(data.text);
+<<<<<<< HEAD
+            Vibration.vibrate(100);
+          } else if (data.details && data.details.includes('429')) {
+             Alert.alert('SISTEMA SATURADO', 'El procesador de voz está descansando. Espera 30 segundos.');
+          } else {
+            Alert.alert('AVISO', 'No he podido entender el audio. ¿Puedes probar a hablar un poco más claro o reducir el ruido ambiental?');
+=======
             Vibration.vibrate(50);
           } else {
             console.warn("[Audio] Respuesta vacía del servidor.");
             Alert.alert('ASISTENTE', 'No he podido entender tus palabras. ¿Puedes repetirlo un poco más claro?');
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
           }
         } catch (e: any) {
           console.error("[Audio] Error en transcripción:", e);
@@ -318,6 +334,10 @@ export const AppProvider = ({ children }) => {
       }
     } catch (e: any) {
       console.error('[Voice Stop Error]:', e);
+<<<<<<< HEAD
+      Alert.alert('AVISO', 'Fallo en la conexión con el servidor de voz.');
+=======
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
     } finally {
       setIsTyping(false);
       setIsDictating(false);
@@ -580,16 +600,23 @@ export const AppProvider = ({ children }) => {
         });
         clearTimeout(timeoutId);
         const data = await response.json();
-        const aiText = data.text || "Lo siento, mi conexión táctica ha fallado.";
+        const aiText = data.text || "Lo siento, mi conexión ha fallado temporalmente.";
         setMessages(prev => [...prev, { id: Date.now().toString(), text: aiText, isUser: false }]);
         speak(aiText);
       } catch (error: any) {
         clearTimeout(timeoutId);
         console.error("[Frontend] Chat Error Details:", error);
+<<<<<<< HEAD
+        let errorMsg = "Error de comunicación con el asistente.";
+        if (error.name === 'AbortError') errorMsg = "El sistema está algo lento hoy y está tardando demasiado en responder. Inténtalo en unos segundos.";
+        setMessages(prev => [...prev, { id: Date.now().toString(), text: errorMsg, isUser: false }]);
+        speak("Error de conexión.");
+=======
         let errorMsg = "Vaya, parece que mi conexión se ha cortado un segundo. ¿Puedes repetirme eso?";
         if (error.name === 'AbortError') errorMsg = "Estoy tardando un poco más de lo normal en pensar. Por favor, vuelve a intentarlo ahora.";
         setMessages(prev => [...prev, { id: Date.now().toString(), text: errorMsg, isUser: false }]);
         speak("Perdona, he perdido la conexión un momento.");
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
       } finally { setIsTyping(false); }
     })();
   };

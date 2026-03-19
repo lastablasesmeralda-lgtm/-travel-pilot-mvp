@@ -1,4 +1,4 @@
 {
   "compilerOptions": {},
-  "extends": "expo/tsconfig.base"
+  "extends": "./travel-pilot/node_modules/expo/tsconfig.base"
 }

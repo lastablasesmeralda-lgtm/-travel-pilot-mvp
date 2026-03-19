@@ -334,9 +334,9 @@ fastify.post('/api/chat', async (request, reply) => {
         const errorMsg = error.message || String(error);
         console.error("[Chat Error]:", errorMsg);
         
-        let userFriendlyError = "Lo siento, mis sistemas tácticos están saturados ahora mismo. Google me tiene en lista de espera. Por favor, vuelve a intentarlo en unos segundos.";
+        let userFriendlyError = "Lo siento, mis sistemas están un poco saturados en este momento. Google me tiene en lista de espera. Por favor, vuelve a intentarlo en unos segundos.";
         if (errorMsg.includes("429") || errorMsg.includes("RetryInfo")) {
-            userFriendlyError = "El núcleo de Gemini está al límite de su capacidad gratuita. Espera 30 segundos y pregúntame de nuevo, estaré listo.";
+            userFriendlyError = "El asistente está al límite de su capacidad en este momento. Espera 30 segundos y pregúntame de nuevo, estaré listo.";
         }
 
         require('fs').appendFileSync('backend_errors.log', `[${new Date().toISOString()}] Chat Error: ${errorMsg}\n`);
@@ -715,6 +715,16 @@ fastify.post('/api/transcribe', async (request, reply) => {
         if (!data) return reply.status(400).send({ error: 'No audio provided' });
 
         const buffer = await data.toBuffer();
+<<<<<<< HEAD
+        console.log(`[Transcribe] 🎤 Recibido audio: ${data.filename} | Tamaño: ${buffer.length} bytes`);
+        
+        if (buffer.length < 100) {
+            console.warn('[Transcribe] ⚠️ Audio demasiado corto o vacío.');
+            return reply.send({ text: "" });
+        }
+
+        // Usamos Gemini 1.5 Flash para la transcripción multimodal
+=======
         console.log(`[Transcribe] Recibidos ${buffer.length} bytes. Tipo: ${data.mimetype}`);
 
         // Debug: Guardar el último audio para inspección
@@ -722,17 +732,27 @@ fastify.post('/api/transcribe', async (request, reply) => {
             require('fs').writeFileSync('last_audio_debug.m4a', buffer);
         } catch(e) {}
         
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
         const chatModel = new ChatGoogleGenerativeAI({
             model: "gemini-1.5-flash",
             apiKey: process.env.GOOGLE_API_KEY,
             maxRetries: 1, 
         });
 
+<<<<<<< HEAD
+        console.log('[Transcribe] 🧠 Enviando a Gemini Flash...');
+        // @ts-ignore
+=======
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
         const response = await chatModel.invoke([
             {
                 role: "user",
                 content: [
+<<<<<<< HEAD
+                    { type: "text", text: "Transcribe exactamente lo que se dice en este audio. Idioma: Español. No añadidas nada más que el texto transcrito. Si no hay voz humana audible, devuelve un string vacío." },
+=======
                     { type: "text", text: "Eres un experto en transcripción. Transcribe el siguiente audio a texto en español. Si no hay voz inteligible, devuelve vacío. No añadas comentarios extra." },
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
                     {
                         type: "media",
                         mimeType: "audio/mp4",
@@ -742,11 +762,17 @@ fastify.post('/api/transcribe', async (request, reply) => {
             }
         ]);
 
+<<<<<<< HEAD
+        const transcribedText = response.content.toString().trim().replace(/^["']|["']$/g, '');
+        console.log(`[Transcribe AI Result]: "${transcribedText}"`);
+        
+=======
         const transcribedText = response.content.toString().trim()
             .replace(/^"|"$/g, '')
             .replace(/^transcripción: /i, '');
         
         console.log(`[Transcribe AI Result]: ${transcribedText}`);
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
         return reply.send({ text: transcribedText });
     } catch (error: any) {
         const errorMsg = error.message || String(error);

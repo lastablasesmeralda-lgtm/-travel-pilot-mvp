@@ -21,12 +21,21 @@ export default function GlobalOverlays() {
 
     return (
         <>
+<<<<<<< HEAD
+            {/* MODAL DE AYUDA — ASISTENCIA EN VIAJE */}
+            <Modal visible={showSOSMenu} transparent animationType="fade">
+                <View style={[s.mf]}>
+                    <SafeAreaView style={[s.mc, { width: '90%' }]}>
+                        <Text style={{ color: '#FF3B30', fontSize: 23, fontWeight: '900', marginBottom: 5 }}>ℹ️ AYUDA</Text>
+                        <Text style={{ color: '#B0B0B0', fontSize: 12, marginBottom: 20 }}>ASISTENCIA Y SOPORTE EN VIAJE</Text>
+=======
             {/* MENÚ DE AYUDA — ASISTENCIA RÁPIDA */}
             <Modal visible={showSOSMenu} transparent animationType="fade">
                 <View style={[s.mf]}>
                     <SafeAreaView style={[s.mc, { width: '90%' }]}>
                         <Text style={{ color: '#AF52DE', fontSize: 23, fontWeight: '900', marginBottom: 5 }}>🙋 ASISTENCIA</Text>
                         <Text style={{ color: '#B0B0B0', fontSize: 12, marginBottom: 20 }}>TU ASISTENTE PERSONAL DE VIAJE</Text>
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
 
                         {[
                             {
@@ -46,7 +55,10 @@ export default function GlobalOverlays() {
                                                         body: JSON.stringify({
                                                             hotelPhone: "+34623986708",
                                                             passengerName: user?.email?.split('@')[0] || "Viajero",
+<<<<<<< HEAD
+=======
                                                             passengerPhone: userPhone || "No registrado",
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
                                                             delayMinutes: 210
                                                         }),
                                                         signal: controller.signal

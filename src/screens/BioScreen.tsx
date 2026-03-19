@@ -37,7 +37,7 @@ export default function BioScreen() {
                     <Text style={{ color: '#B0B0B0', fontSize: 12 }}>Tu protección Travel-Pilot está activa hasta el 20/05/2026.</Text>
                 </View>
 
-                {/* ——— ESTADO DE CONEXIÓN TÁCTICA ——— */}
+                {/* ——— ESTADO DE CONEXIÓN ——— */}
                 <View style={{ 
                     flexDirection: 'row', 
                     marginTop: 20,
@@ -54,8 +54,13 @@ export default function BioScreen() {
                         shadowColor: '#4CD964', shadowOpacity: 0.5, shadowRadius: 5
                     }} />
                     <View style={{ flex: 1 }}>
+<<<<<<< HEAD
+                        <Text style={{ color: '#FFF', fontSize: 13, fontWeight: 'bold' }}>CONEXIÓN SEGURA Y ESTABLE</Text>
+                        <Text style={{ color: '#B0B0B0', fontSize: 11 }}>Sincronizado con el sistema central</Text>
+=======
                         <Text style={{ color: '#FFF', fontSize: 13, fontWeight: 'bold' }}>ASISTENCIA CONECTADA</Text>
                         <Text style={{ color: '#B0B0B0', fontSize: 11 }}>Sincronizado con Travel-Pilot</Text>
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
                     </View>
                     <Text style={{ color: '#B0B0B0', fontSize: 11 }}>Ping: 42ms</Text>
                 </View>
@@ -219,8 +224,13 @@ export default function BioScreen() {
                             <Text style={{ fontSize: 20 }}>📖</Text>
                         </View>
                         <View>
+<<<<<<< HEAD
+                            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 15 }}>GUÍA DE USO COMPLETA</Text>
+                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>Descubre cómo sacarle el máximo partido</Text>
+=======
                             <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 15 }}>GUÍA DEL VIAJERO</Text>
                             <Text style={{ color: '#B0B0B0', fontSize: 11 }}>Familiarízate con los consejos clave</Text>
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
                         </View>
                     </View>
                     <Text style={{ color: '#AF52DE', fontSize: 18, fontWeight: 'bold' }}>→</Text>
@@ -229,19 +239,32 @@ export default function BioScreen() {
                 <Modal visible={showGuide} animationType="slide" transparent={true}>
                     <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', paddingTop: 60 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, marginBottom: 20 }}>
+<<<<<<< HEAD
+                            <Text style={{ color: '#FFF', fontSize: 21, fontWeight: '900' }}>GUÍA DE USO</Text>
+=======
                             <Text style={{ color: '#FFF', fontSize: 21, fontWeight: '900' }}>GUÍA DEL VIAJERO</Text>
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
                             <TouchableOpacity onPress={() => setShowGuide(false)} style={{ backgroundColor: '#222', width: 34, height: 34, borderRadius: 17, justifyContent: 'center', alignItems: 'center' }}>
                                 <Text style={{ color: '#B0B0B0', fontSize: 16 }}>✕</Text>
                             </TouchableOpacity>
                         </View>
 
                         <ScrollView contentContainerStyle={{ padding: 25 }}>
+<<<<<<< HEAD
+                            <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold', marginBottom: 15, letterSpacing: 1 }}>FASE I: VIGILANCIA INTELIGENTE</Text>
+                            {[
+                                { step: '1', title: 'Planificación Inteligente', desc: 'En la pestaña VIAJE, crea tu itinerario. Mi sistema cruzará datos de clima y aeropuertos para que tengas toda la información.' },
+                                { step: '2', title: 'Radar Activo 24/7', desc: 'En VUELOS, guarda tu número. Empiezo a monitorizar cualquier movimiento o pequeño cambio en tiempo real.' },
+                                { step: '3', title: 'Notificaciones Clave', desc: 'Sin ruidos. Solo te avisaré si hay algo importante que debas saber sobre tu viaje. Tu tranquilidad es lo primero.' },
+                                { step: '4', title: 'Asistente Legal', desc: 'Si el retraso supera las 3h, gestiono tu expediente legal al instante. Recupera hasta 600€ de forma sencilla.' }
+=======
                             <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold', marginBottom: 15, letterSpacing: 1 }}>PASO I: CONFIGURACIÓN Y ASISTENCIA</Text>
                             {[
                                 { step: '1', title: 'Planificación de Viaje', desc: 'En la pestaña VIAJE, crea tu itinerario. El asistente cruzará datos de clima y aeropuertos para darte el control total del destino.' },
                                 { step: '2', title: 'Vigilancia de Vuelos 24/7', desc: 'En la pestaña VUELOS, guarda tu número. Activamos un sistema inteligente que rastrea cualquier movimiento fuera de lo previsto.' },
                                 { step: '3', title: 'Notificaciones Útiles', desc: 'Sin ruidos. Solo recibirás una notificación si existe un riesgo real para tu conexión. Tu tranquilidad es nuestra prioridad.' },
                                 { step: '4', title: 'Protección al Pasajero (DOCS)', desc: 'Si el retraso supera las 3h, preparamos tu expediente de reclamación al instante en la sección DOCS. Recupera hasta 600€ con un solo toque.' }
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
                             ].map((item, i) => (
                                 <View key={i} style={{ flexDirection: 'row', marginBottom: 25 }}>
                                     <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#AF52DE', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
@@ -254,6 +277,15 @@ export default function BioScreen() {
                                 </View>
                             ))}
 
+<<<<<<< HEAD
+                            <Text style={{ color: '#D4AF37', fontSize: 11, fontWeight: 'bold', marginTop: 15, marginBottom: 15, letterSpacing: 1 }}>FASE II: ASISTENCIA AVANZADA</Text>
+                            {[
+                                { step: '5', title: 'Asistencia en Emergencias', desc: 'Si lo necesitas, puedo contactar con hoteles y servicios locales para avisar de tu situación automáticamente.' },
+                                { step: '6', title: 'Planes de Contingencia', desc: 'Ante un problema, calculo 3 opciones personalizadas: rapidez, ahorro o descanso. Tú eliges.' },
+                                { step: '7', title: 'Gestión por ti', desc: 'Tu asistente se encarga de las tareas pesadas. Verás cómo realizo los trámites y gestiones en tiempo real.' },
+                                { step: '8', title: 'Tu Asistente Personal', desc: 'Hablamos por voz o texto. Conozco tu viaje al detalle y te daré los mejores consejos en cada momento.' },
+                                { step: '9', title: 'Privacidad Total', desc: 'Tus datos son sagrados. Utilizamos los estándares más altos de seguridad para que tu información esté siempre a salvo.' }
+=======
                             <Text style={{ color: '#D4AF37', fontSize: 11, fontWeight: 'bold', marginTop: 15, marginBottom: 15, letterSpacing: 1 }}>PASO II: SERVICIOS PREMIUM</Text>
                             {[
                                 { step: '5', title: 'Asistencia en Destino', desc: 'Soporte directo. El asistente puede contactar con hoteles y servicios locales para avisar de tu situación si lo necesitas.' },
@@ -261,6 +293,7 @@ export default function BioScreen() {
                                 { step: '7', title: 'Gestión Inteligente', desc: 'Tu asistente se encarga de lo difícil. Podrás ver cómo realiza las gestiones pesadas por ti en tiempo real.' },
                                 { step: '8', title: 'Chat con IA Personal', desc: 'Chat contextual por voz o texto. El asistente conoce tu viaje y te dará los mejores consejos.' },
                                 { step: '9', title: 'Seguridad y Privacidad', desc: 'Tus documentos están seguros. Encriptación avanzada AES-256 para proteger toda tu información personal.' }
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
                             ].map((item, i) => (
                                 <View key={i} style={{ flexDirection: 'row', marginBottom: 25 }}>
                                     <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#D4AF37', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
@@ -277,7 +310,11 @@ export default function BioScreen() {
                                 onPress={() => setShowGuide(false)}
                                 style={{ backgroundColor: '#AF52DE', padding: 18, borderRadius: 15, alignItems: 'center', marginTop: 20, marginBottom: 100 }}
                             >
+<<<<<<< HEAD
+                                <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 15 }}>¡ENTENDIDO!</Text>
+=======
                                 <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 15 }}>ENTENDIDO, DE ACUERDO</Text>
+>>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
                             </TouchableOpacity>
                         </ScrollView>
                     </View>
