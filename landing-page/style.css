@@ -258,11 +258,11 @@ header nav {
     margin-bottom: 60px;
 }
 
-.pillar-grid {
+.pillar-grid-4 {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    max-width: 1200px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    max-width: 1000px;
     margin: 0 auto;
 }
 
@@ -470,6 +470,6 @@ header nav {
     .overlay-card { width: 50%; right: 0; bottom: -20px; }
 }
 @media (max-width: 600px) {
-    .pillar-grid { grid-template-columns: 1fr; }
+    .pillar-grid-4 { grid-template-columns: 1fr; }
     .hero h1 { font-size: 2.2rem; }
 }
