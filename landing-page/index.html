@@ -202,6 +202,7 @@
                                         <span id="clara-status">Castellano / Inteligente</span>
                                     </div>
                                     <div class="v-waves"><span></span><span></span><span></span></div>
+                                    <div class="stop-audio" id="clara-stop" onclick="stopCurrentVoice(event, 'clara')">✕</div>
                                 </div>
                                 <div class="voice-item" onclick="playVoice('Marco')">
                                     <div class="play-btn"></div>
@@ -210,6 +211,7 @@
                                         <span id="marco-status">Castellano / Profesional y Seguro</span>
                                     </div>
                                     <div class="v-waves"><span></span><span></span><span></span></div>
+                                    <div class="stop-audio" id="marco-stop" onclick="stopCurrentVoice(event, 'marco')">✕</div>
                                 </div>
                             </div>
                         </div>
@@ -299,14 +301,22 @@
         }
 
         function playVoice(name) {
+            // Detener cualquier sonido previo
+            const prevAss = currentAssistant;
+            const prevStop = document.getElementById(prevAss + '-stop');
+            if(prevStop) prevStop.style.display = 'none';
+            
             stopAudio();
             currentAssistant = name.toLowerCase();
             const statusId = currentAssistant + '-status';
+            const stopId = currentAssistant + '-stop';
             const originalText = name === 'Clara' ? 'Castellano / Inteligente' : 'Castellano / Profesional y Seguro';
             const status = document.getElementById(statusId);
+            const stopBtn = document.getElementById(stopId);
             
             status.innerText = "Asistente hablando...";
             status.style.color = "#AF52DE";
+            if(stopBtn) stopBtn.style.display = 'block';
 
             currentAudio = new Audio(`assets/${currentAssistant}_intro.mp3`);
             currentAudio.play().catch(e => console.log("Error al reproducir audio:", e));
@@ -314,7 +324,20 @@
             currentAudio.onended = () => { 
                 status.innerText = originalText;
                 status.style.color = "#888"; 
+                if(stopBtn) stopBtn.style.display = 'none';
             };
+        }
+
+        function stopCurrentVoice(event, name) {
+            if(event) event.stopPropagation(); // IMPORTANTE: No activar el onclick del padre
+            stopAudio();
+            const statusId = name + '-status';
+            const stopId = name + '-stop';
+            const originalText = name === 'clara' ? 'Castellano / Inteligente' : 'Castellano / Profesional y Seguro';
+            
+            document.getElementById(statusId).innerText = originalText;
+            document.getElementById(statusId).style.color = "#888";
+            document.getElementById(stopId).style.display = 'none';
         }
 
         // Precargar voces (algunos navegadores las cargan tarde)
