@@ -281,10 +281,14 @@
             currentAudio = new Audio(`assets/${currentAssistant}_${planFile}.mp3`);
             currentAudio.play().catch(e => console.log("Audio no cargado aún:", e));
 
-            // Texto de apoyo visual
-            if(plan === 'ECO') iaText.innerText = "Entendido. He procesado tu ahorro. Te avisaré para tu nuevo embarque y gestionaré tu indemnización.";
-            else if(plan === 'VIP') iaText.innerText = "Acceso VIP confirmado. Tu transporte premium ya está en camino a la terminal. Tu viaje continúa.";
-            else iaText.innerText = "Perfecto. He reservado el vuelo directo más cercano. Tus nuevas credenciales están ya en tu Bóveda.";
+            // Texto de apoyo visual (Sincronizado con audios reales)
+            if(plan === 'ECO') {
+                iaText.innerText = "Entendido. He procesado tu solicitud de ahorro máximo. He registrado tu reclamación de seiscientos euros y recibirás el reembolso sin gestiones adicionales. Te avisaré cuando falte una hora para tu nuevo embarque. Relájate y disfruta del tiempo extra.";
+            } else if(plan === 'VIP') {
+                iaText.innerText = "Acceso VIP confirmado. Tu nuevo vuelo en Clase Ejecutiva está listo en la puerta B12 y el acceso a la Sala VIP ha sido activado. He coordinado un transporte privado para que tu traslado entre terminales sea impecable. Tu viaje continúa sin interrupciones.";
+            } else {
+                iaText.innerText = "Perfecto. He reservado el vuelo directo más cercano disponible para ti. Tus nuevas tarjetas de embarque y el itinerario actualizado ya están descansando en tu Bóveda Digital segura. Estaré monitorizando tu conexión para que el resto del trayecto sea impecable.";
+            }
         }
 
         function resetSimulation() {
