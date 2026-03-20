@@ -149,23 +149,65 @@
 
                             <!-- Estado: Resuelto -->
                             <div id="plans-ui" class="plans-ui">
-                                <div class="plan-card-sim">
+                                <div class="plan-card-sim" onclick="selectPlan('ECO')">
                                     <span class="plan-tag">Opción 01: ECO</span>
                                     <h4>Ahorro Máximo</h4>
                                     <div class="price">0€</div>
                                     <div class="time">Espera: 4h | Comp: 600€</div>
                                 </div>
-                                <div class="plan-card-sim">
+                                <div class="plan-card-sim" onclick="selectPlan('Equilibrado')">
                                     <span class="plan-tag">Opción 02: EQ</span>
                                     <h4>Equilibrado</h4>
                                     <div class="price">45€</div>
                                     <div class="time">Espera: 1.5h | Vuelo Directo</div>
                                 </div>
-                                <div class="plan-card-sim vip">
+                                <div class="plan-card-sim vip" onclick="selectPlan('VIP')">
                                     <span class="plan-tag">Opción 03: VIP</span>
                                     <h4>Prioridad Élite</h4>
                                     <div class="price">120€</div>
                                     <div class="time">Inmediato | Business Class</div>
+                                </div>
+                            </div>
+
+                            <!-- Estado: Respuesta IA -->
+                            <div id="sim-response" class="sim-response">
+                                <div class="ia-avatar"></div>
+                                <div class="ia-msg">
+                                    <span class="ia-name">ASISTENTE CLARA</span>
+                                    <p id="ia-text">Excelente elección. Estoy sincronizando tu Bóveda Digital con las nuevas tarjetas de embarque.</p>
+                                </div>
+                                <div class="reset-sim-wrapper">
+                                    <button class="reset-sim" onclick="resetSimulation()">VOLVER A EMPEZAR</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VOCES PREMIUM -->
+                <section id="voices" class="voices-section">
+                    <div class="container">
+                        <div class="voice-card glass">
+                            <span class="protocol-num">TECNOLOGÍA NEURAL</span>
+                            <h2>Escucha a tu Asistente</h2>
+                            <p>Elige entre una variedad de voces optimizadas por IA para una asistencia humana y exclusiva.</p>
+                            
+                            <div class="voice-grid">
+                                <div class="voice-item" onclick="playVoice('Clara')">
+                                    <div class="play-btn"></div>
+                                    <div class="voice-info">
+                                        <h4>CLARA</h4>
+                                        <span id="clara-status">Castellano / Inteligente</span>
+                                    </div>
+                                    <div class="v-waves"><span></span><span></span><span></span></div>
+                                </div>
+                                <div class="voice-item" onclick="playVoice('Lucía')">
+                                    <div class="play-btn"></div>
+                                    <div class="voice-info">
+                                        <h4>LUCIA</h4>
+                                        <span id="lucia-status">Latino / Suave y Proactiva</span>
+                                    </div>
+                                    <div class="v-waves"><span></span><span></span><span></span></div>
                                 </div>
                             </div>
                         </div>
@@ -203,22 +245,49 @@
         const FORMSPARK_ACTION_URL = "https://submit-form.com/sbubR96H7"; 
 
         function startSimulation() {
-            const btn = document.getElementById('trigger-btn');
-            const scanning = document.getElementById('scanning-ui');
-            const plans = document.getElementById('plans-ui');
-
-            // 1. Ocultar botón
-            btn.style.display = 'none';
-            // 2. Mostrar radar
-            scanning.style.display = 'flex';
-
-            // 3. Simular procesamiento de IA
+            document.getElementById('trigger-btn').style.display = 'none';
+            document.getElementById('scanning-ui').style.display = 'flex';
             setTimeout(() => {
-                scanning.style.display = 'none';
+                document.getElementById('scanning-ui').style.display = 'none';
+                const plans = document.getElementById('plans-ui');
                 plans.style.display = 'grid';
-                // Añadir clase para animar entrada
                 setTimeout(() => plans.classList.add('active'), 50);
             }, 3000);
+        }
+
+        function selectPlan(plan) {
+            document.getElementById('plans-ui').style.display = 'none';
+            const response = document.getElementById('sim-response');
+            const text = document.getElementById('ia-text');
+            response.style.display = 'flex';
+
+            if(plan === 'ECO') {
+                text.innerText = "Entendido. He procesado tu solicitud de ahorro. Te avisaré cuando falte una hora para tu nuevo embarque y procesaré tu indemnización de 600€.";
+            } else if(plan === 'VIP') {
+                text.innerText = "Acceso VIP confirmado. Tu transporte premium ya está en camino a la terminal y tu nuevo vuelo en Business Class está listo en la puerta B12.";
+            } else {
+                text.innerText = "Perfecto. He reservado el vuelo directo más cercano. Tus nuevas credenciales ya están en tu Bóveda Digital segura.";
+            }
+        }
+
+        function resetSimulation() {
+            document.getElementById('sim-response').style.display = 'none';
+            document.getElementById('plans-ui').classList.remove('active');
+            document.getElementById('trigger-btn').style.display = 'block';
+        }
+
+        function playVoice(name) {
+            const statusId = name.toLowerCase() + '-status';
+            const originalText = name === 'Clara' ? 'Castellano / Inteligente' : 'Latino / Suave y Proactiva';
+            const status = document.getElementById(statusId);
+            
+            status.innerText = "Reproduciendo muestra...";
+            status.style.color = "#AF52DE";
+            
+            setTimeout(() => {
+                status.innerText = originalText;
+                status.style.color = "#888";
+            }, 2500);
         }
 
         async function registerBeta(inputId) {
