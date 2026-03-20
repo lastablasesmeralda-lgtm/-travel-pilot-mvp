@@ -127,6 +127,8 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
 
                 <!-- SIMULADOR DE CRISIS -->
                 <section id="simulator" class="simulator-section">
@@ -201,11 +203,11 @@
                                     </div>
                                     <div class="v-waves"><span></span><span></span><span></span></div>
                                 </div>
-                                <div class="voice-item" onclick="playVoice('Lucía')">
+                                <div class="voice-item" onclick="playVoice('Marco')">
                                     <div class="play-btn"></div>
                                     <div class="voice-info">
-                                        <h4>LUCIA</h4>
-                                        <span id="lucia-status">Latino / Suave y Proactiva</span>
+                                        <h4>MARCO</h4>
+                                        <span id="marco-status">Castellano / Profesional y Seguro</span>
                                     </div>
                                     <div class="v-waves"><span></span><span></span><span></span></div>
                                 </div>
@@ -231,8 +233,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
     </main>
 
     <footer>
@@ -241,8 +241,17 @@
         </div>
     </footer>
     <script>
-        // CONFIGURACIÓN TÁCTICA: ID de Formspark activado
+        // CONFIGURACIÓN TÁCTICA
         const FORMSPARK_ACTION_URL = "https://submit-form.com/sbubR96H7"; 
+        let currentAssistant = 'clara';
+        let currentAudio = null;
+
+        function stopAudio() {
+            if(currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+        }
 
         function startSimulation() {
             document.getElementById('trigger-btn').style.display = 'none';
@@ -256,74 +265,52 @@
         }
 
         function selectPlan(plan) {
+            stopAudio();
             document.getElementById('plans-ui').style.display = 'none';
             const response = document.getElementById('sim-response');
-            const text = document.getElementById('ia-text');
+            const iaName = document.querySelector('.ia-name');
+            const iaText = document.getElementById('ia-text');
+            
             response.style.display = 'flex';
+            iaName.innerText = `ASISTENTE ${currentAssistant.toUpperCase()}`;
 
-            if(plan === 'ECO') {
-                text.innerText = "Entendido. He procesado tu solicitud de ahorro. Te avisaré cuando falte una hora para tu nuevo embarque y procesaré tu indemnización de 600€.";
-            } else if(plan === 'VIP') {
-                text.innerText = "Acceso VIP confirmado. Tu transporte premium ya está en camino a la terminal y tu nuevo vuelo en Business Class está listo en la puerta B12.";
-            } else {
-                text.innerText = "Perfecto. He reservado el vuelo directo más cercano. Tus nuevas credenciales ya están en tu Bóveda Digital segura.";
-            }
+            // Mapear nombre de archivo
+            const planFile = plan.toLowerCase() === 'equilibrado' ? 'equil' : plan.toLowerCase();
+            
+            // Audio Real
+            currentAudio = new Audio(`assets/${currentAssistant}_${planFile}.mp3`);
+            currentAudio.play().catch(e => console.log("Audio no cargado aún:", e));
+
+            // Texto de apoyo visual
+            if(plan === 'ECO') iaText.innerText = "Entendido. He procesado tu ahorro. Te avisaré para tu nuevo embarque y gestionaré tu indemnización.";
+            else if(plan === 'VIP') iaText.innerText = "Acceso VIP confirmado. Tu transporte premium ya está en camino a la terminal. Tu viaje continúa.";
+            else iaText.innerText = "Perfecto. He reservado el vuelo directo más cercano. Tus nuevas credenciales están ya en tu Bóveda.";
         }
 
         function resetSimulation() {
+            stopAudio();
             document.getElementById('sim-response').style.display = 'none';
             document.getElementById('plans-ui').classList.remove('active');
             document.getElementById('trigger-btn').style.display = 'block';
         }
 
         function playVoice(name) {
-            const statusId = name.toLowerCase() + '-status';
-            const originalText = name === 'Clara' ? 'Castellano / Inteligente' : 'Latino / Suave y Proactiva';
+            stopAudio();
+            currentAssistant = name.toLowerCase();
+            const statusId = currentAssistant + '-status';
+            const originalText = name === 'Clara' ? 'Castellano / Inteligente' : 'Castellano / Profesional y Seguro';
             const status = document.getElementById(statusId);
             
-            status.innerText = "Sincronizando voz neural...";
+            status.innerText = "Asistente hablando...";
             status.style.color = "#AF52DE";
 
-            const msgText = name === 'Clara' 
-                ? "Hola, soy Clara. He detectado un retraso en tu vuelo pero no te preocupes, ya tengo tres alternativas listas para ti en tu radar."
-                : "Hola, soy Lucía. Tu tranquilidad es mi prioridad. He asegurado tu documentación en la Bóveda y estoy monitorizando tu conexión en tiempo real.";
+            currentAudio = new Audio(`assets/${currentAssistant}_intro.mp3`);
+            currentAudio.play().catch(e => console.log("Error al reproducir audio:", e));
 
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                
-                const utterance = new SpeechSynthesisUtterance(msgText);
-                
-                // BUSCAR LA MEJOR VOZ DISPONIBLE
-                const voices = window.speechSynthesis.getVoices();
-                let chosenVoice = null;
-
-                // Prioridad: Google (muy humanas) > Natural > Microsoft Helena
-                if (name === 'Clara') {
-                    chosenVoice = voices.find(v => v.name.includes('Google') && v.lang.includes('es-ES')) ||
-                                  voices.find(v => v.name.includes('Helena')) ||
-                                  voices.find(v => v.lang.includes('es-ES'));
-                    utterance.lang = 'es-ES';
-                } else {
-                    chosenVoice = voices.find(v => v.name.includes('Google') && v.lang.includes('es-MX')) ||
-                                  voices.find(v => v.lang.includes('es')) ||
-                                  voices.find(v => v.lang.includes('es-ES'));
-                    utterance.lang = 'es-MX';
-                }
-
-                if (chosenVoice) utterance.voice = chosenVoice;
-                
-                // Ajustes para evitar sonido robótico
-                utterance.rate = 0.95; // Un poco más lenta
-                utterance.pitch = 1.05; // Un poco más aguda (más humana)
-
-                utterance.onstart = () => { status.innerText = "Asistente hablando..."; };
-                utterance.onend = () => { 
-                    status.innerText = originalText;
-                    status.style.color = "#888"; 
-                };
-
-                window.speechSynthesis.speak(utterance);
-            }
+            currentAudio.onended = () => { 
+                status.innerText = originalText;
+                status.style.color = "#888"; 
+            };
         }
 
         // Precargar voces (algunos navegadores las cargan tarde)
