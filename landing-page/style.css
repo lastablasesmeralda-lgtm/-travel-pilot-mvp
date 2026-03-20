@@ -402,6 +402,190 @@ header nav {
         border-bottom: 1px solid var(--border);
     }
 }
+
+/* --- SIMULADOR DE CRISIS --- */
+.simulator-section {
+    padding: 120px 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.sim-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 60px 40px;
+    backdrop-filter: blur(40px);
+    position: relative;
+}
+
+.sim-container::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 300px;
+    background: var(--primary);
+    filter: blur(150px);
+    opacity: 0.1;
+    z-index: -1;
+}
+
+.sim-header h2 {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, #FFF 0%, #AAA 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.sim-header p {
+    color: #888;
+    margin-bottom: 40px;
+    font-size: 1.1rem;
+}
+
+.sim-stage {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+/* Botón disparador */
+.trigger-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 24px 48px;
+    border-radius: 100px;
+    font-weight: 900;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 40px rgba(175, 82, 222, 0.4);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: 1px;
+    z-index: 10;
+}
+
+.trigger-btn:hover {
+    transform: scale(1.05) translateY(-5px);
+    box-shadow: 0 15px 50px rgba(175, 82, 222, 0.6);
+}
+
+.trigger-btn:active {
+    transform: scale(0.95);
+}
+
+/* Radar de búsqueda */
+.scanning-ui {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+}
+
+.radar-circle {
+    width: 200px;
+    height: 200px;
+    border: 2px solid var(--primary);
+    border-radius: 50%;
+    position: relative;
+    animation: pulseRadar 2s infinite;
+}
+
+@keyframes pulseRadar {
+    0% { transform: scale(0.8); opacity: 0; border-width: 10px; }
+    50% { opacity: 0.5; }
+    100% { transform: scale(1.5); opacity: 0; border-width: 1px; }
+}
+
+.scanning-text {
+    margin-top: 30px;
+    color: var(--primary);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+
+/* Planes resueltos */
+.plans-ui {
+    display: none;
+    width: 100%;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    perspective: 1000px;
+}
+
+.plan-card-sim {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 25px;
+    text-align: left;
+    transition: all 0.4s ease;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(30px) rotateX(-10deg);
+}
+
+.plans-ui.active .plan-card-sim {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+}
+
+.plan-card-sim:nth-child(1) { transition-delay: 0.1s; }
+.plan-card-sim:nth-child(2) { transition-delay: 0.3s; }
+.plan-card-sim:nth-child(3) { transition-delay: 0.5s; border-color: var(--gold); }
+
+.plan-card-sim:hover {
+    background: rgba(175, 82, 222, 0.1);
+    border-color: var(--primary);
+    transform: translateY(-10px) scale(1.02);
+}
+
+.plan-tag {
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.plan-card-sim h4 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.plan-card-sim .price {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #FFF;
+    margin-bottom: 5px;
+}
+
+.plan-card-sim .time {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.plan-card-sim.vip .plan-tag { color: var(--gold); }
+.plan-card-sim.vip { background: rgba(212, 175, 55, 0.05); }
+
+/* --- FORM FOOTER --- */
 .form-footer {
     margin-top: 100px;
     padding: 80px;
@@ -465,7 +649,7 @@ header nav {
     font-size: 0.7rem;
     color: #888;
     margin-bottom: 5px;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 .terminal-input-group {
@@ -505,7 +689,7 @@ header nav {
     padding: 8px 15px;
     border-radius: 5px;
     font-weight: 900;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     cursor: pointer;
     transition: 0.3s;
     font-size: 0.8rem;
@@ -537,8 +721,10 @@ header nav {
     .pillar-grid { grid-template-columns: repeat(2, 1fr); }
     .features-list-simple { text-align: left; max-width: 500px; margin: 0 auto; }
     .overlay-card { width: 50%; right: 0; bottom: -20px; }
+    .plans-ui { grid-template-columns: 1fr; max-width: 400px; }
 }
 @media (max-width: 600px) {
     .pillar-grid-4 { grid-template-columns: 1fr; }
     .hero h1 { font-size: 2.2rem; }
+    .sim-header h2 { font-size: 1.8rem; }
 }

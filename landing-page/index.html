@@ -128,6 +128,50 @@
                     </div>
                 </div>
 
+                <!-- SIMULADOR DE CRISIS -->
+                <section id="simulator" class="simulator-section">
+                    <div class="sim-container">
+                        <div class="sim-header">
+                            <span class="protocol-num">INTELIGENCIA EN VIVO</span>
+                            <h2>Simulador de Respuesta Proactiva</h2>
+                            <p>Experimenta cómo Travel-Pilot resuelve un retraso antes de que te afecte.</p>
+                        </div>
+
+                        <div class="sim-stage">
+                            <!-- Estado inicial -->
+                            <button id="trigger-btn" class="trigger-btn" onclick="startSimulation()">SIMULAR RETRASO DE VUELO</button>
+
+                            <!-- Estado: Escaneando -->
+                            <div id="scanning-ui" class="scanning-ui">
+                                <div class="radar-circle"></div>
+                                <div class="scanning-text">DETECTANDO INCIDENCIA...</div>
+                            </div>
+
+                            <!-- Estado: Resuelto -->
+                            <div id="plans-ui" class="plans-ui">
+                                <div class="plan-card-sim">
+                                    <span class="plan-tag">Opción 01: ECO</span>
+                                    <h4>Ahorro Máximo</h4>
+                                    <div class="price">0€</div>
+                                    <div class="time">Espera: 4h | Comp: 600€</div>
+                                </div>
+                                <div class="plan-card-sim">
+                                    <span class="plan-tag">Opción 02: EQ</span>
+                                    <h4>Equilibrado</h4>
+                                    <div class="price">45€</div>
+                                    <div class="time">Espera: 1.5h | Vuelo Directo</div>
+                                </div>
+                                <div class="plan-card-sim vip">
+                                    <span class="plan-tag">Opción 03: VIP</span>
+                                    <h4>Prioridad Élite</h4>
+                                    <div class="price">120€</div>
+                                    <div class="time">Inmediato | Business Class</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <div class="form-footer">
                     <h3>Únete a la Beta Exclusiva</h3>
                     <p>Regístrese para recibir su invitación VIP y probar el sistema antes que nadie.</p>
@@ -157,6 +201,25 @@
     <script>
         // CONFIGURACIÓN TÁCTICA: ID de Formspark activado
         const FORMSPARK_ACTION_URL = "https://submit-form.com/sbubR96H7"; 
+
+        function startSimulation() {
+            const btn = document.getElementById('trigger-btn');
+            const scanning = document.getElementById('scanning-ui');
+            const plans = document.getElementById('plans-ui');
+
+            // 1. Ocultar botón
+            btn.style.display = 'none';
+            // 2. Mostrar radar
+            scanning.style.display = 'flex';
+
+            // 3. Simular procesamiento de IA
+            setTimeout(() => {
+                scanning.style.display = 'none';
+                plans.style.display = 'grid';
+                // Añadir clase para animar entrada
+                setTimeout(() => plans.classList.add('active'), 50);
+            }, 3000);
+        }
 
         async function registerBeta(inputId) {
             const input = document.getElementById(inputId);
