@@ -281,13 +281,41 @@
             const originalText = name === 'Clara' ? 'Castellano / Inteligente' : 'Latino / Suave y Proactiva';
             const status = document.getElementById(statusId);
             
-            status.innerText = "Reproduciendo muestra...";
+            status.innerText = "Sincronizando voz neural...";
             status.style.color = "#AF52DE";
-            
-            setTimeout(() => {
-                status.innerText = originalText;
-                status.style.color = "#888";
-            }, 2500);
+
+            // MENSAJES DE VOZ SEGÚN PERSONAJE
+            const msgText = name === 'Clara' 
+                ? "Hola, soy Clara. He detectado un retraso en tu vuelo pero no te preocupes, ya tengo tres alternativas listas para ti en tu radar."
+                : "Hola, soy Lucía. Tu tranquilidad es mi prioridad. He asegurado tu documentación en la Bóveda y estoy monitorizando tu conexión en tiempo real.";
+
+            // WEB SPEECH API (HABLAR DE VERDAD)
+            if ('speechSynthesis' in window) {
+                // Cancelar cualquier voz previa
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(msgText);
+                utterance.lang = name === 'Clara' ? 'es-ES' : 'es-MX';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.1;
+
+                utterance.onstart = () => {
+                    status.innerText = "Asistente hablando...";
+                };
+
+                utterance.onend = () => {
+                    status.innerText = originalText;
+                    status.style.color = "#888";
+                };
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                // Inteligencia de respaldo si el navegador no soporta voz
+                setTimeout(() => {
+                    status.innerText = originalText;
+                    status.style.color = "#888";
+                }, 3000);
+            }
         }
 
         async function registerBeta(inputId) {
