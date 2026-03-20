@@ -259,10 +259,10 @@ header nav {
 }
 
 .pillar-grid-4 {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 30px;
-    max-width: 1000px;
+    max-width: 900px;
     margin: 0 auto;
 }
 
@@ -278,18 +278,22 @@ header nav {
 
 .pillar-card.horizontal {
     display: flex;
-    align-items: center;
+    align-items: stretch;
 }
 
 .glass:hover {
     border-color: var(--primary);
-    transform: translateY(-10px);
+    transform: translateY(-6px);
+    box-shadow: 0 20px 60px rgba(175, 82, 222, 0.15);
 }
 
 .pillar-image {
-    flex: 0 0 200px; /* Incrementado para mayor legibilidad táctica */
-    height: 100%;
+    flex: 0 0 220px;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .pillar-card img {
@@ -300,15 +304,31 @@ header nav {
     display: block;
 }
 
+.placeholder-img {
+    background: rgba(175, 82, 222, 0.08);
+    border-right: 1px solid var(--border);
+}
+
+.placeholder-img span {
+    color: rgba(255, 255, 255, 0.15);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+}
+
 .pillar-info {
-    padding: 25px;
+    padding: 35px 30px;
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .pillar-info h3 {
     color: var(--gold);
-    margin-bottom: 8px;
-    font-size: 1.1rem;
+    margin-bottom: 12px;
+    font-size: 1.3rem;
     text-align: left;
 }
 
@@ -316,18 +336,20 @@ header nav {
     display: inline-block;
     color: var(--primary);
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 800;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     border: 1px solid rgba(175, 82, 222, 0.3);
-    padding: 4px 10px;
+    padding: 4px 12px;
     border-radius: 6px;
     background: rgba(175, 82, 222, 0.1);
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
 .pillar-info p {
-    color: #AAA;
-    font-size: 0.85rem;
+    color: #BBB;
+    font-size: 0.95rem;
     text-align: left;
     line-height: 1.4;
 }
