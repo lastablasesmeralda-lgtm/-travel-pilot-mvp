@@ -165,6 +165,7 @@ header nav {
     color: var(--primary);
     margin-bottom: 10px;
     text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .features-list-simple {
@@ -647,6 +648,9 @@ header nav {
 .voice-card {
     padding: 60px;
     text-align: left;
+    flex-direction: column;
+    height: auto;
+    align-items: flex-start;
 }
 
 .voice-grid {
