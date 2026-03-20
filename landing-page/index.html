@@ -284,39 +284,50 @@
             status.innerText = "Sincronizando voz neural...";
             status.style.color = "#AF52DE";
 
-            // MENSAJES DE VOZ SEGÚN PERSONAJE
             const msgText = name === 'Clara' 
                 ? "Hola, soy Clara. He detectado un retraso en tu vuelo pero no te preocupes, ya tengo tres alternativas listas para ti en tu radar."
                 : "Hola, soy Lucía. Tu tranquilidad es mi prioridad. He asegurado tu documentación en la Bóveda y estoy monitorizando tu conexión en tiempo real.";
 
-            // WEB SPEECH API (HABLAR DE VERDAD)
             if ('speechSynthesis' in window) {
-                // Cancelar cualquier voz previa
                 window.speechSynthesis.cancel();
                 
                 const utterance = new SpeechSynthesisUtterance(msgText);
-                utterance.lang = name === 'Clara' ? 'es-ES' : 'es-MX';
-                utterance.rate = 1.0;
-                utterance.pitch = 1.1;
+                
+                // BUSCAR LA MEJOR VOZ DISPONIBLE
+                const voices = window.speechSynthesis.getVoices();
+                let chosenVoice = null;
 
-                utterance.onstart = () => {
-                    status.innerText = "Asistente hablando...";
-                };
+                // Prioridad: Google (muy humanas) > Natural > Microsoft Helena
+                if (name === 'Clara') {
+                    chosenVoice = voices.find(v => v.name.includes('Google') && v.lang.includes('es-ES')) ||
+                                  voices.find(v => v.name.includes('Helena')) ||
+                                  voices.find(v => v.lang.includes('es-ES'));
+                    utterance.lang = 'es-ES';
+                } else {
+                    chosenVoice = voices.find(v => v.name.includes('Google') && v.lang.includes('es-MX')) ||
+                                  voices.find(v => v.lang.includes('es')) ||
+                                  voices.find(v => v.lang.includes('es-ES'));
+                    utterance.lang = 'es-MX';
+                }
 
-                utterance.onend = () => {
+                if (chosenVoice) utterance.voice = chosenVoice;
+                
+                // Ajustes para evitar sonido robótico
+                utterance.rate = 0.95; // Un poco más lenta
+                utterance.pitch = 1.05; // Un poco más aguda (más humana)
+
+                utterance.onstart = () => { status.innerText = "Asistente hablando..."; };
+                utterance.onend = () => { 
                     status.innerText = originalText;
-                    status.style.color = "#888";
+                    status.style.color = "#888"; 
                 };
 
                 window.speechSynthesis.speak(utterance);
-            } else {
-                // Inteligencia de respaldo si el navegador no soporta voz
-                setTimeout(() => {
-                    status.innerText = originalText;
-                    status.style.color = "#888";
-                }, 3000);
             }
         }
+
+        // Precargar voces (algunos navegadores las cargan tarde)
+        window.speechSynthesis.getVoices();
 
         async function registerBeta(inputId) {
             const input = document.getElementById(inputId);
