@@ -8,12 +8,12 @@ import * as Notifications from 'expo-notifications';
 
 // Importar imágenes directamente para que siempre estén disponibles
 const DOC_IMAGES: Record<string, any> = {
-    'demo-passport-premium': require('../assets/pasaporte_puro.png'),
-    'demo-boarding-premium': require('../assets/tarjeta_embarque_pura.png'),
-    'demo-hotel-premium': require('../assets/reserva_hotel_pura.png'),
-    'ticket-rapido': require('../assets/ticket_rapido_vip.png'),
-    'ticket-equilibrado': require('../assets/ticket_equilibrado_confort.png'),
-    'ticket-economico': require('../assets/ticket_economico.png'),
+    'demo-passport-premium': require('../assets/pasaporte_puro.jpg'),
+    'demo-boarding-premium': require('../assets/tarjeta_embarque_pura.jpg'),
+    'demo-hotel-premium': require('../assets/reserva_hotel_pura.jpg'),
+    'ticket-rapido': require('../assets/ticket_rapido_vip.jpg'),
+    'ticket-equilibrado': require('../assets/ticket_equilibrado_confort.jpg'),
+    'ticket-economico': require('../assets/ticket_economico.jpg'),
 };
 
 export default function GlobalOverlays() {
@@ -415,9 +415,9 @@ export default function GlobalOverlays() {
                                  const isEco = selectedPlan.type?.includes('ECONÓMIC');
                                  const isHotel = selectedPlan.actionType === 'hotel' || selectedPlan.type?.includes('EQUILIBRADO') || selectedPlan.type?.includes('CONFORT');
                                  
-                                 const imgRescate = isVip ? require('../assets/ticket_rapido_vip.png') : 
-                                                   isEco ? require('../assets/ticket_economico.png') : 
-                                                   require('../assets/ticket_equilibrado_confort.png');
+                                 const imgRescate = isVip ? require('../assets/ticket_rapido_vip.jpg') : 
+                                                   isEco ? require('../assets/ticket_economico.jpg') : 
+                                                   require('../assets/ticket_equilibrado_confort.jpg');
 
                                  speak(`Rescate completado con éxito. He sincronizado tu nuevo ${isHotel ? 'bono de hotel' : 'billete'} ${isVip ? 'VIP' : isEco ? 'Económico' : 'Equilibrado'} en la bóveda de documentos. Buen viaje.`);
                                  
