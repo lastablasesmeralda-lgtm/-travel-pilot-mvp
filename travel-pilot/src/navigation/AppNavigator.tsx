@@ -19,13 +19,23 @@ export default function AppNavigator() {
             screenOptions={({ route }) => ({
                 headerShown: false,
                 tabBarStyle: {
-                    height: 95,
-                    backgroundColor: '#0F0F0F',
-                    flexDirection: 'row',
-                    borderTopWidth: 1,
-                    borderColor: '#222',
-                    paddingBottom: 25,
-                    paddingHorizontal: 10
+                    position: 'absolute',
+                    bottom: 25,
+                    left: 20,
+                    right: 20,
+                    height: 75,
+                    backgroundColor: 'rgba(12, 15, 20, 0.95)',
+                    borderRadius: 38,
+                    borderTopWidth: 0,
+                    borderWidth: 1.5,
+                    borderColor: 'rgba(212, 175, 55, 0.3)',
+                    paddingBottom: 0,
+                    paddingHorizontal: 10,
+                    elevation: 15,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 10 },
+                    shadowOpacity: 0.8,
+                    shadowRadius: 15
                 },
                 tabBarButton: (props) => {
                     let icon = '';
@@ -39,15 +49,25 @@ export default function AppNavigator() {
                     return (
                         <TouchableOpacity
                             {...(props as any)}
-                            style={[s.ni, { flexDirection: 'column', alignItems: 'center' }]}
+                            style={{ flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                            activeOpacity={0.7}
                         >
-                            <View>
+                            <View style={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: 22,
+                                backgroundColor: isFocused ? 'rgba(212, 175, 55, 0.15)' : 'transparent',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderWidth: isFocused ? 1 : 0,
+                                borderColor: 'rgba(212, 175, 55, 0.5)'
+                            }}>
                                 <Text style={{
-                                    fontSize: 26,
-                                    opacity: isFocused ? 1 : 0.5,
-                                    transform: [{ scale: isFocused ? 1.2 : 1 }],
-                                    textShadowColor: isFocused ? 'rgba(175, 82, 222, 0.8)' : 'transparent',
-                                    textShadowRadius: isFocused ? 15 : 0
+                                    fontSize: isFocused ? 26 : 22,
+                                    opacity: isFocused ? 1 : 0.6,
+                                    transform: [{ scale: isFocused ? 1.1 : 1 }],
+                                    textShadowColor: isFocused ? 'rgba(212, 175, 55, 0.8)' : 'transparent',
+                                    textShadowRadius: isFocused ? 10 : 0
                                 }}>
                                     {icon}
                                 </Text>
@@ -56,40 +76,29 @@ export default function AppNavigator() {
                                         position: 'absolute',
                                         right: -2,
                                         top: -2,
-                                        width: 10,
-                                        height: 10,
-                                        borderRadius: 5,
+                                        width: 12,
+                                        height: 12,
+                                        borderRadius: 6,
                                         backgroundColor: '#FF3B30',
-                                        borderWidth: 1.5,
-                                        borderColor: '#0F0F0F'
+                                        borderWidth: 2,
+                                        borderColor: '#0C0F14'
                                     }} />
                                 )}
                             </View>
                             <Text style={{
-                                color: isFocused ? '#AF52DE' : '#666',
-                                fontSize: 10,
+                                color: isFocused ? '#D4AF37' : '#666',
+                                fontSize: 9,
                                 fontWeight: '900',
-                                marginTop: 4,
+                                marginTop: 2,
                                 textTransform: 'uppercase',
-                                letterSpacing: 0.5
+                                letterSpacing: isFocused ? 1 : 0.5,
+                                textShadowColor: isFocused ? 'rgba(212, 175, 55, 0.5)' : 'transparent',
+                                textShadowRadius: isFocused ? 5 : 0
                             }}>
                                 {route.name === 'Intel' ? 'INICIO' :
                                     route.name === 'Radar' ? 'VUELOS' :
                                         route.name === 'Vault' ? 'DOCS' : 'PERFIL'}
                             </Text>
-                            {isFocused && (
-                                <View style={{ 
-                                    width: 4, 
-                                    height: 4, 
-                                    borderRadius: 2, 
-                                    backgroundColor: '#AF52DE', 
-                                    marginTop: 4,
-                                    shadowColor: '#AF52DE',
-                                    shadowOffset: { width: 0, height: 0 },
-                                    shadowOpacity: 1,
-                                    shadowRadius: 5
-                                }} />
-                            )}
                         </TouchableOpacity>
                     );
                 }
