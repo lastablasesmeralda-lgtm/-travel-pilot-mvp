@@ -40,9 +40,7 @@ export const AppProvider = ({ children }) => {
   const [showBrowser, setShowBrowser] = useState(false);
   const [browserLogs, setBrowserLogs] = useState<any[]>([]);
   const [legalShieldActive, setLegalShieldActive] = useState(false);
-  const [claims, setClaims] = useState<any[]>([
-    { id: 'C1', aerolinea: 'British Airways', estado: 'GENERANDO EXPEDIENTE', compensacion: '600€' }
-  ]);
+  const [claims, setClaims] = useState<any[]>([]);
   const [inputText, setInputText] = useState('');
   const [messages, setMessages] = useState<any[]>([
     { id: '1', text: 'TRAVEL-PILOT CONECTADO. Hola, soy tu asistente. ¿En qué te puedo ayudar hoy?', isUser: false }
@@ -58,6 +56,7 @@ export const AppProvider = ({ children }) => {
   const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
   const [loadingStep, setLoadingStep] = useState(0);
   const [prefetchedData, setPrefetchedData] = useState<any>(null);
+  const [compBannerDismissed, setCompBannerDismissed] = useState(false);
   const [isPrefetching, setIsPrefetching] = useState(false);
   const [flightInput, setFlightInput] = useState('');
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
@@ -72,6 +71,8 @@ export const AppProvider = ({ children }) => {
   const [weather, setWeather] = useState({ temp: '22', condition: 'Cargando...', icon: '🌤️', city: 'Tu Destino' });
   const [isDictating, setIsDictating] = useState(false);
   const [userPhone, setUserPhone] = useState('');
+  const [hasSeenPlan, setHasSeenOnPlan] = useState(false);
+  const [selectedRescuePlan, setSelectedRescuePlan] = useState<string | null>(null);
 
   // ESTADO DE PLANES Y CRISIS RECUPERADO
   const [planes, setPlanes] = useState<any[]>([
@@ -176,16 +177,42 @@ export const AppProvider = ({ children }) => {
 
     (async () => {
       const voices = await Speech.getAvailableVoicesAsync();
-      // Solo voces en español O nuestras favoritas específicas
-      const filtered = voices.filter(v => 
-        v.language.startsWith('es') || 
+      
+      // Buscar voces en español (incluyendo variantes MX, US, etc.)
+      const esVoices = voices.filter(v => v.language.startsWith('es'));
+      
+      const maleKeywords = ['jorge', 'diego', 'carlos', 'juan', 'pablo', 'manuel', 'antonio', '-esd-', '-esc-', '-esf-'];
+      const maleVoices = esVoices.filter(v => {
+        const str = (v.name + ' ' + v.identifier).toLowerCase();
+        return maleKeywords.some(k => str.includes(k));
+      });
+      
+      const femaleVoices = esVoices.filter(v => !maleVoices.includes(v));
+
+      // Asignamos explícitamente [Mujer, Hombre, Mujer, Hombre] -> [Clara, Jorge, Lucía, Javier]
+      // Si el SO no tiene tantas voces, repetimos la primera que se encuentre del género correcto.
+      const f1 = femaleVoices[0] || esVoices[0];
+      const m1 = maleVoices[0] || esVoices[0];
+      const f2 = femaleVoices[1] || f1;
+      const m2 = maleVoices[1] || m1;
+
+      const arrangedVoices = [f1, m1, f2, m2];
+
+      // Voces premium simuladas
+      const premiumVoices = voices.filter(v => 
         v.name.toLowerCase().includes('autonoe') || 
         v.name.toLowerCase().includes('enceladus')
       );
+
+      const uniqueVoices = Array.from(new Set(arrangedVoices)).filter(Boolean);
+      const rest = esVoices.filter(v => !uniqueVoices.includes(v));
+
+      const filtered = [...uniqueVoices, ...premiumVoices, ...rest];
       setAvailableVoices(filtered);
+      
       if (filtered.length > 0) {
-        const premium = filtered.find(v => v.name.toLowerCase().includes('autonoe') || v.name.toLowerCase().includes('premium'));
-        setSelectedVoice(premium ? premium.identifier : filtered[0].identifier);
+        const defaultVoiceId = m1?.identifier || filtered[0].identifier;
+        setSelectedVoice(defaultVoiceId);
       }
     })();
 
@@ -211,6 +238,34 @@ export const AppProvider = ({ children }) => {
     return () => clearInterval(timer);
   }, []);
 
+  // SIMULACIÓN DE LOGS DEL NAVEGADOR ASISTENTE (DINÁMICA)
+  useEffect(() => {
+    let interval: any;
+    if (showBrowser && selectedPlan) {
+      const sequence = [
+        "> Iniciando conexión segura con Travel-Core...",
+        "> 🔓 Conexión cifrada establecida...",
+        "> 🔍 Buscando alternativas de vuelo en tiempo real...",
+        "> 📋 Sincronizando datos de pasaje...",
+        "> ✅ Operación completada con éxito. Actualizando tu App."
+      ];
+      let step = 0;
+      setBrowserLogs([sequence[0]]);
+      step = 1;
+      interval = setInterval(() => {
+        if (step < sequence.length) {
+          setBrowserLogs(prev => [...prev, sequence[step]]);
+          step++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 1200);
+    } else if (!showBrowser) {
+      setBrowserLogs([]);
+    }
+    return () => clearInterval(interval);
+  }, [showBrowser, selectedPlan]);
+
   useEffect(() => {
     const sub = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
@@ -233,11 +288,7 @@ export const AppProvider = ({ children }) => {
       console.log("[Audio] Iniciando flujo de grabación...");
       const { status } = await Audio.requestPermissionsAsync();
       if (status !== 'granted') {
-<<<<<<< HEAD
-        Alert.alert('AVISO', 'Se requieren permisos de micrófono para que pueda escucharte.');
-=======
         Alert.alert('AVISO DE PERMISOS', 'Para poder hablar con el asistente de voz, Travel-Pilot necesita permiso para acceder a tu micrófono. Por favor, acéptalo en los ajustes si no aparece el menú.');
->>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
         return;
       }
 
@@ -266,11 +317,7 @@ export const AppProvider = ({ children }) => {
     } catch (e: any) {
       console.error('[Voice Start Error]:', e);
       setIsDictating(false);
-<<<<<<< HEAD
-      Alert.alert('AVISO', 'Error al iniciar la grabación de audio. Revisa los permisos.');
-=======
       Alert.alert('ERROR DE HARDWARE', 'No se ha podido activar el micrófono.');
->>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
     }
   };
 
@@ -314,18 +361,12 @@ export const AppProvider = ({ children }) => {
           const data = await res.json();
           if (data.text && data.text.trim().length > 0) {
             setInputText(data.text);
-<<<<<<< HEAD
-            Vibration.vibrate(100);
+            Vibration.vibrate(50);
           } else if (data.details && data.details.includes('429')) {
              Alert.alert('SISTEMA SATURADO', 'El procesador de voz está descansando. Espera 30 segundos.');
           } else {
-            Alert.alert('AVISO', 'No he podido entender el audio. ¿Puedes probar a hablar un poco más claro o reducir el ruido ambiental?');
-=======
-            Vibration.vibrate(50);
-          } else {
             console.warn("[Audio] Respuesta vacía del servidor.");
             Alert.alert('ASISTENTE', 'No he podido entender tus palabras. ¿Puedes repetirlo un poco más claro?');
->>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
           }
         } catch (e: any) {
           console.error("[Audio] Error en transcripción:", e);
@@ -334,10 +375,7 @@ export const AppProvider = ({ children }) => {
       }
     } catch (e: any) {
       console.error('[Voice Stop Error]:', e);
-<<<<<<< HEAD
       Alert.alert('AVISO', 'Fallo en la conexión con el servidor de voz.');
-=======
->>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
     } finally {
       setIsTyping(false);
       setIsDictating(false);
@@ -521,6 +559,9 @@ export const AppProvider = ({ children }) => {
       if (data.departure?.delay >= 180) {
         setCompensationEligible(true);
       }
+      if (data.departure?.delay >= 120 || data.status === 'cancelled') {
+        showPlan();
+      }
       prefetchPlan();
     } catch (e) {
       setSearchError('Error de conexión con el servidor. Revisa el túnel ngrok.');
@@ -606,17 +647,10 @@ export const AppProvider = ({ children }) => {
       } catch (error: any) {
         clearTimeout(timeoutId);
         console.error("[Frontend] Chat Error Details:", error);
-<<<<<<< HEAD
-        let errorMsg = "Error de comunicación con el asistente.";
-        if (error.name === 'AbortError') errorMsg = "El sistema está algo lento hoy y está tardando demasiado en responder. Inténtalo en unos segundos.";
-        setMessages(prev => [...prev, { id: Date.now().toString(), text: errorMsg, isUser: false }]);
-        speak("Error de conexión.");
-=======
         let errorMsg = "Vaya, parece que mi conexión se ha cortado un segundo. ¿Puedes repetirme eso?";
         if (error.name === 'AbortError') errorMsg = "Estoy tardando un poco más de lo normal en pensar. Por favor, vuelve a intentarlo ahora.";
         setMessages(prev => [...prev, { id: Date.now().toString(), text: errorMsg, isUser: false }]);
         speak("Perdona, he perdido la conexión un momento.");
->>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
       } finally { setIsTyping(false); }
     })();
   };
@@ -744,13 +778,17 @@ export const AppProvider = ({ children }) => {
     }, 4500);
   };
 
+  const removeClaim = (id: string) => {
+    setClaims(prev => prev.filter(c => c.id !== id));
+  };
+
   const value = {
     user, authEmail, setAuthEmail, authPassword, setAuthPassword, authMode, setAuthMode, authLoading,
     handleLogin, handleRegister, handleLogout,
     tab, setTab, showSOS, setShowSOS, showSOSMenu, setShowSOSMenu,
     selectedPlan, setSelectedPlan, viewDoc, setViewDoc, isScanning, setIsScanning, scanAnim, sosPulse,
     showChat, setShowChat, showBrowser, setShowBrowser, browserLogs, setBrowserLogs, legalShieldActive, setLegalShieldActive,
-    claims, setClaims, inputText, setInputText, messages, setMessages, isSpeaking, waveAnim, compensationEligible, setCompensationEligible,
+    claims, setClaims, removeClaim, inputText, setInputText, messages, setMessages, isSpeaking, waveAnim, compensationEligible, setCompensationEligible,
     isGenerating, apiPlan, setApiPlan, isTyping, availableVoices, selectedVoice, setSelectedVoice, loadingStep, flightInput, setFlightInput,
     flightData, isSearching, searchError, planes, setPlanes, searchFlight, clearFlight, showPlan, fetchContingencyPlan, handleSendMessage,
     agentLogs, fetchAgentLogs,
@@ -761,7 +799,10 @@ export const AppProvider = ({ children }) => {
     isExtracting, simulateGmailSync, extraDocs, setExtraDocs,
     speak, stopSpeak, formatTime, getStatusColor, getStatusLabel, scrollViewRef,
     clearMessages, isDictating, startDictation, stopDictation,
-    userPhone, setUserPhone
+    userPhone, setUserPhone,
+    hasSeenPlan, setHasSeenOnPlan,
+    selectedRescuePlan, setSelectedRescuePlan,
+    compBannerDismissed, setCompBannerDismissed
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

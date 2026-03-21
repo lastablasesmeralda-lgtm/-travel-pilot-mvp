@@ -4,7 +4,7 @@ import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
 
 export default function IntelScreen() {
-    const { user, myTrips, saveTrip, removeTrip, myFlights, removeMyFlight, setFlightInput, setTab, weather, flightData, simulatePushNotification, tab, selectedVoice } = useAppContext();
+    const { user, myTrips, saveTrip, removeTrip, myFlights, removeMyFlight, setFlightInput, setTab, weather, flightData, simulatePushNotification, tab, selectedVoice, hasSeenPlan, selectedRescuePlan, showPlan } = useAppContext();
     const [newTripTitle, setNewTripTitle] = useState('');
     const [newTripDest, setNewTripDest] = useState('');
     const [showForm, setShowForm] = useState(false);
@@ -116,17 +116,46 @@ Todo parece estar en orden para tu viaje. Si detectamos cualquier riesgo para tu
                     <View style={{ width: 4, backgroundColor: '#AF52DE', borderRadius: 2, marginRight: 15 }} />
                     <View style={{ flex: 1 }}>
                         <Text style={{ color: '#C0C0C0', fontSize: 10, fontWeight: '900', letterSpacing: 1.5, marginBottom: 5 }}>INFORME DEL ASISTENTE</Text>
-                        <Text style={{ color: '#E0E0E0', fontSize: 13, lineHeight: 20, fontStyle: 'italic', letterSpacing: 0.3 }}>
+                        <View>
                             {!flightData?.flightNumber ? (
-                                <Text>Estoy conectado y en espera. Añade un vuelo en la pestaña VUELOS para que empiece a vigilarlo.</Text>
-                            ) : flightData?.delay >= 180 ? (
-                                <Text>🚨 <Text style={{ color: '#FF3B30', fontWeight: 'bold' }}>ALERTA CRÍTICA:</Text> Tu retraso supera las 3h. Tienes derecho a <Text style={{ color: '#4CD964', fontWeight: 'bold' }}>600€</Text>. He activado tu compensación en la sección de DOCS.</Text>
+                                <Text style={{ color: '#E0E0E0', fontSize: 13, lineHeight: 20, fontStyle: 'italic', letterSpacing: 0.3 }}>
+                                    Estoy conectado y en espera. Añade un vuelo en la pestaña VUELOS para que empiece a vigilarlo.
+                                </Text>
                             ) : flightData?.delay >= 120 ? (
-                                <Text>⚠️ <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>CONSEJO DEL SISTEMA:</Text> Tienes derecho a comida y bebida. <Text style={{ fontWeight: 'bold' }}>Guarda los tickets</Text> para reclamar gastos.</Text>
+                                <View>
+                                    <Text style={{ color: '#E0E0E0', fontSize: 13, lineHeight: 20, fontStyle: 'italic', letterSpacing: 0.3, marginBottom: 12 }}>
+                                        { (flightData?.delay || 0) >= 180 ? (
+                                            <>🚨 <Text style={{ color: '#FF3B30', fontWeight: 'bold' }}>ALERTA CRÍTICA:</Text> Retraso superior a 3h. Tienes derecho a <Text style={{ color: '#4CD964', fontWeight: 'bold' }}>600€</Text>. He activado tu Estrategia de Rescate.</>
+                                        ) : (
+                                            <>⚠️ <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>INCIDENCIA DETECTADA:</Text> Retraso de {flightData.delay} min. He diseñado una estrategia personalizada.</>
+                                        )}
+                                    </Text>
+                                    <TouchableOpacity 
+                                        onPress={() => showPlan(null)}
+                                        style={{ 
+                                            backgroundColor: '#AF52DE', 
+                                            paddingVertical: 10, 
+                                            paddingHorizontal: 15, 
+                                            borderRadius: 12,
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 12, letterSpacing: 0.5 }}>
+                                            {selectedRescuePlan 
+                                                ? `🚀 GESTIONANDO: ${selectedRescuePlan}` 
+                                                : hasSeenPlan 
+                                                    ? '📂 VER ESTRATEGIAS DISPONIBLES' 
+                                                    : '⚡ RESOLVER AHORA CON IA'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
                             ) : (
-                                <Text>Todo bajo control. He verificado tu vuelo <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>{flightData.flightNumber}</Text> y no hay alertas críticas.</Text>
+                                <Text style={{ color: '#E0E0E0', fontSize: 13, lineHeight: 20, fontStyle: 'italic', letterSpacing: 0.3 }}>
+                                    Todo bajo control. He verificado tu vuelo <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>{flightData.flightNumber}</Text> y no hay alertas críticas.
+                                </Text>
                             )}
-                        </Text>
+                        </View>
                     </View>
                 </View>
 

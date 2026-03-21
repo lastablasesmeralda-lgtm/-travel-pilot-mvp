@@ -12,7 +12,8 @@ export default function GlobalOverlays() {
         handleSendMessage, scrollViewRef, viewDoc, isScanning, setViewDoc, scanAnim, selectedPlan, setSelectedPlan, showSOS, setShowSOS,
         isGenerating, loadingStep, apiPlan, setApiPlan, setPlanes, setShowBrowser, browserLogs, showBrowser,
         clearMessages, availableVoices, selectedVoice, setSelectedVoice,
-        isDictating, startDictation, stopDictation, userPhone
+        isDictating, startDictation, stopDictation, userPhone,
+        setSelectedRescuePlan, selectedRescuePlan
     } = useAppContext();
 
     const [showVoiceMenu, setShowVoiceMenu] = React.useState(false);
@@ -21,21 +22,12 @@ export default function GlobalOverlays() {
 
     return (
         <>
-<<<<<<< HEAD
-            {/* MODAL DE AYUDA — ASISTENCIA EN VIAJE */}
-            <Modal visible={showSOSMenu} transparent animationType="fade">
-                <View style={[s.mf]}>
-                    <SafeAreaView style={[s.mc, { width: '90%' }]}>
-                        <Text style={{ color: '#FF3B30', fontSize: 23, fontWeight: '900', marginBottom: 5 }}>ℹ️ AYUDA</Text>
-                        <Text style={{ color: '#B0B0B0', fontSize: 12, marginBottom: 20 }}>ASISTENCIA Y SOPORTE EN VIAJE</Text>
-=======
             {/* MENÚ DE AYUDA — ASISTENCIA RÁPIDA */}
             <Modal visible={showSOSMenu} transparent animationType="fade">
                 <View style={[s.mf]}>
                     <SafeAreaView style={[s.mc, { width: '90%' }]}>
                         <Text style={{ color: '#AF52DE', fontSize: 23, fontWeight: '900', marginBottom: 5 }}>🙋 ASISTENCIA</Text>
                         <Text style={{ color: '#B0B0B0', fontSize: 12, marginBottom: 20 }}>TU ASISTENTE PERSONAL DE VIAJE</Text>
->>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
 
                         {[
                             {
@@ -55,10 +47,7 @@ export default function GlobalOverlays() {
                                                         body: JSON.stringify({
                                                             hotelPhone: "+34623986708",
                                                             passengerName: user?.email?.split('@')[0] || "Viajero",
-<<<<<<< HEAD
-=======
                                                             passengerPhone: userPhone || "No registrado",
->>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
                                                             delayMinutes: 210
                                                         }),
                                                         signal: controller.signal
@@ -144,13 +133,13 @@ export default function GlobalOverlays() {
 
                                                 if (index === 0) { label = 'Autonoe'; isPremium = true; }
                                                 else if (index === 1) { label = 'Enceladus'; isPremium = true; }
-                                                else if (index === 2) { label = 'Lucía'; isPremium = false; }
+                                                else if (index === 2) { label = 'Jorge'; isPremium = false; }
                                                 else { label = 'Javier'; isPremium = false; }
 
                                                 return (
                                                     <TouchableOpacity 
                                                         key={v.identifier}
-                                                        onPress={() => setSelectedVoice(v.identifier)} 
+                                                        onPress={() => { setSelectedVoice(v.identifier); speak('He cambiado mi configuración de voz.'); }} 
                                                         style={{ 
                                                             backgroundColor: selectedVoice === v.identifier ? '#AF52DE' : '#1A1A1A', 
                                                             paddingHorizontal: 16, 
@@ -195,7 +184,7 @@ export default function GlobalOverlays() {
             </Modal>
 
             {/* PLANES CONTINGENCIA (RADAR) */}
-            <Modal visible={!!user && (!!selectedPlan || showSOS)} transparent animationType="fade">
+            <Modal visible={!!user && showSOS} transparent animationType="fade">
                 <View style={s.mf}>
                     <SafeAreaView style={s.mc}>
                         <Text style={s.mt}>OPCIONES DE VIAJE AI</Text>
@@ -223,16 +212,14 @@ export default function GlobalOverlays() {
                                         <TouchableOpacity
                                             key={idx}
                                             style={[s.bt, { backgroundColor: opt.type === 'RAPIDO' ? '#FF9500' : opt.type === 'BARATO' ? '#34C759' : '#AF52DE', marginTop: idx > 0 ? 10 : 0 }]}
-                                            onPress={() => {
-                                                const msg = `Análisis de ruta ${opt.title}. ${opt.description}. El coste estimado es de ${opt.estimatedCost} euros.`;
-                                                speak(msg);
-                                                setPlanes((prev: any) => prev.map((p: any) => p.destino === 'TOKIO' ? { ...p, status: 'OK' } : p));
-                                                Alert.alert("SUGERENCIAS DEL ASISTENTE", msg, [
-                                                    { text: "AYUDARME AHORA", onPress: () => setShowBrowser(true) },
-                                                    { text: "CANCELAR", style: 'cancel', onPress: () => stopSpeak() }
-                                                ]);
-                                                // setShowSOS(false); // In global overlay we don't have direct access if we moved state, but we mapped it in context
-                                            }}
+                                                onPress={() => {
+                                                    const msg = `Análisis de ruta ${opt.title}. ${opt.description}. El coste estimado es de ${opt.estimatedCost} euros.`;
+                                                    speak(msg);
+                                                    setSelectedRescuePlan(opt.title);
+                                                    setSelectedPlan(opt);
+                                                    setShowSOS(false);
+                                                    setShowBrowser(true);
+                                                }}
                                         >
                                             <Text style={s.btx}>{opt.type}: {opt.title}</Text>
                                         </TouchableOpacity>

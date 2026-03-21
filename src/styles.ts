@@ -33,24 +33,16 @@ export const s = StyleSheet.create({
   vt: { color: '#FFF', fontWeight: 'bold' },
   vs: { color: '#B0B0B0', fontSize: 11 },
   vl: { color: '#FFF', marginBottom: 10, fontWeight: 'bold' },
-<<<<<<< HEAD
-  sosContainer: { position: 'absolute', top: 52, left: 28, zIndex: 100 },
-=======
   sosContainer: { position: 'absolute', top: 46, left: 28, zIndex: 100 },
->>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
   sos: { 
     width: 52, height: 52, borderRadius: 26, backgroundColor: '#FF3B30', 
     justifyContent: 'center', alignItems: 'center', 
     shadowColor: '#FF3B30', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.9, shadowRadius: 15, elevation: 15,
     borderWidth: 1.5, borderColor: 'rgba(255, 59, 48, 0.5)'
   },
-<<<<<<< HEAD
-  sosChat: { position: 'absolute', top: 52, right: 15, width: 52, height: 52, borderRadius: 26, backgroundColor: '#222', borderWidth: 1, borderColor: '#AF52DE', justifyContent: 'center', alignItems: 'center', zIndex: 100 },
-=======
   sosBtn: { position: 'absolute', bottom: 125, left: 20, width: 65, height: 65, borderRadius: 33, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#FF3B30', elevation: 10, shadowColor: '#FF3B30', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 8 },
   chatBubble: { position: 'absolute', bottom: 125, right: 20, width: 65, height: 65, borderRadius: 33, backgroundColor: '#AF52DE', justifyContent: 'center', alignItems: 'center', elevation: 10, shadowColor: '#AF52DE', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 8 },
   sosChat: { position: 'absolute', top: 46, right: 15, width: 52, height: 52, borderRadius: 26, backgroundColor: '#222', borderWidth: 1, borderColor: '#AF52DE', justifyContent: 'center', alignItems: 'center', zIndex: 100 },
->>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
   topPanel: { position: 'absolute', top: 64, left: 0, right: 0, alignItems: 'center', zIndex: 90 },
   nav: { height: 90, flexDirection: 'row', backgroundColor: '#111', borderTopWidth: 1, borderColor: '#222', paddingBottom: 25 },
   ni: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -74,9 +66,10 @@ export const s = StyleSheet.create({
   chatInputWrap: { flexDirection: 'row', padding: 15, backgroundColor: '#111', borderTopWidth: 1, borderTopColor: '#222' },
   chatInput: { flex: 1, backgroundColor: '#0A0A0A', borderRadius: 20, paddingHorizontal: 15, color: '#FFF', height: 45 },
   chatBtn: { width: 45, height: 45, backgroundColor: '#AF52DE', borderRadius: 22.5, justifyContent: 'center', alignItems: 'center', marginLeft: 10 },
-  compBanner: { backgroundColor: '#FFD700', padding: 12, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 2, borderBottomColor: '#D4AF37' },
-  compText: { color: '#000', fontWeight: '900', fontSize: 14 },
-  compSub: { color: '#333', fontSize: 10, fontWeight: 'bold', marginTop: 2 },
+  compBanner: { backgroundColor: '#FFD700', paddingVertical: 14, paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 3, borderBottomColor: '#B8860B', position: 'relative', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 8 },
+  compText: { color: '#000', fontWeight: '900', fontSize: 13, letterSpacing: 0.5, textAlign: 'center' },
+  compSub: { color: '#444', fontSize: 10, fontWeight: 'bold', marginTop: 3, opacity: 0.8, textAlign: 'center' },
+  compClose: { position: 'absolute', right: 12, top: '50%', marginTop: -15, width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(0,0,0,0.08)', justifyContent: 'center', alignItems: 'center' },
   voiceBtn: { paddingHorizontal: 15, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: '#AF52DE', marginRight: 10 },
   voiceBtnSelected: { backgroundColor: '#AF52DE' }
 });

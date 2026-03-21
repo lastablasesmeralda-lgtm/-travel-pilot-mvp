@@ -21,7 +21,6 @@ export default function VuelosScreen() {
 
             <View style={{ backgroundColor: '#111', borderRadius: 16, padding: 16, marginBottom: 16 }}>
                 <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', marginBottom: 8 }}>🔍 BUSCAR VUELO</Text>
-<<<<<<< HEAD
                 <View style={{ flexDirection: 'row' }}>
                     <View style={{ flex: 1, position: 'relative', marginRight: 10 }}>
                         <TextInput
@@ -43,29 +42,6 @@ export default function VuelosScreen() {
                             </TouchableOpacity>
                         )}
                     </View>
-=======
-                <View style={{ flexDirection: 'row', position: 'relative' }}>
-
-                    <TextInput
-                        placeholder="Ej: IB3166, BA0117..."
-                        placeholderTextColor="#B0B0B0"
-                        value={flightInput}
-                        onChangeText={setFlightInput}
-                        autoCapitalize="characters"
-                        style={{
-                        flex: 1, backgroundColor: '#1F2937', color: 'white', paddingHorizontal: 12, paddingVertical: 10, paddingRight: 36, borderRadius: 10, marginRight: 10, fontSize: 15,
-}}
-
-                    />
-                   {(flightData || searchError || flightInput.length > 0) && (
-                        <TouchableOpacity
-                            onPress={clearFlight}
-                            style={{ position: 'absolute', right: 18, top: 0, bottom: 0, justifyContent: 'center' }}
-                        >
-                            <Text style={{ color: '#666', fontSize: 21, fontWeight: 'bold' }}>✕</Text>
-                        </TouchableOpacity>
-                    )}
->>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
                     <TouchableOpacity
                         onPress={searchFlight}
                         disabled={isSearching || !flightInput.trim()}
@@ -82,12 +58,9 @@ export default function VuelosScreen() {
                         <Text style={{ color: '#FF9500', fontWeight: 'bold', fontSize: 14 }}>⚠️ {searchError}</Text>
                         <Text style={{ color: '#B0B0B0', fontSize: 12, marginTop: 4 }}>Comprueba el número e intenta de nuevo.</Text>
                     </View>
-<<<<<<< HEAD
-=======
                     <TouchableOpacity onPress={() => clearFlight()} style={{ padding: 5 }}>
                         <Text style={{ color: '#666', fontSize: 20 }}>✕</Text>
                     </TouchableOpacity>
->>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
                 </View>
             )}
 

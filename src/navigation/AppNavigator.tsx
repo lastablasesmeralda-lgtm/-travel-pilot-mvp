@@ -28,8 +28,8 @@ export default function AppNavigator() {
                 tabBarButton: (props) => {
                     let icon = '';
                     if (route.name === 'Intel') icon = '💠';
-                    else if (route.name === 'Radar') icon = '🔘';
-                    else if (route.name === 'Vault') icon = '📄';
+                    else if (route.name === 'Radar') icon = '✈️';
+                    else if (route.name === 'Vault') icon = '💼';
                     else if (route.name === 'Bio') icon = '👥';
 
                     const isFocused = props.accessibilityState?.selected;
@@ -40,23 +40,39 @@ export default function AppNavigator() {
                             style={[s.ni, { flexDirection: 'column', alignItems: 'center' }]}
                         >
                             <Text style={{
-                                fontSize: 25,
-                                opacity: isFocused ? 1 : 0.6,
-                                transform: [{ scale: isFocused ? 1.1 : 1 }]
+                                fontSize: 26,
+                                opacity: isFocused ? 1 : 0.5,
+                                transform: [{ scale: isFocused ? 1.2 : 1 }],
+                                textShadowColor: isFocused ? 'rgba(175, 82, 222, 0.8)' : 'transparent',
+                                textShadowRadius: isFocused ? 15 : 0
                             }}>
                                 {icon}
                             </Text>
                             <Text style={{
                                 color: isFocused ? '#AF52DE' : '#666',
-                                fontSize: 11,
-                                fontWeight: 'bold',
+                                fontSize: 10,
+                                fontWeight: '900',
                                 marginTop: 4,
-                                textTransform: 'uppercase'
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.5
                             }}>
                                 {route.name === 'Intel' ? 'INICIO' :
                                     route.name === 'Radar' ? 'VUELOS' :
-                                        route.name === 'Vault' ? 'DOCUMENTOS' : 'PERFIL'}
+                                        route.name === 'Vault' ? 'DOCS' : 'PERFIL'}
                             </Text>
+                            {isFocused && (
+                                <View style={{ 
+                                    width: 4, 
+                                    height: 4, 
+                                    borderRadius: 2, 
+                                    backgroundColor: '#AF52DE', 
+                                    marginTop: 4,
+                                    shadowColor: '#AF52DE',
+                                    shadowOffset: { width: 0, height: 0 },
+                                    shadowOpacity: 1,
+                                    shadowRadius: 5
+                                }} />
+                            )}
                         </TouchableOpacity>
                     );
                 }

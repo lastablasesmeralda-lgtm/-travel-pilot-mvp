@@ -10,7 +10,7 @@ import { BACKEND_URL } from '../../config';
 
 export default function DocsScreen() {
     const {
-        legalShieldActive, setViewDoc, setIsScanning, claims, flightData,
+        legalShieldActive, setViewDoc, setIsScanning, claims, removeClaim, flightData,
         compensationEligible, extraDocs, setExtraDocs, isExtracting, simulateGmailSync, user
     } = useAppContext();
 
@@ -391,12 +391,26 @@ export default function DocsScreen() {
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                                     <View style={{
                                         width: 6, height: 6, borderRadius: 3,
-                                        backgroundColor: c.isDynamic ? '#FF9500' : '#27C93F', marginRight: 6,
+                                        backgroundColor: (c.isDynamic || c.estado?.includes('GESTIONANDO')) ? '#FF9500' : '#27C93F', marginRight: 6,
                                     }} />
-                                    <Text style={{ color: c.isDynamic ? '#FF9500' : '#27C93F', fontSize: 11, fontWeight: 'bold' }}>{c.estado}</Text>
+                                    <Text style={{ color: (c.isDynamic || c.estado?.includes('GESTIONANDO')) ? '#FF9500' : '#27C93F', fontSize: 11, fontWeight: 'bold' }}>{c.estado}</Text>
                                 </View>
                             </View>
-                            <ActivityIndicator size="small" color={c.isDynamic ? '#FF9500' : '#27C93F'} />
+                            <TouchableOpacity 
+                                onPress={() => {
+                                    Alert.alert(
+                                        "BORRAR EXPEDIENTE",
+                                        `¿Estás seguro de que quieres eliminar la reclamación de ${c.aerolinea}?`,
+                                        [
+                                            { text: "CANCELAR", style: "cancel" },
+                                            { text: "BORRAR", style: "destructive", onPress: () => removeClaim(c.id) }
+                                        ]
+                                    );
+                                }}
+                                style={{ padding: 10, marginRight: -10 }}
+                            >
+                                <Text style={{ color: '#666', fontSize: 18, fontWeight: 'bold' }}>✕</Text>
+                            </TouchableOpacity>
                         </View>
 
                         {/* Barra de progreso */}

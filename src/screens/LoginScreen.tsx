@@ -59,11 +59,7 @@ export default function LoginScreen() {
                         </Text>
                     </View>
                     <Text style={{ color: '#888', fontSize: 12, marginBottom: 16, marginLeft: 16 }}>
-<<<<<<< HEAD
                         {authMode === 'login' ? 'Inicia sesión para activar tu asistencia en viaje.' : 'Crea tu perfil de viajero para empezar a recibir soporte.'}
-=======
-                        {authMode === 'login' ? 'Inicia sesión para activar tu asistente inteligente.' : 'Crea tu perfil para empezar a viajar tranquilo.'}
->>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
                     </Text>
 
                     <TextInput
@@ -131,11 +127,7 @@ export default function LoginScreen() {
             ) : (
                 <View style={{ padding: 40, alignItems: 'center', marginTop: 100, backgroundColor: '#111', borderRadius: 16, borderWidth: 1, borderColor: '#222' }}>
                     <Text style={{ color: '#E0E0E0', fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>ASISTENCIA ACTIVA</Text>
-<<<<<<< HEAD
                     <Text style={{ color: '#888', marginBottom: 30 }}>Viajero: {user.email}</Text>
-=======
-                    <Text style={{ color: '#888', marginBottom: 30 }}>Usuario: {user.email}</Text>
->>>>>>> d6f6d1a840845440c35c74cb2739f0b0322c0f5b
                     <TouchableOpacity onPress={handleLogout} style={{ backgroundColor: '#333', paddingVertical: 12, paddingHorizontal: 30, borderRadius: 8 }}>
                         <Text style={{ color: '#E0E0E0', fontWeight: 'bold' }}>CERRAR SESIÓN</Text>
                     </TouchableOpacity>
