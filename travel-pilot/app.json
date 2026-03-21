@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Travel-Pilot",
+    "slug": "travel-pilot",
+    "version": "1.0.3",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.travelpilot.app",
+      "permissions": ["INTERNET"]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "3a250c2c-ac83-471d-970e-e4cf92d99dc2"
+      }
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableJetifier": true,
+            "gradleCommand": "assembleRelease",
+            "extraParams": {
+               "org.gradle.jvmargs": "-Xmx3g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
+            }
+          }
+        }
+      ]
+    ],
+    "owner": "travelpilot"
+  }
+}
