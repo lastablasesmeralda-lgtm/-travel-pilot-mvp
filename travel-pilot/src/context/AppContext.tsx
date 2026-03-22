@@ -835,7 +835,9 @@ export const AppProvider = ({ children }) => {
       setHasSeenPlan(false);
       setPrefetchedData(null);
       setIsGenerating(false);
-      Alert.alert('✅ COMPLETADO', 'Historial de actividad de la IA vaciado correctamente.');
+      setFlightData(null); // Reseteo total de datos de vuelo
+      setFlightInput('');  // Limpieza del campo de búsqueda
+      Alert.alert('✅ COMPLETADO', 'Historial y planes de la IA vaciados correctamente.');
     } catch (e) {
       console.error('[Frontend] Error clearing logs:', e);
     }

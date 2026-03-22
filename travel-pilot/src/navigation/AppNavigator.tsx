@@ -20,22 +20,22 @@ export default function AppNavigator() {
                 headerShown: false,
                 tabBarStyle: {
                     position: 'absolute',
-                    bottom: 45, // Elevación aumentada para evitar el sistema Android
+                    bottom: 45,
                     left: 15,
                     right: 15,
-                    height: 85, // Un poco más de aire interno
-                    backgroundColor: 'rgba(5, 11, 24, 0.98)', // Azul más profundo y premium
+                    height: 85,
+                    backgroundColor: 'rgba(3, 7, 18, 0.99)', // Más oscuro para que resalten los fluorescentes
                     borderRadius: 42,
                     borderTopWidth: 0,
-                    borderWidth: 1.5,
-                    borderColor: '#FFD700',
-                    paddingBottom: 5, // Espacio extra para los textos
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 215, 0, 0.8)',
+                    paddingBottom: 5,
                     paddingHorizontal: 15,
-                    elevation: 15,
+                    elevation: 25,
                     shadowColor: '#FFD700',
-                    shadowOffset: { width: 0, height: 8 },
-                    shadowOpacity: 0.6,
-                    shadowRadius: 15
+                    shadowOffset: { width: 0, height: 12 },
+                    shadowOpacity: 0.8, // Brillo mucho más intenso
+                    shadowRadius: 20
                 },
                 tabBarButton: (props) => {
                     let icon = '';
@@ -56,18 +56,18 @@ export default function AppNavigator() {
                                 width: 44,
                                 height: 44,
                                 borderRadius: 22,
-                                backgroundColor: isFocused ? 'rgba(212, 175, 55, 0.15)' : 'transparent',
+                                backgroundColor: isFocused ? 'rgba(255, 215, 0, 0.25)' : 'transparent',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                borderWidth: isFocused ? 1 : 0,
-                                borderColor: 'rgba(212, 175, 55, 0.5)'
+                                borderWidth: isFocused ? 1.5 : 0,
+                                borderColor: 'rgba(255, 255, 255, 0.6)'
                             }}>
                                 <Text style={{
-                                    fontSize: isFocused ? 28 : 22, // Mayor resalte al enfocar
-                                    opacity: isFocused ? 1 : 0.5,
-                                    transform: [{ scale: isFocused ? 1.15 : 1 }],
-                                    textShadowColor: isFocused ? 'rgba(255, 215, 0, 0.9)' : 'transparent',
-                                    textShadowRadius: isFocused ? 12 : 0
+                                    fontSize: isFocused ? 30 : 22, // Aún más grande
+                                    opacity: isFocused ? 1 : 0.4,
+                                    transform: [{ scale: isFocused ? 1.2 : 1 }],
+                                    textShadowColor: isFocused ? '#FFD700' : 'transparent',
+                                    textShadowRadius: isFocused ? 15 : 0
                                 }}>
                                     {icon}
                                 </Text>
@@ -86,14 +86,14 @@ export default function AppNavigator() {
                                 )}
                             </View>
                             <Text style={{
-                                color: isFocused ? '#FFFFFF' : 'rgba(255, 215, 0, 0.45)', // Blanco puro para enfoque para máximo resalte
-                                fontSize: 9.5,
+                                color: isFocused ? '#FFFFFF' : 'rgba(255, 215, 0, 0.35)', // Máximo contraste
+                                fontSize: 10, // Un pelín más grande para legibilidad
                                 fontWeight: '900',
                                 marginTop: 4,
                                 textTransform: 'uppercase',
-                                letterSpacing: isFocused ? 2.5 : 0.8,
-                                textShadowColor: isFocused ? 'rgba(212, 175, 55, 0.8)' : 'transparent',
-                                textShadowRadius: isFocused ? 8 : 0
+                                letterSpacing: isFocused ? 3 : 1,
+                                textShadowColor: isFocused ? 'rgba(255, 255, 255, 0.5)' : 'transparent',
+                                textShadowRadius: isFocused ? 10 : 0
                             }}>
                                 {route.name === 'Intel' ? 'INICIO' :
                                     route.name === 'Radar' ? 'VUELOS' :
