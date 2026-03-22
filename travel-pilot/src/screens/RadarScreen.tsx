@@ -189,68 +189,7 @@ export default function VuelosScreen() {
                 </View>
             )}
 
-                        </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>TERMINAL</Text>
-                            <Text style={{ color: '#FFF', fontSize: 17, fontWeight: 'bold' }}>T5</Text>
-                        </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>PUERTA</Text>
-                            <Text style={{ color: '#FFF', fontSize: 17, fontWeight: 'bold' }}>C32</Text>
-                        </View>
-                    </View>
-                    <Text style={{ color: '#FF9500', fontSize: 12, marginTop: 10 }}>⚠️ Tiempo mínimo de conexión en LHR: 60 min. Margen crítico.</Text>
-                </View>
-            )}
-
-            {showDemoHotel && (
-                <View style={{ backgroundColor: '#111', borderRadius: 16, padding: 16, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: '#4CD964' }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', marginBottom: 8 }}>🏨 HOTEL</Text>
-                            <Text style={{ color: '#FFF', fontSize: 19, fontWeight: '900' }}>The Standard NYC</Text>
-                            <Text style={{ color: '#B0B0B0', fontSize: 14, marginTop: 4 }}>848 Washington St, Nueva York</Text>
-                        </View>
-                        <TouchableOpacity onPress={() => setShowDemoHotel(false)} style={{ padding: 5, marginLeft: 10 }}>
-                            <Text style={{ color: '#555', fontSize: 18 }}>✕</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <View style={{ flexDirection: 'row', marginTop: 12 }}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>CHECK-IN</Text>
-                            <Text style={{ color: '#4CD964', fontSize: 17, fontWeight: 'bold' }}>15:00</Text>
-                        </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>CHECK-OUT</Text>
-                            <Text style={{ color: '#FFF', fontSize: 17, fontWeight: 'bold' }}>12:00</Text>
-                        </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>ESTADO</Text>
-                            <Text style={{ color: '#4CD964', fontSize: 13, fontWeight: 'bold' }}>A TIEMPO ✓</Text>
-                        </View>
-                    </View>
-                </View>
-            )}
-
-            {showAltPlans && (
-                <View style={{ backgroundColor: isGenerating ? '#551A8B' : '#FF3B30', borderRadius: 16, marginBottom: 20, overflow: 'hidden', opacity: isGenerating ? 0.8 : 1 }}>
-                    <TouchableOpacity
-                        onPress={showPlan}
-                        disabled={isGenerating}
-                        style={{ padding: 16, alignItems: 'center' }}
-                    >
-                        {isGenerating ? (
-                            <ActivityIndicator size="small" color="#FFF" />
-                        ) : (
-                            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 17 }}>✨ VER PLANES ALTERNATIVOS</Text>
-                        )}
-                        <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 4 }}>
-                            {isGenerating ? 'Vigilancia activa: conectando con servidor de contingencia...' : 'Tu asistente calculará 3 opciones ahora'}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-            )}
-
+            {/* Asistente y Otros componentes dinmicos aqu */}
             {showAssistant && (
                 <View style={{ backgroundColor: '#111', borderRadius: 16, padding: 16, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: '#AF52DE' }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
