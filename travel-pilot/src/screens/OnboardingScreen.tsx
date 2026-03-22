@@ -72,54 +72,19 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
             alignItems: 'center',
             paddingHorizontal: 25,
         }}>
-            <View style={{ 
-                width: 280, 
-                height: 280, 
-                backgroundColor: 'rgba(255,255,255,0.02)', 
-                borderRadius: 40,
+            {/* Imagen que ocupa todo el espacio central (ya contiene el texto) */}
+            <View style={{
+                flex: 1,
+                width: '100%',
+                borderRadius: 30,
                 overflow: 'hidden',
-                marginBottom: 30,
-                borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.1)',
-                justifyContent: 'center',
-                alignItems: 'center'
+                marginBottom: 20,
             }}>
                 <Image 
                     source={item.image} 
-                    style={{ width: '100%', height: '100%', borderRadius: 30 }}
-                    resizeMode="cover"
+                    style={{ width: '100%', height: '100%' }}
+                    resizeMode="contain" // Contain para asegurar que no se corte el texto de la imagen
                 />
-            </View>
-
-            <View style={{
-                width: '100%',
-                backgroundColor: 'rgba(255,255,255,0.03)',
-                padding: 25,
-                borderRadius: 28,
-                borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.05)',
-                alignItems: 'center'
-            }}>
-                <Text style={{
-                    color: '#FFF',
-                    fontSize: 28,
-                    fontWeight: '900',
-                    textAlign: 'center',
-                    marginBottom: 14,
-                    letterSpacing: -0.5,
-                }}>
-                    {item.title}
-                </Text>
-
-                <Text style={{
-                    color: '#B0B0B0',
-                    fontSize: 15,
-                    textAlign: 'center',
-                    lineHeight: 24,
-                    fontWeight: '400'
-                }}>
-                    {item.subtitle}
-                </Text>
             </View>
         </View>
     );
@@ -131,7 +96,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
             {/* Top Badge */}
             <View style={{ position: 'absolute', top: 60, width: '100%', alignItems: 'center', zIndex: 10 }}>
                 <View style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#D4AF37' }}>
-                    <Text style={{ color: '#D4AF37', fontSize: 11, fontWeight: '900', letterSpacing: 4 }}>TRAVEL-PILOT VIP</Text>
+                    <Text style={{ color: '#D4AF37', fontSize: 11, fontWeight: '900', letterSpacing: 3 }}>TRAVEL-PILOT VIP</Text>
                 </View>
             </View>
 
