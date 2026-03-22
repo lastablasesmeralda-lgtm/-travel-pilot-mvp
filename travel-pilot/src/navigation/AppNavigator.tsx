@@ -20,22 +20,22 @@ export default function AppNavigator() {
                 headerShown: false,
                 tabBarStyle: {
                     position: 'absolute',
-                    bottom: 30,
-                    left: 20,
-                    right: 20,
-                    height: 80,
-                    backgroundColor: 'rgba(10, 25, 47, 0.98)',
-                    borderRadius: 40,
+                    bottom: 45, // Elevación aumentada para evitar el sistema Android
+                    left: 15,
+                    right: 15,
+                    height: 85, // Un poco más de aire interno
+                    backgroundColor: 'rgba(5, 11, 24, 0.98)', // Azul más profundo y premium
+                    borderRadius: 42,
                     borderTopWidth: 0,
-                    borderWidth: 2,
+                    borderWidth: 1.5,
                     borderColor: '#FFD700',
-                    paddingBottom: 0,
+                    paddingBottom: 5, // Espacio extra para los textos
                     paddingHorizontal: 15,
-                    elevation: 20,
+                    elevation: 15,
                     shadowColor: '#FFD700',
-                    shadowOffset: { width: 0, height: 10 },
-                    shadowOpacity: 0.5,
-                    shadowRadius: 20
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.6,
+                    shadowRadius: 15
                 },
                 tabBarButton: (props) => {
                     let icon = '';
@@ -63,11 +63,11 @@ export default function AppNavigator() {
                                 borderColor: 'rgba(212, 175, 55, 0.5)'
                             }}>
                                 <Text style={{
-                                    fontSize: isFocused ? 26 : 22,
-                                    opacity: isFocused ? 1 : 0.6,
-                                    transform: [{ scale: isFocused ? 1.1 : 1 }],
-                                    textShadowColor: isFocused ? 'rgba(212, 175, 55, 0.8)' : 'transparent',
-                                    textShadowRadius: isFocused ? 10 : 0
+                                    fontSize: isFocused ? 28 : 22, // Mayor resalte al enfocar
+                                    opacity: isFocused ? 1 : 0.5,
+                                    transform: [{ scale: isFocused ? 1.15 : 1 }],
+                                    textShadowColor: isFocused ? 'rgba(255, 215, 0, 0.9)' : 'transparent',
+                                    textShadowRadius: isFocused ? 12 : 0
                                 }}>
                                     {icon}
                                 </Text>
@@ -86,14 +86,14 @@ export default function AppNavigator() {
                                 )}
                             </View>
                             <Text style={{
-                                color: isFocused ? '#FFD700' : 'rgba(255, 215, 0, 0.4)',
-                                fontSize: 9,
+                                color: isFocused ? '#FFFFFF' : 'rgba(255, 215, 0, 0.45)', // Blanco puro para enfoque para máximo resalte
+                                fontSize: 9.5,
                                 fontWeight: '900',
-                                marginTop: 2,
+                                marginTop: 4,
                                 textTransform: 'uppercase',
-                                letterSpacing: isFocused ? 2 : 0.5,
-                                textShadowColor: isFocused ? 'rgba(255, 215, 0, 0.8)' : 'transparent',
-                                textShadowRadius: isFocused ? 10 : 0
+                                letterSpacing: isFocused ? 2.5 : 0.8,
+                                textShadowColor: isFocused ? 'rgba(212, 175, 55, 0.8)' : 'transparent',
+                                textShadowRadius: isFocused ? 8 : 0
                             }}>
                                 {route.name === 'Intel' ? 'INICIO' :
                                     route.name === 'Radar' ? 'VUELOS' :
