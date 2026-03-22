@@ -95,7 +95,7 @@ export default function AppNavigator() {
                                 textShadowColor: isFocused ? 'rgba(212, 175, 55, 0.5)' : 'transparent',
                                 textShadowRadius: isFocused ? 5 : 0
                             }}>
-                                {route.name === 'Intel' ? 'INICIO' :
+                                {route.name === 'Intel' ? 'INICIO VIP' :
                                     route.name === 'Radar' ? 'VUELOS' :
                                         route.name === 'Vault' ? 'DOCS' : 'PERFIL'}
                             </Text>
