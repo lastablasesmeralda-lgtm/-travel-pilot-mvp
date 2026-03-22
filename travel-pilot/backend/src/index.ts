@@ -465,7 +465,7 @@ fastify.delete('/api/logs', async (request, reply) => {
         const { error } = await supabase
             .from('agent_logs')
             .delete()
-            .neq('id', '0'); // Hack para borrar todo (borra los que su id no sea '0')
+            .neq('status', 'nonexistent'); // Hack seguro para vaciar toda la tabla
 
         if (error) throw error;
         console.log('[Backend] 🧹 Historial de logs vaciado.');
