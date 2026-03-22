@@ -831,6 +831,10 @@ export const AppProvider = ({ children }) => {
     try {
       await fetch(`${BACKEND_URL}/api/logs`, { method: 'DELETE' });
       setAgentLogs([]);
+      setApiPlan(null);
+      setHasSeenPlan(false);
+      setPrefetchedData(null);
+      setIsGenerating(false);
       Alert.alert('✅ COMPLETADO', 'Historial de actividad de la IA vaciado correctamente.');
     } catch (e) {
       console.error('[Frontend] Error clearing logs:', e);
