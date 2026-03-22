@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
-    View, Text, TouchableOpacity, Dimensions, FlatList, Animated, Easing,
+    View, Text, TouchableOpacity, Dimensions, FlatList, Animated, Easing, Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -9,144 +9,33 @@ const { width } = Dimensions.get('window');
 const SLIDES = [
     {
         id: '1',
-        icon: '💎',
-        title: 'Tu Escudo de Viaje',
-        subtitle: 'Toda la inteligencia de tu trayecto en un solo vistazo. Controla el clima y el estado de tus vuelos con precisión militar.\n\nEs tu centro de mando personalizado para una experiencia VIP sin sobresaltos.',
-        accent: '#D4AF37',
-        animType: 'pulse',
+        image: require('../../assets/onboarding1.jpg'),
+        title: 'Esto no es una app de viajes',
+        subtitle: 'Las apps normales te informan de un problema. Travel-Pilot lo resuelve por ti.\n\nEs la primera app del mundo que actúa cuando algo va mal en tu viaje.',
+        accent: '#9333EA', // Purple
     },
     {
         id: '2',
-        icon: '✈️',
-        title: 'Radar de Vuelos OORO',
-        subtitle: 'Monitorea cualquier vuelo en tiempo real. Observa cómo nuestra IA vigila cada minuto de tu trayecto con registros de actividad.\n\nPrecisión absoluta para que siempre sepas qué está haciendo tu asistente por ti.',
-        accent: '#D4AF37',
-        animType: 'fly',
+        image: require('../../assets/onboarding2.jpg'),
+        title: 'Tú solo eliges',
+        subtitle: 'Te presentaremos 3 opciones personalizadas:\n\n🔴 Rápido — Llegar cuanto antes.\n🟢 Económico — Ahorrar dinero.\n🟣 Confort — Descansar y volar mañana.',
+        accent: '#22C55E', // Green
     },
     {
         id: '3',
-        icon: '🛡️',
-        title: 'Bóveda de Seguridad',
-        subtitle: 'Tus pasaportes y billetes, protegidos con encriptación de alta seguridad. Generamos tus reclamaciones legales de forma automática.\n\nProtección total y gestión de compensaciones de hasta 600€ en la palma de tu mano.',
-        accent: '#D4AF37',
-        animType: 'alarm',
+        image: require('../../assets/onboarding3.jpg'),
+        title: 'Solo necesitas tu vuelo',
+        subtitle: 'Ve a la pestaña VUELOS y escribe tu número de vuelo (ej: IB3166).\n\nA partir de ese momento, la IA vigila tu vuelo las 24 horas. Tú no tienes que hacer nada más.',
+        accent: '#3B82F6', // Blue
     },
     {
         id: '4',
-        icon: '👑',
-        title: 'Perfil VIP Elite',
-        subtitle: 'Tú tienes el mando. Configura cómo quieres que la IA responda ante imprevistos: modo VIP, Económico o Confort.\n\nPersonaliza tu identidad digital y deja que Travel-Pilot se adapte a tu estilo de vida único.',
-        accent: '#D4AF37',
-        animType: 'sparkle',
+        image: require('../../assets/onboarding4.jpg'),
+        title: '¿Retraso? Nosotros actuamos',
+        subtitle: 'Si tu vuelo se retrasa, la IA:\n\n• Llama a tu hotel para avisar.\n• Busca vuelos alternativos.\n• Reclama tu compensación (hasta 600€).\n\nTodo automático. Sin que tú hagas nada.',
+        accent: '#EF4444', // Red
     },
 ];
-
-// Animated icon component
-function AnimatedIcon({ icon, accent, animType, isActive }: {
-    icon: string; accent: string; animType: string; isActive: boolean;
-}) {
-    const pulseAnim = useRef(new Animated.Value(1)).current;
-    const flyAnim = useRef(new Animated.Value(0)).current;
-    const rotateAnim = useRef(new Animated.Value(0)).current;
-    const glowAnim = useRef(new Animated.Value(0.3)).current;
-
-    useEffect(() => {
-        if (!isActive) return;
-
-        if (animType === 'pulse') {
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(pulseAnim, { toValue: 1.15, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-                    Animated.timing(pulseAnim, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-                ])
-            ).start();
-        }
-
-        if (animType === 'fly') {
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(flyAnim, { toValue: -12, duration: 1500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-                    Animated.timing(flyAnim, { toValue: 12, duration: 1500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-                ])
-            ).start();
-        }
-
-        if (animType === 'alarm') {
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(rotateAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-                    Animated.timing(rotateAnim, { toValue: -1, duration: 100, useNativeDriver: true }),
-                    Animated.timing(rotateAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-                    Animated.timing(rotateAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
-                    Animated.delay(2000),
-                ])
-            ).start();
-        }
-
-        if (animType === 'sparkle') {
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(pulseAnim, { toValue: 1.2, duration: 600, easing: Easing.elastic(2), useNativeDriver: true }),
-                    Animated.timing(pulseAnim, { toValue: 1, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-                    Animated.delay(1000),
-                ])
-            ).start();
-        }
-
-        // Glow animation for all
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(glowAnim, { toValue: 0.6, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-                Animated.timing(glowAnim, { toValue: 0.3, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-            ])
-        ).start();
-
-    }, [isActive, animType]);
-
-    const spin = rotateAnim.interpolate({
-        inputRange: [-1, 1],
-        outputRange: ['-8deg', '8deg'],
-    });
-
-    const bgColor = glowAnim.interpolate({
-        inputRange: [0.3, 0.6],
-        outputRange: [`${accent}15`, `${accent}30`],
-    });
-
-    return (
-        <Animated.View style={{
-            width: 130, height: 130, borderRadius: 65,
-            backgroundColor: bgColor,
-            justifyContent: 'center', alignItems: 'center',
-            marginBottom: 40,
-            borderWidth: 1,
-            borderColor: `${accent}40`,
-        }}>
-            {/* Orbital ring */}
-            <View style={{
-                position: 'absolute',
-                width: 150, height: 150, borderRadius: 75,
-                borderWidth: 1, borderColor: `${accent}15`,
-            }} />
-            <View style={{
-                position: 'absolute',
-                width: 170, height: 170, borderRadius: 85,
-                borderWidth: 1, borderColor: `${accent}08`,
-            }} />
-
-            <Animated.Text style={{
-                fontSize: 57,
-                transform: [
-                    { scale: pulseAnim },
-                    { translateY: animType === 'fly' ? flyAnim : 0 },
-                    { rotate: animType === 'alarm' ? spin : '0deg' },
-                ],
-            }}>
-                {icon}
-            </Animated.Text>
-        </Animated.View>
-    );
-}
 
 interface OnboardingScreenProps {
     onComplete: () => void;
@@ -160,7 +49,6 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
 
     const handleNext = () => {
         if (currentIndex < SLIDES.length - 1) {
-            // Fade out, scroll, fade in
             Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => {
                 flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
                 setCurrentIndex(currentIndex + 1);
@@ -182,44 +70,52 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            paddingHorizontal: 30,
+            paddingHorizontal: 25,
         }}>
-            {/* BACK GLOW BLOBS */}
-            <View style={{ position: 'absolute', top: '15%', width: 300, height: 300, borderRadius: 150, backgroundColor: item.accent, opacity: 0.1, filter: 'blur(100px)' as any }} />
-            <View style={{ position: 'absolute', bottom: '20%', right: -50, width: 250, height: 250, borderRadius: 125, backgroundColor: item.accent, opacity: 0.05, filter: 'blur(80px)' as any }} />
-
-            <AnimatedIcon
-                icon={item.icon}
-                accent={item.accent}
-                animType={item.animType}
-                isActive={currentIndex === index}
-            />
+            <View style={{ 
+                width: 280, 
+                height: 280, 
+                backgroundColor: 'rgba(255,255,255,0.02)', 
+                borderRadius: 40,
+                overflow: 'hidden',
+                marginBottom: 30,
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.1)',
+                justifyContent: 'center',
+                alignItems: 'center'
+            }}>
+                <Image 
+                    source={item.image} 
+                    style={{ width: '100%', height: '100%', borderRadius: 30 }}
+                    resizeMode="cover"
+                />
+            </View>
 
             <View style={{
                 width: '100%',
                 backgroundColor: 'rgba(255,255,255,0.03)',
-                padding: 30,
-                borderRadius: 32,
+                padding: 25,
+                borderRadius: 28,
                 borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.07)',
+                borderColor: 'rgba(255,255,255,0.05)',
                 alignItems: 'center'
             }}>
                 <Text style={{
                     color: '#FFF',
-                    fontSize: 32,
+                    fontSize: 28,
                     fontWeight: '900',
                     textAlign: 'center',
-                    marginBottom: 16,
-                    letterSpacing: -1,
+                    marginBottom: 14,
+                    letterSpacing: -0.5,
                 }}>
                     {item.title}
                 </Text>
 
                 <Text style={{
                     color: '#B0B0B0',
-                    fontSize: 16,
+                    fontSize: 15,
                     textAlign: 'center',
-                    lineHeight: 26,
+                    lineHeight: 24,
                     fontWeight: '400'
                 }}>
                     {item.subtitle}
