@@ -11,11 +11,11 @@ export default function VuelosScreen() {
         myFlights, saveMyFlight, removeMyFlight
     } = useAppContext();
 
+    const [showLogsDetails, setShowLogsDetails] = React.useState(false);
     const [showDemoConnection, setShowDemoConnection] = React.useState(true);
     const [showDemoHotel, setShowDemoHotel] = React.useState(true);
     const [showAltPlans, setShowAltPlans] = React.useState(true);
     const [showAssistant, setShowAssistant] = React.useState(true);
-    const [showLogsDetails, setShowLogsDetails] = React.useState(false);
 
     React.useEffect(() => {
         fetchAgentLogs();
@@ -189,27 +189,6 @@ export default function VuelosScreen() {
                 </View>
             )}
 
-            {showDemoConnection && (
-                <View style={{ backgroundColor: '#111', borderRadius: 16, padding: 16, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: '#FF9500' }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', marginBottom: 8 }}>🔗 CONEXIÓN EN RIESGO</Text>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Text style={{ color: '#FFF', fontSize: 23, fontWeight: '900' }}>BA0117</Text>
-                                <View style={{ backgroundColor: '#FF9500', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
-                                    <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold' }}>68 MIN DISPONIBLES</Text>
-                                </View>
-                            </View>
-                        </View>
-                        <TouchableOpacity onPress={() => setShowDemoConnection(false)} style={{ padding: 5, marginLeft: 10 }}>
-                            <Text style={{ color: '#555', fontSize: 18 }}>✕</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <Text style={{ color: '#B0B0B0', fontSize: 14, marginTop: 8 }}>Londres Heathrow (LHR) → Nueva York (JFK)</Text>
-                    <View style={{ flexDirection: 'row', marginTop: 12 }}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>SALIDA</Text>
-                            <Text style={{ color: '#FFF', fontSize: 17, fontWeight: 'bold' }}>11:00</Text>
                         </View>
                         <View style={{ flex: 1 }}>
                             <Text style={{ color: '#B0B0B0', fontSize: 11 }}>TERMINAL</Text>

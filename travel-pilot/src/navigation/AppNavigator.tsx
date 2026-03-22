@@ -20,22 +20,22 @@ export default function AppNavigator() {
                 headerShown: false,
                 tabBarStyle: {
                     position: 'absolute',
-                    bottom: 45,
+                    bottom: 60, // Elevación máxima para sobresalir de los botones del móvil
                     left: 15,
                     right: 15,
-                    height: 85,
-                    backgroundColor: 'rgba(3, 7, 18, 0.99)', // Más oscuro para que resalten los fluorescentes
-                    borderRadius: 42,
+                    height: 90, // Un poco más alta
+                    backgroundColor: 'rgba(2, 6, 17, 1)', // Opaco total para máximo contraste
+                    borderRadius: 45,
                     borderTopWidth: 0,
-                    borderWidth: 1,
-                    borderColor: 'rgba(255, 215, 0, 0.8)',
+                    borderWidth: 2,
+                    borderColor: 'rgba(255, 215, 0, 0.9)',
                     paddingBottom: 5,
                     paddingHorizontal: 15,
-                    elevation: 25,
+                    elevation: 35, // Sombra máxima en Android
                     shadowColor: '#FFD700',
-                    shadowOffset: { width: 0, height: 12 },
-                    shadowOpacity: 0.8, // Brillo mucho más intenso
-                    shadowRadius: 20
+                    shadowOffset: { width: 0, height: 15 },
+                    shadowOpacity: 1, // Full Glow
+                    shadowRadius: 25
                 },
                 tabBarButton: (props) => {
                     let icon = '';
@@ -56,18 +56,18 @@ export default function AppNavigator() {
                                 width: 44,
                                 height: 44,
                                 borderRadius: 22,
-                                backgroundColor: isFocused ? 'rgba(255, 215, 0, 0.25)' : 'transparent',
+                                backgroundColor: isFocused ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255,255,255,0.03)',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                borderWidth: isFocused ? 1.5 : 0,
-                                borderColor: 'rgba(255, 255, 255, 0.6)'
+                                borderWidth: isFocused ? 2.5 : 0.5,
+                                borderColor: isFocused ? '#FFFFFF' : 'rgba(255,255,255,0.1)'
                             }}>
                                 <Text style={{
-                                    fontSize: isFocused ? 30 : 22, // Aún más grande
-                                    opacity: isFocused ? 1 : 0.4,
-                                    transform: [{ scale: isFocused ? 1.2 : 1 }],
-                                    textShadowColor: isFocused ? '#FFD700' : 'transparent',
-                                    textShadowRadius: isFocused ? 15 : 0
+                                    fontSize: isFocused ? 32 : 23, // Más grandes
+                                    opacity: isFocused ? 1 : 0.35,
+                                    transform: [{ scale: isFocused ? 1.25 : 1 }],
+                                    textShadowColor: isFocused ? '#FFFFFF' : 'transparent',
+                                    textShadowRadius: isFocused ? 20 : 0
                                 }}>
                                     {icon}
                                 </Text>

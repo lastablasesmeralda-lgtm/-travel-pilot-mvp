@@ -9,31 +9,31 @@ const { width } = Dimensions.get('window');
 const SLIDES = [
     {
         id: '1',
-        image: require('../../assets/onboarding1.jpg'),
+        image: require('../../assets/onboarding1.png'), // Intel/Inicio
         title: 'Esto no es una app de viajes',
-        subtitle: 'Las apps normales te informan de un problema. Travel-Pilot lo resuelve por ti.\n\nEs la primera app del mundo que actúa cuando algo va mal en tu viaje.',
-        accent: '#9333EA', // Purple
+        subtitle: 'Las apps normales te informan de un problema. Travel-Pilot lo resuelve por ti.\n\nEs la primera app del mundo que actúa cuando algo va mal.',
+        accent: '#9333EA', // Púrpura (Intel)
     },
     {
         id: '2',
-        image: require('../../assets/onboarding2.jpg'),
-        title: 'Tú solo eliges',
-        subtitle: 'Te presentaremos 3 opciones personalizadas:\n\n🔴 Rápido — Llegar cuanto antes.\n🟢 Económico — Ahorrar dinero.\n🟣 Confort — Descansar y volar mañana.',
-        accent: '#22C55E', // Green
+        image: require('../../assets/onboarding2.png'), // Radar/Vuelos
+        title: 'Solo necesitas tu vuelo',
+        subtitle: 'Escribe tu número de vuelo (ej: IB3166).\n\nA partir de ese momento, la IA vigila tu vuelo las 24 horas. No tienes que hacer nada más.',
+        accent: '#3B82F6', // Azul (Radar)
     },
     {
         id: '3',
-        image: require('../../assets/onboarding3.jpg'),
-        title: 'Solo necesitas tu vuelo',
-        subtitle: 'Ve a la pestaña VUELOS y escribe tu número de vuelo (ej: IB3166).\n\nA partir de ese momento, la IA vigila tu vuelo las 24 horas. Tú no tienes que hacer nada más.',
-        accent: '#3B82F6', // Blue
+        image: require('../../assets/onboarding3.png'), // Vault/Docs
+        title: '¿Retraso? Nosotros actuamos',
+        subtitle: 'Si tu vuelo se retrasa, la IA busca alternativas, llama a tu hotel y reclama tu compensación. Todo automático.',
+        accent: '#EF4444', // Rojo (Vault)
     },
     {
         id: '4',
-        image: require('../../assets/onboarding4.jpg'),
-        title: '¿Retraso? Nosotros actuamos',
-        subtitle: 'Si tu vuelo se retrasa, la IA:\n\n• Llama a tu hotel para avisar.\n• Busca vuelos alternativos.\n• Reclama tu compensación (hasta 600€).\n\nTodo automático. Sin que tú hagas nada.',
-        accent: '#EF4444', // Red
+        image: require('../../assets/onboarding4.png'), // Bio/Perfil
+        title: 'Tú solo eliges',
+        subtitle: 'Tres modos inteligentes:\n\n🔴 Rápido — Llegar pronto.\n🟢 Económico — Ahorrar dinero.\n🟣 Confort — Descanso VIP.',
+        accent: '#22C55E', // Verde (Bio)
     },
 ];
 
@@ -72,19 +72,49 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
             alignItems: 'center',
             paddingHorizontal: 25,
         }}>
-            {/* Imagen que ocupa todo el espacio central (ya contiene el texto) */}
+            {/* Icono en Tarjeta 3D */}
             <View style={{
-                flex: 1,
+                height: '42%',
                 width: '100%',
-                borderRadius: 30,
-                overflow: 'hidden',
-                marginBottom: 20,
+                borderRadius: 40,
+                backgroundColor: 'rgba(255,255,255,0.02)',
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.08)',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 30,
+                overflow: 'hidden'
             }}>
                 <Image 
                     source={item.image} 
-                    style={{ width: '100%', height: '100%' }}
-                    resizeMode="contain" // Contain para asegurar que no se corte el texto de la imagen
+                    style={{ width: '85%', height: '85%' }}
+                    resizeMode="contain"
                 />
+            </View>
+
+            {/* Texto Dinámico Premium */}
+            <View style={{ width: '100%', alignItems: 'center', paddingHorizontal: 10 }}>
+                <Text style={{
+                    color: '#FFF',
+                    fontSize: 28,
+                    fontWeight: '900',
+                    textAlign: 'center',
+                    marginBottom: 15,
+                    letterSpacing: -0.5
+                }}>
+                    {item.title}
+                </Text>
+
+                <Text style={{
+                    color: '#B0B0B0',
+                    fontSize: 16,
+                    textAlign: 'center',
+                    lineHeight: 24,
+                    fontWeight: '400',
+                    paddingHorizontal: 10
+                }}>
+                    {item.subtitle}
+                </Text>
             </View>
         </View>
     );
