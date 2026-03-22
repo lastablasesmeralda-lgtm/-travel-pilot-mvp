@@ -20,22 +20,22 @@ export default function AppNavigator() {
                 headerShown: false,
                 tabBarStyle: {
                     position: 'absolute',
-                    bottom: 25,
+                    bottom: 30,
                     left: 20,
                     right: 20,
-                    height: 75,
-                    backgroundColor: 'rgba(12, 15, 20, 0.95)',
-                    borderRadius: 38,
+                    height: 80,
+                    backgroundColor: 'rgba(10, 25, 47, 0.98)',
+                    borderRadius: 40,
                     borderTopWidth: 0,
-                    borderWidth: 1.5,
-                    borderColor: 'rgba(212, 175, 55, 0.3)',
+                    borderWidth: 2,
+                    borderColor: '#FFD700',
                     paddingBottom: 0,
-                    paddingHorizontal: 10,
-                    elevation: 15,
-                    shadowColor: '#000',
+                    paddingHorizontal: 15,
+                    elevation: 20,
+                    shadowColor: '#FFD700',
                     shadowOffset: { width: 0, height: 10 },
-                    shadowOpacity: 0.8,
-                    shadowRadius: 15
+                    shadowOpacity: 0.5,
+                    shadowRadius: 20
                 },
                 tabBarButton: (props) => {
                     let icon = '';
@@ -86,18 +86,18 @@ export default function AppNavigator() {
                                 )}
                             </View>
                             <Text style={{
-                                color: isFocused ? '#D4AF37' : '#666',
+                                color: isFocused ? '#FFD700' : 'rgba(255, 215, 0, 0.4)',
                                 fontSize: 9,
                                 fontWeight: '900',
                                 marginTop: 2,
                                 textTransform: 'uppercase',
-                                letterSpacing: isFocused ? 1 : 0.5,
-                                textShadowColor: isFocused ? 'rgba(212, 175, 55, 0.5)' : 'transparent',
-                                textShadowRadius: isFocused ? 5 : 0
+                                letterSpacing: isFocused ? 2 : 0.5,
+                                textShadowColor: isFocused ? 'rgba(255, 215, 0, 0.8)' : 'transparent',
+                                textShadowRadius: isFocused ? 10 : 0
                             }}>
-                                {route.name === 'Intel' ? 'INICIO VIP' :
-                                    route.name === 'Radar' ? 'VUELOS' :
-                                        route.name === 'Vault' ? 'DOCS' : 'PERFIL'}
+                                {route.name === 'Intel' ? 'MODO VIP' :
+                                    route.name === 'Radar' ? 'RADAR' :
+                                        route.name === 'Vault' ? 'BÚNKER' : 'AGENT'}
                             </Text>
                         </TouchableOpacity>
                     );
