@@ -10,7 +10,7 @@ export default function BioScreen() {
     const {
         availableVoices, selectedVoice, setSelectedVoice, user,
         setHasSeenOnboarding, userPhone, setUserPhone, setIsReplayingTutorial,
-        travelProfile, setTravelProfile, speak
+        travelProfile, setTravelProfile, speak, simulatePushNotification
     } = useAppContext();
     const [showGuide, setShowGuide] = useState(false);
     const [showVip, setShowVip] = useState(false);
@@ -211,30 +211,17 @@ export default function BioScreen() {
                 </View>
 
                 <TouchableOpacity
-                    onPress={async () => {
-                        if (!user?.email) return Alert.alert('Error', 'Inicia sesión primero');
-                        try {
-                            const resp = await fetch(`${BACKEND_URL}/api/testPush`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    email: user.email,
-                                    title: '🔔 Prueba de Travel-Pilot',
-                                    body: '¡Funciona! Tu asistente te avisará aquí de cualquier retraso.',
-                                    entry: { flight: 'TP404' }
-                                })
-                            });
-                            const data = await resp.json();
-                            if (data.success) Alert.alert('✅ Enviada', 'La notificación debería llegar en unos segundos.');
-                            else Alert.alert('❌ Error', 'No hay dispositivos registrados para este email.');
-                        } catch (e) {
-                            Alert.alert('❌ Error', 'No se pudo contactar con el servidor.');
-                        }
+                    onPress={() => {
+                        Alert.alert(
+                            "📲 INICIANDO PRUEBA",
+                            "Voy a enviarte una notificación táctica en 5 segundos. Por favor, sal ahora mismo al menú de inicio de tu móvil para recibirla.",
+                            [{ text: "OK, SALGO AHORA", onPress: () => simulatePushNotification() }]
+                        );
                     }}
                     style={{ backgroundColor: '#111', padding: 16, borderRadius: 16, borderLeftWidth: 4, borderLeftColor: '#4CD964', marginBottom: 20 }}
                 >
                     <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 15 }}>PROBAR NOTIFICACIONES</Text>
-                    <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 4 }}>Pulsa aquí para recibir una alerta de prueba.</Text>
+                    <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 4 }}>Pulsa aquí para recibir una alerta de prueba instantánea.</Text>
                 </TouchableOpacity>
 
                 <Text style={[s.b, { marginTop: 10, marginBottom: 15 }]}>📖 CENTRO DE INFORMACIÓN</Text>

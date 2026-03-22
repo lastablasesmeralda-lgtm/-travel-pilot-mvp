@@ -626,13 +626,14 @@ fastify.post('/api/testPush', async (request, reply) => {
     const { email, title, body } = request.body as { email: string, title?: string, body?: string };
     if (!email) return reply.status(400).send({ error: 'email es requerido' });
 
-    await sendPushNotification(
+    console.log(`[Push] Inciando prueba manual para: ${email}`);
+    const sent = await sendPushNotification(
         email,
         title || '🛡️ Alerta de Travel-Pilot',
         body || 'Tu asistente está vigilando tu viaje.'
     );
 
-    return reply.send({ success: true });
+    return reply.send({ success: true, target: email });
 });
 
 // ============================================================
