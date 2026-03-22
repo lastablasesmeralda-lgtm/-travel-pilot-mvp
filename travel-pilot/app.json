@@ -4,13 +4,23 @@
     "slug": "travel-pilot",
     "version": "1.0.3",
     "orientation": "portrait",
+    "icon": "./assets/icon.jpg",
     "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#020617"
+    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "package": "com.travelpilot.app",
-      "permissions": ["INTERNET"]
+      "permissions": ["INTERNET"],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.jpg",
+        "backgroundColor": "#020617"
+      }
     },
     "extra": {
       "eas": {

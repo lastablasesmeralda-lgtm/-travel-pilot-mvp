@@ -664,10 +664,15 @@ export const AppProvider = ({ children }) => {
         Animated.timing(waveAnim, { toValue: 0, duration: 500, useNativeDriver: true }),
       ])
     ).start();
-    Speech.speak(text, { language: 'es-ES', voice: overrideVoiceId || selectedVoice || undefined, onDone: () => stopSpeak() });
+    Speech.speak(text, { language: 'es-ES', voice: overrideVoiceId || selectedVoice || undefined, onDone: () => onSpeechDone() });
   };
 
-  const stopSpeak = () => { Speech.stop(); setIsSpeaking(false); waveAnim.stopAnimation(); };
+  const onSpeechDone = () => {
+    setIsSpeaking(false);
+    waveAnim.stopAnimation();
+  };
+
+  const stopSpeak = () => { Speech.stop(); onSpeechDone(); };
 
   const clearMessages = () => {
     setMessages([{ id: '1', text: "Hola, estoy a tu escucha. ¿En qué puedo ayudarte?", isUser: false }]);
@@ -706,6 +711,11 @@ export const AppProvider = ({ children }) => {
     const code = flightInput.trim();
     if (!code) return;
     setIsSearching(true); setSearchError(null); setFlightData(null); setPrefetchedData(null);
+    setCompensationEligible(false); // Reseteo para nueva busqueda
+    
+    // Si el usuario busca este vuelo de nuevo, lo perdonamos de la lista negra de borrados
+    setDismissedClaims(prev => prev.filter(f => f !== code.toUpperCase()));
+
     try {
       const response = await fetch(`${BACKEND_URL}/api/flightInfo?flight=${code}`);
       if (!response.ok) {
@@ -715,8 +725,43 @@ export const AppProvider = ({ children }) => {
       }
       const data = await response.json();
       setFlightData(data);
-      if (data.departure?.delay >= 180) {
+      
+      // AUTO-VOZ REACTIVA
+      if (data.status === 'cancelled') {
+        speak('Alerta Roja. Tu vuelo ha sido cancelado. He generado tu reembolso oficial en DOCS.', selectedVoice);
+      } else if ((data.departure?.delay || 0) >= 180) {
+        const amt = getEU261Amount(data).replace('€', ' euros');
+        speak(`Retraso crítico de tres horas. Documento legal preparado para reclamar ${amt}. Tienes derecho a asistencia gratuita`, selectedVoice);
+      } else if ((data.departure?.delay || 0) >= 120) {
+        speak(`Incidencia media. Te corresponde derecho legal a comida gratuita en mostrador. He calculado planes alternativos`, selectedVoice);
+      } else if ((data.departure?.delay || 0) >= 60) {
+        speak(`Aviso: Retraso grave. Entra en inicio para ver el diagnóstico del asistente. Ya puedes reclamar tu vale de manutención por ley`, selectedVoice);
+      }
+
+      if (data.departure?.delay >= 180 || data.status === 'cancelled') {
         setCompensationEligible(true);
+        
+        // Generar reclamación de inmediato para evitar problemas de re-renderizado
+        setClaims(prevBase => {
+          // Filtramos primero por vuelo para asegurar que no se duplica
+          const prev = prevBase.filter(c => c.vuelo !== data.flightNumber);
+          return [{
+            id: `C-${data.flightNumber}-${Date.now()}`,
+            aerolinea: data.airline || 'Aerolínea',
+            vuelo: data.flightNumber,
+            ruta: `${data.departure?.iata} > ${data.arrival?.iata}`,
+            estado: 'EXPEDIENTE PREPARADO',
+            compensacion: getEU261Amount(data),
+            isDynamic: true
+          }, ...prev];
+        });
+        
+        // Aviso Push UI explícito para el usuario
+        Alert.alert(
+            "📋 EXPEDIENTE LEGAL LISTO",
+            `He depositado tu documento de reclamación EU261 para cobrar ${getEU261Amount(data).replace('€',' euros')} a la aerolínea.\n\nVete a la pestaña 'DOCS' y pulsa sobre la reclamación para FIRMAR.`,
+            [{ text: "ENTENDIDO", style: "default" }]
+        );
       }
       if (data.departure?.delay >= 120 || data.status === 'cancelled') {
         showPlan();
@@ -911,26 +956,7 @@ export const AppProvider = ({ children }) => {
 
   // ✅ GENERACIÓN AUTOMÁTICA DE RECLAMACIONES DINÁMICAS (Importado de utils)
 
-  useEffect(() => {
-    // Si hay datos, hay compensacion y NO esta en la lista de purgados
-    if (compensationEligible && flightData) {
-      if (dismissedClaims.includes(flightData.flightNumber)) return;
-      if (claims.find(c => c.vuelo === flightData.flightNumber)) return;
-
-      const amount = getEU261Amount(flightData);
-      const newClaim = {
-        id: `C-${flightData.flightNumber}-${Date.now()}`,
-        aerolinea: flightData.airline || 'Aerolínea',
-        vuelo: flightData.flightNumber,
-        ruta: `${flightData.departure?.iata} > ${flightData.arrival?.iata}`,
-        estado: 'EXPEDIENTE PREPARADO',
-        compensacion: amount,
-        isDynamic: true
-      };
-      
-      setClaims(prev => [newClaim, ...prev]);
-    }
-  }, [compensationEligible, flightData, dismissedClaims]);
+  // La generación ahora es impulsada directamente desde searchFlight para evitar problemas de async/useEffect
 
   const removeTrip = async (id: string) => {
     try {

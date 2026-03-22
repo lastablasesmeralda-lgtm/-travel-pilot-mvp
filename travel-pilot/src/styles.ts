@@ -40,7 +40,6 @@ export const s = StyleSheet.create({
     shadowColor: '#FF3B30', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.9, shadowRadius: 15, elevation: 15,
     borderWidth: 1.5, borderColor: 'rgba(255, 59, 48, 0.5)'
   },
-  compClose: { position: 'absolute', right: 15, top: 10, width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(0,0,0,0.1)', justifyContent: 'center', alignItems: 'center' },
   sosBtn: { position: 'absolute', bottom: 125, left: 20, width: 65, height: 65, borderRadius: 33, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#FF3B30', elevation: 10, shadowColor: '#FF3B30', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 8 },
   chatBubble: { position: 'absolute', bottom: 125, right: 20, width: 65, height: 65, borderRadius: 33, backgroundColor: '#AF52DE', justifyContent: 'center', alignItems: 'center', elevation: 10, shadowColor: '#AF52DE', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 8 },
   sosChat: { position: 'absolute', top: 20, right: 15, width: 52, height: 52, borderRadius: 26, backgroundColor: '#222', borderWidth: 1, borderColor: '#AF52DE', justifyContent: 'center', alignItems: 'center', zIndex: 100 },

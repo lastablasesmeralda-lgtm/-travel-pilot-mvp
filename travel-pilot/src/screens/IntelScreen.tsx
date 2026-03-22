@@ -19,22 +19,22 @@ export default function IntelScreen() {
         setNewTripDest('');
         setShowForm(false);
     };
-
     return (
-        <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20, paddingTop: 100 }}>
+        <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20, paddingTop: 60 }}>
+
             {/* GLOBAL BETA BANNER */}
-            <View style={{ backgroundColor: '#222', paddingVertical: 10, paddingHorizontal: 15, borderRadius: 12, marginBottom: 24, borderLeftWidth: 4, borderLeftColor: '#4CD964', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: '#4CD964', fontSize: 10, fontWeight: '900', letterSpacing: 1 }}>🛡️ ENTORNO DE PRUEBAS BETA ACTIVO</Text>
+            <View style={{ backgroundColor: '#222', paddingVertical: 10, paddingHorizontal: 15, borderRadius: 12, marginBottom: 24, borderLeftWidth: 4, borderLeftColor: '#D4AF37', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ color: '#D4AF37', fontSize: 10, fontWeight: '900', letterSpacing: 1 }}>🛡️ ENTORNO DE PRUEBAS BETA ACTIVO</Text>
             </View>
 
-            {/* ——— MIS VIAJES (FUNCIONALIDAD PRINCIPAL) ——— */}
+            {/* ——— MIS VIAJES ——— */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <Text style={[s.b, { marginBottom: 0 }]}>🌍 INICIO</Text>
                 <TouchableOpacity
                     onPress={() => setShowForm(!showForm)}
-                    style={{ backgroundColor: showForm ? '#333' : '#AF52DE', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 }}
+                    style={{ backgroundColor: showForm ? '#333' : '#D4AF37', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 }}
                 >
-                    <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>{showForm ? 'CANCELAR' : '+ NUEVO VIAJE'}</Text>
+                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 14 }}>{showForm ? 'CANCELAR' : '+ NUEVO VIAJE'}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -57,9 +57,9 @@ export default function IntelScreen() {
                     />
                     <TouchableOpacity
                         onPress={handleCreate}
-                        style={{ backgroundColor: '#AF52DE', padding: 18, borderRadius: 15, alignItems: 'center' }}
+                        style={{ backgroundColor: '#D4AF37', padding: 18, borderRadius: 15, alignItems: 'center' }}
                     >
-                        <Text style={{ color: '#FFF', fontWeight: 'bold', letterSpacing: 0.5 }}>GUARDAR VIAJE Y ACTIVAR IA</Text>
+                        <Text style={{ color: '#000', fontWeight: 'bold', letterSpacing: 0.5 }}>GUARDAR VIAJE Y ACTIVAR IA</Text>
                     </TouchableOpacity>
                 </View>
             )}
@@ -86,7 +86,7 @@ Todo parece estar en orden para tu viaje. Si detectamos cualquier riesgo para tu
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                                 <View style={{ flex: 1 }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                                        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#4CD964', marginRight: 8 }} />
+                                        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#D4AF37', marginRight: 8 }} />
                                         <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold' }}>VIAJE ACTIVO</Text>
                                     </View>
                                     <Text style={{ color: '#FFF', fontSize: 22, fontWeight: 'bold' }}>{displayTitle}</Text>
@@ -125,9 +125,21 @@ Todo parece estar en orden para tu viaje. Si detectamos cualquier riesgo para tu
                 
                 <TouchableOpacity 
                     onPress={() => {
-                        const msg = travelProfile === 'premium' 
-                            ? 'Hola Piloto. He analizado las condiciones de red y el tráfico aéreo: todo despejado. Estoy en guardia proactiva para tu próximo movimiento. El clima en destino es óptimo. He pre-verificado opciones de transporte al centro por si las necesitas.'
-                            : 'Estoy conectado y en espera. Añade un vuelo en la pestaña VUELOS para que empiece a vigilarlo.';
+                        let msg = '';
+                        if (flightData?.status === 'cancelled') {
+                            msg = 'Alerta Roja. Tu vuelo ha sido cancelado. He generado tu documento de reembolso en la bóveda, y he buscado rutas alternativas para salir de aquí de inmediato';
+                        } else if ((flightData?.departure?.delay || 0) >= 180) {
+                            const amt = getEU261Amount(flightData).replace('€', ' euros');
+                            msg = `Atención Piloto. Retraso crítico superior a 3 horas. Acabo de preparar tu documentación legal para reclamar ${amt}. Tienes derecho a comida y bebida gratis mientras esperamos`;
+                        } else if ((flightData?.departure?.delay || 0) >= 60) {
+                            msg = `Incidencia detectada. Tenemos un retraso de ${flightData.departure.delay} minutos. Ya tienes exigible por ley tu derecho a asistencia, pide a la aerolínea un vale de comida y llamadas telefónicas`;
+                        } else if (flightData?.flightNumber) {
+                            msg = `Todo bajo control con tu vuelo ${flightData.flightNumber}. Estoy monitorizando la red por si hubiera cualquier mínimo cambio`;
+                        } else {
+                            msg = travelProfile === 'premium' 
+                                ? 'Hola Piloto. He analizado las condiciones de red y el tráfico aéreo, todo despejado. Estoy en guardia proactiva para tu próximo movimiento'
+                                : 'Estoy conectado y en espera. Añade un vuelo en la pestaña VUELOS para que empiece a vigilarlo';
+                        }
                         speak(msg, selectedVoice);
                     }}
                     activeOpacity={0.7}
@@ -141,17 +153,24 @@ Todo parece estar en orden para tu viaje. Si detectamos cualquier riesgo para tu
                     flexDirection: 'row',
                     elevation: 5, 
                 }}>
-                    <View style={{ width: 4, backgroundColor: '#AF52DE', borderRadius: 2, marginRight: 15 }} />
+                    <View style={{ width: 4, backgroundColor: '#D4AF37', borderRadius: 2, marginRight: 15 }} />
                     <View style={{ flex: 1 }}>
                         <View style={{ marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Text style={{ color: travelProfile === 'premium' ? '#D4AF37' : '#AF52DE', fontSize: 10, fontWeight: '900', letterSpacing: 1.5 }}>
-                                {travelProfile === 'premium' ? '🛡️ ASISTENTE PROACTIVO' : 'INFORME DEL ASISTENTE'}
+                            <Text style={{ color: '#D4AF37', fontSize: 10, fontWeight: '900', letterSpacing: 1.5 }}>
+                                {travelProfile === 'premium' ? '🛡️ INFORME DE LA IA' : 'INFORME DEL ASISTENTE'}
                             </Text>
-                            {flightData?.isSimulation && (
-                                <View style={{ backgroundColor: 'rgba(76, 217, 100, 0.1)', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(76, 217, 100, 0.5)' }}>
-                                    <Text style={{ color: '#4CD964', fontSize: 8, fontWeight: 'bold' }}>🛡️ MODO PRUEBA ACTIVO</Text>
-                                </View>
-                            )}
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                {(flightData?.departure?.delay || 0) >= 60 && (
+                                    <View style={{ backgroundColor: 'rgba(212, 175, 55, 0.2)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginRight: 6, borderWidth: 1, borderColor: '#D4AF37' }}>
+                                        <Text style={{ color: '#D4AF37', fontSize: 9, fontWeight: 'bold' }}>🎧 ESCUCHAR</Text>
+                                    </View>
+                                )}
+                                {flightData?.isSimulation && (
+                                    <View style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.5)' }}>
+                                        <Text style={{ color: '#D4AF37', fontSize: 8, fontWeight: 'bold' }}>🛡️ SIM</Text>
+                                    </View>
+                                )}
+                            </View>
                         </View>
                         <View>
                             {!flightData?.flightNumber ? (
@@ -162,39 +181,34 @@ Todo parece estar en orden para tu viaje. Si detectamos cualquier riesgo para tu
                                             : `Estoy conectado y en espera. Añade un vuelo en la pestaña VUELOS para que empiece a vigilarlo.`
                                         }
                                     </Text>
-                                    {travelProfile === 'premium' && (
-                                        <View style={{ marginTop: 12, backgroundColor: 'rgba(212, 175, 55, 0.1)', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)' }}>
-                                            <Text style={{ color: '#D4AF37', fontSize: 11, fontWeight: 'bold' }}>💡 CONSEJO VIP: El clima en destino es óptimo. He pre-verificado opciones de transporte al centro por si las necesitas.</Text>
-                                        </View>
-                                    )}
                                 </View>
-                            ) : (flightData?.departure?.delay || 0) >= 120 ? (
+                            ) : (flightData?.departure?.delay || 0) >= 60 ? (
                                 <View>
                                     <Text style={{ color: '#E0E0E0', fontSize: 13, lineHeight: 20, fontStyle: 'italic', letterSpacing: 0.3, marginBottom: 12 }}>
                                         { (flightData?.departure?.delay || 0) >= 180 ? (
                                             <>🚨 <Text style={{ color: '#FF3B30', fontWeight: 'bold' }}>ALERTA CRÍTICA:</Text> Retraso superior a 3h identificado. Tienes derecho a <Text style={{ color: '#4CD964', fontWeight: 'bold' }}>{getEU261Amount(flightData)}</Text> de indemnización. He activado tu Estrategia <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>{travelProfile === 'premium' ? 'VIP' : travelProfile === 'budget' ? 'ECONÓMICA' : 'EQUILIBRADA'}</Text>.</>
                                         ) : (
-                                            <>⚠️ <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>INCIDENCIA DETECTADA:</Text> Retraso de {(flightData?.departure?.delay || 0)} min. He diseñado una <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>Estrategia {travelProfile === 'premium' ? 'VIP' : travelProfile === 'budget' ? 'ECONÓMICA' : 'EQUILIBRADA'}</Text> personalizada para tu situación.</>
+                                            <>⚠️ <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>INCIDENCIA DETECTADA:</Text> Retraso de {(flightData?.departure?.delay || 0)} min. He diseñado una <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>Estrategia {travelProfile === 'premium' ? 'VIP' : travelProfile === 'budget' ? 'ECONÓMICA' : 'EQUILIBRADA'}</Text> personalizada para tu situación.</>
                                         )}
                                     </Text>
                                     <TouchableOpacity 
                                         onPress={showPlan}
                                         style={{ 
-                                            backgroundColor: '#AF52DE', 
+                                            backgroundColor: '#D4AF37', 
                                             paddingVertical: 10, 
                                             paddingHorizontal: 15, 
                                             borderRadius: 12,
                                             flexDirection: 'row',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            shadowColor: "#AF52DE",
+                                            shadowColor: "#D4AF37",
                                             shadowOffset: { width: 0, height: 4 },
                                             shadowOpacity: 0.3,
                                             shadowRadius: 5,
                                             elevation: 8
                                         }}
                                     >
-                                        <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 12, letterSpacing: 0.5 }}>
+                                        <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 12, letterSpacing: 0.5 }}>
                                             {selectedRescuePlan 
                                                 ? `🚀 GESTIONANDO: ${selectedRescuePlan}` 
                                                 : hasSeenPlan 

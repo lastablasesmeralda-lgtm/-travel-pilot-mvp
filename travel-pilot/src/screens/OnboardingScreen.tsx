@@ -9,34 +9,34 @@ const { width } = Dimensions.get('window');
 const SLIDES = [
     {
         id: '1',
-        icon: '🌍',
-        title: 'Tu Panel de Inicio',
-        subtitle: 'Toda la inteligencia de tu viaje en un solo vistazo. Controla el clima en tu destino y el estado general de tus planes.\n\nEs tu centro de mando personalizado para una experiencia de viaje sin sobresaltos.',
-        accent: '#AF52DE',
+        icon: '💎',
+        title: 'Tu Escudo de Viaje',
+        subtitle: 'Toda la inteligencia de tu trayecto en un solo vistazo. Controla el clima y el estado de tus vuelos con precisión militar.\n\nEs tu centro de mando personalizado para una experiencia VIP sin sobresaltos.',
+        accent: '#D4AF37',
         animType: 'pulse',
     },
     {
         id: '2',
-        icon: '📡',
-        title: 'Radar de Vuelos',
-        subtitle: 'Monitorea cualquier vuelo en tiempo real. Observa cómo nuestra IA vigila cada minuto de tu trayecto a través de los registros de actividad.\n\nPrecisión absoluta para que siempre sepas qué está haciendo tu asistente por ti.',
-        accent: '#007AFF',
+        icon: '✈️',
+        title: 'Radar de Vuelos OORO',
+        subtitle: 'Monitorea cualquier vuelo en tiempo real. Observa cómo nuestra IA vigila cada minuto de tu trayecto con registros de actividad.\n\nPrecisión absoluta para que siempre sepas qué está haciendo tu asistente por ti.',
+        accent: '#D4AF37',
         animType: 'fly',
     },
     {
         id: '3',
-        icon: '🔐',
-        title: 'Bóveda de Documentos',
-        subtitle: 'Tus pasaportes y billetes, protegidos con encriptación de alta seguridad. Además, generamos tus reclamaciones legales de forma automática.\n\nSeguridad total y gestión de compensaciones de hasta 600€ en la palma de tu mano.',
-        accent: '#FF3B30',
+        icon: '🛡️',
+        title: 'Bóveda de Seguridad',
+        subtitle: 'Tus pasaportes y billetes, protegidos con encriptación de alta seguridad. Generamos tus reclamaciones legales de forma automática.\n\nProtección total y gestión de compensaciones de hasta 600€ en la palma de tu mano.',
+        accent: '#D4AF37',
         animType: 'alarm',
     },
     {
         id: '4',
-        icon: '👤',
-        title: 'Perfil y Preferencias',
-        subtitle: 'Tú tienes el control. Configura cómo quieres que la IA responda ante imprevistos: modo VIP, Económico o Confort.\n\nPersonaliza tu identidad digital y deja que Travel-Pilot se adapte a tu estilo de vida único.',
-        accent: '#27C93F',
+        icon: '👑',
+        title: 'Perfil VIP Elite',
+        subtitle: 'Tú tienes el mando. Configura cómo quieres que la IA responda ante imprevistos: modo VIP, Económico o Confort.\n\nPersonaliza tu identidad digital y deja que Travel-Pilot se adapte a tu estilo de vida único.',
+        accent: '#D4AF37',
         animType: 'sparkle',
     },
 ];
@@ -234,8 +234,8 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
         <View style={{ flex: 1, backgroundColor: '#000' }}>
             {/* Top Badge */}
             <View style={{ position: 'absolute', top: 60, width: '100%', alignItems: 'center', zIndex: 10 }}>
-                <View style={{ backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
-                    <Text style={{ color: '#AF52DE', fontSize: 10, fontWeight: 'bold', letterSpacing: 2 }}>TRAVEL-PILOT ELITE</Text>
+                <View style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#D4AF37' }}>
+                    <Text style={{ color: '#D4AF37', fontSize: 11, fontWeight: '900', letterSpacing: 4 }}>TRAVEL-PILOT VIP</Text>
                 </View>
             </View>
 
