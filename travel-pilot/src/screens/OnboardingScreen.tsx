@@ -9,30 +9,30 @@ const { width } = Dimensions.get('window');
 const SLIDES = [
     {
         id: '1',
-        image: require('../../assets/onboarding1.png'), // Intel/Inicio
-        title: 'Esto no es una app de viajes',
+        image: require('../../assets/onboarding1.jpg'), // Intel/Inicio
+        title: 'ESTO NO ES UNA APP DE VIAJES',
         subtitle: 'Las apps normales te informan de un problema. Travel-Pilot lo resuelve por ti.\n\nEs la primera app del mundo que actúa cuando algo va mal.',
         accent: '#9333EA', // Púrpura (Intel)
     },
     {
         id: '2',
-        image: require('../../assets/onboarding2.png'), // Radar/Vuelos
-        title: 'Solo necesitas tu vuelo',
-        subtitle: 'Escribe tu número de vuelo (ej: IB3166).\n\nA partir de ese momento, la IA vigila tu vuelo las 24 horas. No tienes que hacer nada más.',
+        image: require('../../assets/onboarding2.jpg'), // Radar/Vuelos
+        title: 'SOLO NECESITAS TU VUELO',
+        subtitle: 'Introduce el número de vuelo (ej: IB3166).\n\nA partir de ese momento, mi IA estará atenta 24h a cada detalle. Tú olvídate de todo.',
         accent: '#3B82F6', // Azul (Radar)
     },
     {
         id: '3',
-        image: require('../../assets/onboarding3.png'), // Vault/Docs
-        title: '¿Retraso? Nosotros actuamos',
-        subtitle: 'Si tu vuelo se retrasa, la IA busca alternativas, llama a tu hotel y reclama tu compensación. Todo automático.',
+        image: require('../../assets/onboarding3.jpg'), // Vault/Docs
+        title: '¿RETRASO? NOSOTROS ACTUAMOS',
+        subtitle: 'Mi IA gestiona alternativas, avisa a tu hotel y lanza reclamación legal de forma autónoma. Un clic y respiro.',
         accent: '#EF4444', // Rojo (Vault)
     },
     {
         id: '4',
-        image: require('../../assets/onboarding4.png'), // Bio/Perfil
-        title: 'Tú solo eliges',
-        subtitle: 'Tres modos inteligentes:\n\n🔴 Rápido — Llegar pronto.\n🟢 Económico — Ahorrar dinero.\n🟣 Confort — Descanso VIP.',
+        image: require('../../assets/onboarding4.jpg'), // Bio/Perfil
+        title: 'TÚ SOLO ELIGES',
+        subtitle: 'Tres modos inteligentes:\n\n🔵 OPCIÓN EQUILIBRADA — Máximo balance.\n🔴 OPCIÓN RÁPIDA — Llegar lo antes posible.\n🟢 OPCIÓN ECONÓMICA — Ahorro total.\n\nTú decides la prioridad y mi IA hace el resto.',
         accent: '#22C55E', // Verde (Bio)
     },
 ];
