@@ -268,7 +268,7 @@ Todo parece estar en orden para tu viaje. Si detectamos cualquier riesgo para tu
 
 
 
-            <View style={{ height: 120 }} />
+            <View style={{ height: 160 }} />
         </ScrollView>
     );
 }

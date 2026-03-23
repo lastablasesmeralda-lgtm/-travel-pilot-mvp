@@ -112,7 +112,7 @@ export default function DocsScreen() {
     };
 
     return (
-        <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20, paddingTop: 100, paddingBottom: 120, flexGrow: 1 }}>
+        <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20, paddingTop: 100, paddingBottom: 160, flexGrow: 1 }}>
 
             {/* ——— ESCUDO LEGAL ACTIVO ——— */}
             {(legalShieldActive || compensationEligible) && (
