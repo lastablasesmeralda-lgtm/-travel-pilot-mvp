@@ -395,7 +395,8 @@ fastify.post('/api/chat', async (request, reply) => {
         - Ve al grano. No des explicaciones largas si no te las piden.
         - Habla de tú, con tono amable pero profesional y rápido.
         - Prohibido usar más de dos párrafos excepto en planes de crisis complejos.
-        - Responde SIEMPRE en español.`;
+        - Responde SIEMPRE en español.
+        - PROHIBIDO usar Markdown (no uses asteriscos ** para negritas). Responde solo con texto plano.` ;
 
         let flightContextStr = "";
         if (flightId) {
@@ -420,7 +421,10 @@ fastify.post('/api/chat', async (request, reply) => {
         }
 
         const response = await chatModel.invoke(messages);
-        const aiText = response.content.toString();
+        let aiText = response.content.toString();
+        
+        // Limpiar asteriscos por si acaso la IA ignora el prompt
+        aiText = aiText.replace(/\*\*/g, '');
         
         console.log(`[Chat AI Response]: ${aiText}`);
         return reply.send({ text: aiText });

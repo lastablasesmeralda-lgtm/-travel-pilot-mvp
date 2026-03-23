@@ -313,7 +313,8 @@ fastify.post('/api/chat', async (request, reply) => {
         - Ve al grano. No des explicaciones largas si no te las piden.
         - Habla de tú, con tono amable pero profesional y rápido.
         - Prohibido usar más de dos párrafos excepto en planes de crisis complejos.
-        - Responde SIEMPRE en español.`;
+        - Responde SIEMPRE en español.
+        - PROHIBIDO usar Markdown (no uses asteriscos ** para negritas). Responde solo con texto plano.` ;
 
         const messages: any[] = [["system", systemPrompt]];
         
@@ -327,7 +328,10 @@ fastify.post('/api/chat', async (request, reply) => {
         }
 
         const response = await chatModel.invoke(messages);
-        const aiText = response.content.toString();
+        let aiText = response.content.toString();
+        
+        // Limpiar asteriscos de Markdown para que el lector de voz no los pronuncie
+        aiText = aiText.replace(/\*\*/g, '');
         
         console.log(`[Chat AI Response]: ${aiText}`);
         return reply.send({ text: aiText });
