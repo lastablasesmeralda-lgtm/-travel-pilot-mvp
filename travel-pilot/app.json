@@ -17,6 +17,7 @@
     "android": {
       "package": "com.travelpilot.app",
       "permissions": ["INTERNET"],
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.jpg",
         "backgroundColor": "#020617"
@@ -41,6 +42,6 @@
         }
       ]
     ],
-    "owner": "travelpilot"
+    "owner": "richardgm2026"
   }
 }

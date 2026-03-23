@@ -12,12 +12,13 @@ import LoginScreen from './src/screens/LoginScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import AppNavigator from './src/navigation/AppNavigator';
 import GlobalOverlays from './src/GlobalOverlays';
+import ChatView from './src/components/ChatView';
 import { s } from './src/styles';
 import { getEU261Amount } from './src/utils/flightUtils';
 
 function RootComponent() {
   const {
-    user, setShowSOSMenu, setShowChat, sosPulse, compensationEligible, speak, stopSpeak, isSpeaking,
+    user, showChat, setShowSOSMenu, setShowChat, sosPulse, compensationEligible, speak, stopSpeak, isSpeaking,
     hasSeenOnboarding, setHasSeenOnboarding, isReplayingTutorial, setIsReplayingTutorial, flightData,
     compBannerDismissed, setCompBannerDismissed
   } = useAppContext();
@@ -52,30 +53,37 @@ function RootComponent() {
         }} />
       ) : (
         <View style={{ flex: 1 }}>
-          <NavigationContainer theme={DarkTheme}>
-            <AppNavigator />
-          </NavigationContainer>
+          {showChat ? (
+            <ChatView />
+          ) : (
+            <>
+              <NavigationContainer theme={DarkTheme}>
+                <AppNavigator />
+              </NavigationContainer>
 
-          {/* ——— PANEL DE MANDO SUPERIOR (FIJO) ——— */}
-          <View style={s.topPanel}>
-            <View style={{ flex: 1, alignItems: 'center' }}>
-                <View style={{ backgroundColor: '#111', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, borderWidth: 1, borderColor: '#222', flexDirection: 'row', alignItems: 'center' }}>
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#4CD964', marginRight: 6 }} />
-                  <Text style={{ color: '#B0B0B0', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 }}>ASISTENTE / ACTIVO</Text>
+              {/* ——— PANEL DE MANDO SUPERIOR (FIJO) ——— */}
+              <View style={s.topPanel}>
+                <View style={{ flex: 1, alignItems: 'center' }}>
+                    <View style={{ backgroundColor: '#111', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, borderWidth: 1, borderColor: '#222', flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#4CD964', marginRight: 6 }} />
+                      <Text style={{ color: '#B0B0B0', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 }}>ASISTENTE / ACTIVO</Text>
+                    </View>
                 </View>
-            </View>
-          </View>
+              </View>
 
-          {/* BOTONES FLOTANTES (AHORA EN POSICIONES FIJAS SUPERIORES) */}
-          <View style={s.sosContainer}>
-            <TouchableOpacity style={s.sos} onPress={() => setShowSOSMenu(true)}>
-              <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 10, textAlign: 'center' }} numberOfLines={1}>AYUDA</Text>
-            </TouchableOpacity>
-          </View>
+              {/* BOTONES FLOTANTES (AHORA EN POSICIONES FIJAS SUPERIORES) */}
+              <View style={s.sosContainer}>
+                <TouchableOpacity style={s.sos} onPress={() => setShowSOSMenu(true)}>
+                  <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 10, textAlign: 'center' }} numberOfLines={1}>AYUDA</Text>
+                </TouchableOpacity>
+              </View>
 
-          <TouchableOpacity style={s.sosChat} onPress={() => setShowChat(true)}>
-            <Text style={{ color: '#AF52DE', fontWeight: 'bold', fontSize: 24 }}>💬</Text>
-          </TouchableOpacity>
+              <TouchableOpacity style={s.sosChat} onPress={() => setShowChat(true)}>
+                <Text style={{ color: '#AF52DE', fontWeight: 'bold', fontSize: 24 }}>💬</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          <GlobalOverlays />
         </View>
       )}
       <GlobalOverlays />

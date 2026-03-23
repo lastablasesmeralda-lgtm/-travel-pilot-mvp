@@ -11,7 +11,7 @@ export default function VuelosScreen() {
     const {
         flightInput, setFlightInput, searchFlight, clearFlight, isSearching, searchError,
         flightData, formatTime, getStatusColor, getStatusLabel,
-        myFlights, saveMyFlight, removeMyFlight
+        myFlights, saveMyFlight, removeMyFlight, activeSearches, removeActiveSearch
     } = useAppContext();
 
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -96,7 +96,7 @@ export default function VuelosScreen() {
                 </View>
 
                 {/* ——— D) HISTORIAL DE BÚSQUEDAS RECIENTES ——— */}
-                {recentSearches.length > 0 && !flightData && (
+                {recentSearches.length > 0 && activeSearches.length === 0 && (
                     <View style={{ marginTop: 12 }}>
                         <Text style={{ color: '#666', fontSize: 10, fontWeight: 'bold', letterSpacing: 1, marginBottom: 8 }}>🕐 RECIENTES</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -135,80 +135,81 @@ export default function VuelosScreen() {
                 </View>
             )}
 
-            {/* ——— TARJETA DE VUELO (datos completos) ——— */}
-            {flightData ? (
-                <View style={{ backgroundColor: '#111', borderRadius: 16, padding: 16, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: getStatusColor(flightData.status) }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                        <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold' }}>✈️ {flightData.airline?.toUpperCase()}</Text>
-                        <Text style={{ color: '#B0B0B0', fontSize: 11, marginRight: 35 }}>SEGUIMIENTO EN VIVO</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <View>
-                            {(flightData.departure?.delay || 0) >= 120 && (
-                                <View style={{ backgroundColor: 'rgba(175, 82, 222, 0.2)', alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginBottom: 4, borderWidth: 1, borderColor: '#AF52DE' }}>
-                                    <Text style={{ color: '#AF52DE', fontSize: 9, fontWeight: '900' }}>✨ SOLUCIÓN DISPONIBLE</Text>
-                                </View>
-                            )}
-                            <Text style={{ color: '#FFF', fontSize: 23, fontWeight: '900' }}>{flightData.flightNumber}</Text>
+            {/* ——— LISTA DE TARJETAS DE VUELO ——— */}
+            {activeSearches.length > 0 ? (
+                activeSearches.map((data) => (
+                    <View key={data.flightNumber} style={{ backgroundColor: '#111', borderRadius: 16, padding: 16, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: getStatusColor(data.status) }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold' }}>✈️ {data.airline?.toUpperCase()}</Text>
+                            <Text style={{ color: '#B0B0B0', fontSize: 11, marginRight: 35 }}>SEGUIMIENTO EN VIVO</Text>
                         </View>
-                        <View style={{ flexDirection: 'row', gap: 8 }}>
-                            <TouchableOpacity
-                                onPress={() => saveMyFlight(flightData.flightNumber)}
-                                style={{ backgroundColor: '#AF52DE', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}
-                            >
-                                <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold' }}>GUARDAR</Text>
-                            </TouchableOpacity>
-                            <View style={{ backgroundColor: getStatusColor(flightData.status), paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
-                                <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold' }}>{getStatusLabel(flightData.status, flightData.departure.delay)}</Text>
-                            </View>
-                        </View>
-                    </View>
-                    <Text style={{ color: '#B0B0B0', fontSize: 14, marginTop: 8 }}>{flightData.departure.airport} ({flightData.departure.iata}) → {flightData.arrival.airport} ({flightData.arrival.iata})</Text>
-                    <View style={{ flexDirection: 'row', marginTop: 12 }}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>SALIDA</Text>
-                            <Text style={{ color: '#FFF', fontSize: 17, fontWeight: 'bold' }}>{formatTime(flightData.departure.scheduled)}</Text>
-                        </View>
-                        {flightData.departure.delay > 0 && (
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ color: '#B0B0B0', fontSize: 11 }}>NUEVA SALIDA</Text>
-                                <Text style={{ color: '#FF9500', fontSize: 17, fontWeight: 'bold' }}>{formatTime(flightData.departure.estimated)}</Text>
-                            </View>
-                        )}
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>LLEGADA</Text>
-                            <Text style={{ color: '#FFF', fontSize: 17, fontWeight: 'bold' }}>{formatTime(flightData.arrival.scheduled)}</Text>
-                        </View>
-                    </View>
-                    <View style={{ flexDirection: 'row', marginTop: 12 }}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>TERMINAL</Text>
-                            <Text style={{ color: '#FFF', fontSize: 15, fontWeight: 'bold' }}>{flightData.departure.terminal || '—'}</Text>
-                        </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>PUERTA</Text>
-                            <Text style={{ color: '#FFF', fontSize: 15, fontWeight: 'bold' }}>{flightData.departure.gate || '—'}</Text>
-                        </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>ESTADO</Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Text style={{ color: getStatusColor(flightData.status), fontSize: 13, fontWeight: 'bold' }}>{flightData.status?.toUpperCase()}</Text>
-                                {flightData.isSimulation && (
-                                    <View style={{ backgroundColor: 'rgba(76, 217, 100, 0.1)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 6, borderWidth: 1, borderColor: '#4CD964' }}>
-                                        <Text style={{ color: '#4CD964', fontSize: 8, fontWeight: 'bold' }}>🧪 TEST</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <View>
+                                {(data.departure?.delay || 0) >= 120 && (
+                                    <View style={{ backgroundColor: 'rgba(175, 82, 222, 0.2)', alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginBottom: 4, borderWidth: 1, borderColor: '#AF52DE' }}>
+                                        <Text style={{ color: '#AF52DE', fontSize: 9, fontWeight: '900' }}>✨ SOLUCIÓN DISPONIBLE</Text>
                                     </View>
                                 )}
+                                <Text style={{ color: '#FFF', fontSize: 23, fontWeight: '900' }}>{data.flightNumber}</Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', gap: 8 }}>
+                                <TouchableOpacity
+                                    onPress={() => saveMyFlight(data.flightNumber)}
+                                    style={{ backgroundColor: '#AF52DE', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}
+                                >
+                                    <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold' }}>GUARDAR</Text>
+                                </TouchableOpacity>
+                                <View style={{ backgroundColor: getStatusColor(data.status), paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                                    <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold' }}>{getStatusLabel(data.status, data.departure.delay)}</Text>
+                                </View>
                             </View>
                         </View>
+                        <Text style={{ color: '#B0B0B0', fontSize: 14, marginTop: 8 }}>{data.departure.airport} ({data.departure.iata}) → {data.arrival.airport} ({data.arrival.iata})</Text>
+                        <View style={{ flexDirection: 'row', marginTop: 12 }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ color: '#B0B0B0', fontSize: 11 }}>SALIDA</Text>
+                                <Text style={{ color: '#FFF', fontSize: 17, fontWeight: 'bold' }}>{formatTime(data.departure.scheduled)}</Text>
+                            </View>
+                            {data.departure.delay > 0 && (
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ color: '#B0B0B0', fontSize: 11 }}>NUEVA SALIDA</Text>
+                                    <Text style={{ color: '#FF9500', fontSize: 17, fontWeight: 'bold' }}>{formatTime(data.departure.estimated)}</Text>
+                                </View>
+                            )}
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ color: '#B0B0B0', fontSize: 11 }}>LLEGADA</Text>
+                                <Text style={{ color: '#FFF', fontSize: 17, fontWeight: 'bold' }}>{formatTime(data.arrival.scheduled)}</Text>
+                            </View>
+                        </View>
+                        <View style={{ flexDirection: 'row', marginTop: 12 }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ color: '#B0B0B0', fontSize: 11 }}>TERMINAL</Text>
+                                <Text style={{ color: '#FFF', fontSize: 15, fontWeight: 'bold' }}>{data.departure.terminal || '—'}</Text>
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ color: '#B0B0B0', fontSize: 11 }}>PUERTA</Text>
+                                <Text style={{ color: '#FFF', fontSize: 15, fontWeight: 'bold' }}>{data.departure.gate || '—'}</Text>
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ color: '#B0B0B0', fontSize: 11 }}>ESTADO</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text style={{ color: getStatusColor(data.status), fontSize: 13, fontWeight: 'bold' }}>{data.status?.toUpperCase()}</Text>
+                                    {data.isSimulation && (
+                                        <View style={{ backgroundColor: 'rgba(76, 217, 100, 0.1)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 6, borderWidth: 1, borderColor: '#4CD964' }}>
+                                            <Text style={{ color: '#4CD964', fontSize: 8, fontWeight: 'bold' }}>🧪 TEST</Text>
+                                        </View>
+                                    )}
+                                </View>
+                            </View>
+                        </View>
+                        <TouchableOpacity 
+                            onPress={() => removeActiveSearch(data.flightNumber)}
+                            style={{ position: 'absolute', top: 12, right: 12, width: 30, height: 30, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 15, justifyContent: 'center', alignItems: 'center', zIndex: 10 }}
+                        >
+                            <Text style={{ color: '#999', fontSize: 16 }}>✕</Text>
+                        </TouchableOpacity>
                     </View>
-                    <TouchableOpacity 
-                        onPress={clearFlight}
-                        style={{ position: 'absolute', top: 12, right: 12, width: 30, height: 30, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 15, justifyContent: 'center', alignItems: 'center', zIndex: 10 }}
-                    >
-                        <Text style={{ color: '#999', fontSize: 16 }}>✕</Text>
-                    </TouchableOpacity>
-                </View>
-
+                ))
             ) : !searchError && !isSearching && (
                 /* ——— C) TARJETA "RADAR VACÍO" PREMIUM ——— */
                 <View style={{ 

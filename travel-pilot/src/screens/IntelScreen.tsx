@@ -15,7 +15,7 @@ const IDLE_PHRASES = [
 ];
 
 export default function IntelScreen() {
-    const { user, myTrips, saveTrip, removeTrip, myFlights, removeMyFlight, setFlightInput, setTab, weather, flightData, clearFlight, simulatePushNotification, tab, selectedVoice, showPlan, travelProfile, hasSeenPlan, selectedRescuePlan, speak } = useAppContext();
+    const { user, myTrips, saveTrip, removeTrip, myFlights, removeMyFlight, setFlightInput, setTab, weather, flightData, clearFlight, simulatePushNotification, tab, selectedVoice, showPlan, travelProfile, hasSeenPlan, selectedRescuePlan, speak, removeActiveSearch } = useAppContext();
     const [newTripTitle, setNewTripTitle] = useState('');
     const [newTripDest, setNewTripDest] = useState('');
     const [showForm, setShowForm] = useState(false);
@@ -127,11 +127,11 @@ Todo parece estar en orden para tu viaje. Si detectamos cualquier riesgo para tu
                     <View style={{ flex: 1, paddingRight: 10 }}>
                         <Text style={{ color: '#B0B0B0', fontSize: 12, fontWeight: 'bold', letterSpacing: 1 }}>🕒 RESUMEN DE TU VIAJE</Text>
                     </View>
-                    {flightData?.flightNumber && (
-                        <TouchableOpacity onPress={clearFlight} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: 'rgba(255, 59, 48, 0.2)', borderRadius: 10 }}>
-                            <Text style={{ color: '#FF3B30', fontSize: 10, fontWeight: 'bold' }}>✕ DESCARTAR VUELO</Text>
-                        </TouchableOpacity>
-                    )}
+                {flightData?.flightNumber && (
+                    <TouchableOpacity onPress={() => removeActiveSearch(flightData.flightNumber)} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: 'rgba(255, 59, 48, 0.2)', borderRadius: 10 }}>
+                        <Text style={{ color: '#FF3B30', fontSize: 10, fontWeight: 'bold' }}>✕ DESCARTAR VUELO</Text>
+                    </TouchableOpacity>
+                )}
                 </View>
                 
                 <TouchableOpacity 

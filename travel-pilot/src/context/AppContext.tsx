@@ -114,6 +114,7 @@ export const AppProvider = ({ children }) => {
 
   const [extraDocs, setExtraDocs] = useState<any[]>(demoItems);
   const [flightData, setFlightData] = useState<any>(null);
+  const [activeSearches, setActiveSearches] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [agentLogs, setAgentLogs] = useState<any[]>([]);
@@ -147,7 +148,13 @@ export const AppProvider = ({ children }) => {
 
         const savedData = await AsyncStorage.getItem('lastFlightData');
         if (savedData) {
-          setFlightData(JSON.parse(savedData));
+          const parsed = JSON.parse(savedData);
+          setFlightData(parsed);
+        }
+
+        const savedActive = await AsyncStorage.getItem('activeSearches');
+        if (savedActive) {
+          setActiveSearches(JSON.parse(savedActive));
         }
 
         const savedClaims = await AsyncStorage.getItem('offline_claims');
@@ -220,7 +227,14 @@ export const AppProvider = ({ children }) => {
         AsyncStorage.removeItem('lastFlightData');
       }
     }
-  }, [flightData, isStorageReady, user]);
+  }, [flightData, isStorageReady]);
+
+  // Guardar búsquedas activas
+  useEffect(() => {
+    if (isStorageReady) {
+      AsyncStorage.setItem('activeSearches', JSON.stringify(activeSearches));
+    }
+  }, [activeSearches, isStorageReady]);
 
   // Guardar rest de datos al cambiar
   useEffect(() => {
@@ -719,6 +733,13 @@ export const AppProvider = ({ children }) => {
       const data = await response.json();
       setFlightData(data);
       
+      // AÑADIR A BÚSQUEDAS ACTIVAS (Sin duplicados por número de vuelo)
+      setActiveSearches(prev => {
+          const exists = prev.find(f => f.flightNumber === data.flightNumber);
+          if (exists) return [data, ...prev.filter(f => f.flightNumber !== data.flightNumber)];
+          return [data, ...prev];
+      });
+
       // AUTO-VOZ REACTIVA
       if (data.status === 'cancelled') {
         speak('Alerta Roja. Tu vuelo ha sido cancelado. He generado tu reembolso oficial en DOCS.', selectedVoice);
@@ -770,8 +791,21 @@ export const AppProvider = ({ children }) => {
     setFlightInput('');
     setFlightData(null);
     setSearchError(null);
+    setActiveSearches([]); // Opcionalmente podemos dejar que esto solo borre el input
     AsyncStorage.removeItem('lastFlightInput');
     AsyncStorage.removeItem('lastFlightData');
+    AsyncStorage.removeItem('activeSearches');
+  };
+
+  const removeActiveSearch = (flightNumber: string) => {
+    setActiveSearches(prev => {
+        const updated = prev.filter(f => f.flightNumber !== flightNumber);
+        // Si borramos el que está en flightData, actualizamos flightData al siguiente o null
+        if (flightData?.flightNumber === flightNumber) {
+            setFlightData(updated.length > 0 ? updated[0] : null);
+        }
+        return updated;
+    });
   };
 
   const showPlan = () => { 
@@ -979,7 +1013,8 @@ export const AppProvider = ({ children }) => {
 
   const fetchWeather = async (location: string) => {
     try {
-      const resp = await fetch(`${BACKEND_URL}/api/weather?location=${encodeURIComponent(location)}`);
+      const sanitized = location.toLowerCase().includes('bora bora') ? 'Bora Bora, French Polynesia' : location;
+      const resp = await fetch(`${BACKEND_URL}/api/weather?location=${encodeURIComponent(sanitized)}`);
       const data = await resp.json();
       if (data.temp) {
         setWeatherMap(prev => ({ ...prev, [location.toLowerCase()]: data }));
@@ -1070,7 +1105,9 @@ export const AppProvider = ({ children }) => {
     selectedRescuePlan,
     setSelectedRescuePlan,
     hasSeenPlan,
-    setHasSeenPlan
+    setHasSeenPlan,
+    activeSearches,
+    removeActiveSearch
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

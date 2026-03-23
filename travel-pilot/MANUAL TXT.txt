@@ -1,0 +1,685 @@
+TRAVEL PILOT — MANUAL OFICIAL DE USUARIO
+BLOQUE 1 — PRIMEROS PASOS
+Capítulo 1.1 — Registro y Login
+Cuando abres Travel Pilot por primera vez, verás la pantalla de bienvenida con la imagen del ala de avión al atardecer y el texto:
+"TRAVEL-PILOT · Tu copiloto de IA para retrasos, reclamaciones y planes de emergencia."
+Debajo verás tres puntos clave listados:
+•	Vigilancia Activa de Vuelos en Tiempo Real
+•	Garantía de Compensación por Retraso y Cancelación
+•	Protocolos de Contingencia de Respuesta Inmediata
+Botón ACCEDER
+Pulsa aquí si ya tienes cuenta. Introduce tu email y contraseña y pulsa ACCEDER. El sistema te conecta con Firebase Auth y activa tu agente de vigilancia.
+Ejemplo real: Tienes un vuelo mañana a las 7:00. Abres la app a las 22:00, haces login y el agente empieza a vigilar tu vuelo mientras duermes.
+Botón CREAR CUENTA
+Si es la primera vez, pulsa aquí. Introduce tu email, nombre, teléfono y una contraseña. En segundos tienes tu perfil creado y el agente IA asignado a ti.
+Consejo: Usa el mismo email donde recibes las confirmaciones de vuelos y hoteles. Así cuando actives la integración con Gmail, el asistente podrá detectar tus reservas automáticamente.
+________________________________________
+Capítulo 1.2 — Onboarding: Los 4 Slides de Bienvenida
+Solo aparecen la primera vez que entras. Puedes saltarlos pulsando SALTAR arriba a la derecha, pero te recomendamos leerlos porque resumen la filosofía completa de la app.
+Slide 1 — "Esto no es una app de viajes"
+"Las apps normales te informan de un problema. Travel-Pilot lo resuelve por ti. Es la primera app del mundo que actúa cuando algo va mal en tu viaje."
+Qué significa en la práctica: Flightradar24 te dice que tu vuelo lleva 2 horas de retraso. Travel Pilot ya ha generado 3 alternativas, ha verificado si tienes derecho a 600€ y ha avisado a tu hotel. Todo sin que tú hayas hecho nada.
+Slide 2 — "Solo necesitas tu vuelo"
+"Ve a la pestaña VUELOS y escribe tu número de vuelo (ej: IB3166). A partir de ese momento, la IA vigila tu vuelo las 24 horas. Tú no tienes que hacer nada más."
+Ejemplo real: Escribes IB3166 (Madrid–París de Iberia) el lunes por la noche. Tu vuelo sale el martes a las 10:00. A las 6:30 recibes una notificación: "Tu vuelo IB3166 tiene una demora estimada de 195 minutos. He activado el Escudo Legal. Tienes 3 opciones preparadas."
+Slide 3 — "¿Retraso? Nosotros actuamos"
+"Si tu vuelo se retrasa, la IA: llama a tu hotel para avisar, busca vuelos alternativos, reclama tu compensación legal (hasta 600€). Todo automático. Sin que tú hagas nada."
+Situación posible: Estás en la puerta de embarque con tu familia. El vuelo se retrasa 4 horas. No tienes que llamar al hotel, no tienes que buscar en Google qué derechos tienes, no tienes que rellenar formularios. Travel Pilot lo está haciendo por ti mientras tú tomas un café.
+Slide 4 — "Tú solo eliges"
+"Te presentaremos 3 vías alternativas personalizadas según tu perfil: Rápido (VIP), Económico (Ahorro) o Confort (Estancia). Tú siempre tienes la última palabra. En el menú de PERFIL tienes la guía detallada."
+Ejemplo real: Tienes una reunión crítica. Pulsas EJECUTAR ESTRATEGIA VIP. La IA emite un nuevo itinerario y te confirma por voz que tu prioridad de tiempo está protegida. Otra situación: viajas por placer. Eliges OPCIÓN ECONÓMICA. El asistente inicia la reclamación legal y te gestiona asistencia en la terminal mientras esperas, maximizando tu compensación económica.
+________________________________________
+Capítulo 1.3 — Configuración inicial recomendada
+Cuando entras por primera vez, haz estos 3 pasos en orden:
+Paso 1: Ve al tab VIAJE y pulsa "+ NUEVO VIAJE". Escribe el nombre de tu próximo viaje (ej: "Vacaciones Tokio") y la ciudad de destino (ej: "Tokyo, JP"). Pulsa "GUARDAR VIAJE Y ACTIVAR IA". El asistente empezará a cruzar datos de clima y aeropuertos para ese destino.
+Paso 2: Ve al tab VUELOS. Escribe el código de tu vuelo (ej: IB3166) y pulsa BUSCAR. Cuando aparezca la tarjeta, pulsa GUARDAR. El radar de vigilancia queda activado.
+Paso 3: Ve al tab PERFIL y pulsa "PROBAR NOTIFICACIONES". Deberías recibir una alerta push en segundos. Si la recibes, las notificaciones están funcionando y el sistema te avisará aunque tengas la app cerrada.
+________________________________________
+BLOQUE 2 — GUÍA COMPLETA DE PANTALLAS
+Capítulo 2.1 — Tab VIAJE (Centro de Mando)
+Es la pantalla principal. Tu cuartel general. Todo lo que el agente hace por ti aparece aquí.
+Header superior
+•	Botón SOS (círculo rojo, esquina superior izquierda): acceso de emergencia inmediata. Ver Capítulo 2.6.
+•	"OPERATIVO / VIGILANCIA" (punto verde): indica que el agente está activo y conectado. Si este punto estuviera en rojo o no apareciese, revisa tu conexión a internet.
+•	Icono de chat (burbuja morada, esquina superior derecha): abre el Asistente IA. Ver Capítulo 2.7.
+Tarjeta de Viaje Activo
+Aparece cuando has creado al menos un viaje. Contiene:
+•	Punto verde + "VIAJE ACTIVO": el agente está monitorizando este viaje.
+•	Nombre del viaje (ej: Vacaciones): el título que pusiste al crearlo.
+•	Destino (ej: Hawaii): con pin de ubicación.
+•	Widget de clima: temperatura actual en el destino + condición meteorológica + icono. Se actualiza en tiempo real con Open-Meteo.
+Ejemplo de uso: Vas a viajar a Tokio en 3 días. La tarjeta te muestra 18°C y lluvia. Sabes que tienes que meter el paraguas en el equipaje de mano.
+Botón ✕ (esquina superior derecha de la tarjeta): elimina el viaje. Pide confirmación antes de borrar.
+
+Informe del Asistente
+Bloque con borde morado izquierdo (o dorado si tienes el plan VIP). El texto se adapta dinámicamente y con frases rotativas de alta tecnología:
+•	Si tu radar está libre: muestra informes de sistema ("Todos los sistemas operativos. Tu próximo viaje está bajo mi protección.")
+•	Vuelo OK: "Todo bajo control con tu vuelo IB0123. Monitoreando la red."
+•	Retrasos moderados: "Incidencia detectada... Tienes exigible por ley tu derecho a asistencia."
+•	Retraso superior a 3 horas: "ALERTA CRÍTICA: Retraso superior a 3h. Tienes derecho a una compensación legal de hasta 600€. He activado tu Estrategia VIP/Económica."
+Situación posible: Estás en casa y el informe cambia de verde a rojo. Abres la app y ves "ALERTA CRÍTICA". Vas directamente a DOCS y encuentras el expediente ya generado, listo para firmar.
+Timeline del Viaje
+Dos líneas cronológicas:
+•	AHORA: Vigilancia activa con escudo.
+•	PRÓX.: Salida vuelo estimada con avión.
+Botón "TEST: FORZAR ALERTA PUSH"
+Botón discreto con fondo semitransparente. Solo para verificar que las notificaciones push funcionan en tu dispositivo. Úsalo la primera vez que configures la app. No tiene efecto en el estado real de tu vuelo.
+Sección SEGUIMIENTO DE VUELOS
+•	Botón "GESTIONAR VUELOS" (borde morado): te lleva directamente al tab VUELOS.
+•	Lista de vuelos en seguimiento: cada vuelo guardado aparece como tarjeta con número de vuelo, "Seguimiento en vivo", badge LIVE verde y botón ✕ rojo para eliminar.
+•	Si no tienes vuelos guardados, aparece el mensaje "No hay vuelos en seguimiento activo" con botón "Añadir vuelo ahora →".
+Botón "+ NUEVO VIAJE"
+Abre el formulario de creación de viaje:
+•	Campo "Nombre" (ej: Vacaciones Japón, Viaje de negocios Londres, Congreso París).
+•	Campo "Ciudad" (ej: Tokio JP, London UK, Paris FR).
+•	Botón "GUARDAR VIAJE Y ACTIVAR IA": crea el viaje en Supabase, activa el motor de clima y vincula el agente de vigilancia.
+•	Botón "CANCELAR": cierra el formulario sin guardar.
+________________________________________
+Capítulo 2.2 — Tab VUELOS (Radar)
+El corazón operativo de la app. Aquí introduces tu vuelo y la IA empieza a vigilarlo en tiempo real.
+Buscador de Vuelos
+•	Input de texto: escribe el código IATA de tu vuelo. Siempre en formato: 2 letras de aerolínea + número (ej: IB3166, BA0117, VY1234, TP404).
+•	Autoconversión a mayúsculas: si escribes "ib3166" la app lo convierte automáticamente a "IB3166".
+•	Botón BUSCAR (morado): lanza la búsqueda contra el backend. Si el vuelo existe en el radar, devuelve la tarjeta de datos en 1-2 segundos.
+•	Botón ✕ (aparece cuando hay texto o resultados): limpia la búsqueda y vuelve al estado inicial.
+Códigos de vuelo que puedes probar ahora mismo:
+•	TP404 → Travel-Pilot Air, Madrid→Londres, retrasado 210 min.
+•	IB3166 → Iberia, Madrid→París, retrasado 195 min.
+•	IB0123 → Iberia Vanguard, Madrid→JFK, retrasado 190 min.
+•	VY1234 → Vueling, Barcelona→Roma, puntual.
+•	BA0117 → British Airways, LHR→JFK, en vuelo.
+Tarjeta de Vuelo Encontrado
+Cuando el radar localiza tu vuelo, aparece una tarjeta con borde de color según estado:
+•	Verde: vuelo puntual o en vuelo.
+•	Naranja: retraso moderado.
+•	Rojo: retraso grave o cancelación.
+Datos que muestra:
+•	Aerolínea + "SEGUIMIENTO EN VIVO".
+•	Número de vuelo (grande, blanco, negrita).
+•	Botón GUARDAR (morado pequeño): añade el vuelo a tu lista de seguimiento permanente. Útil para vuelos que haces frecuentemente.
+•	Badge de estado: RETRASADO +210 MIN (naranja) / EN VUELO (verde) / PROGRAMADO (gris) / CANCELADO (rojo).
+•	Ruta: Aeropuerto origen (IATA) → Aeropuerto destino (IATA).
+•	SALIDA: hora programada original.
+•	NUEVA SALIDA: hora estimada actualizada (solo aparece si hay retraso). En naranja para que destaque.
+•	LLEGADA: hora estimada de aterrizaje.
+•	TERMINAL: terminal de salida.
+•	PUERTA: puerta de embarque.
+•	ESTADO: texto del estado actual.
+•	Botón ✕ (esquina superior derecha de la tarjeta): cierra la tarjeta y limpia la búsqueda.
+Situación posible: Eres familiar de alguien que viaja. Introduces su número de vuelo para saber cuándo llega. La tarjeta te dice que está EN VUELO con llegada a las 18:45.
+Banner "COMPENSACIÓN ELEGIBLE: HASTA 600€"
+Aparece automáticamente en la parte superior de la pantalla cuando el radar detecta que el retraso de tu vuelo supera las 3 horas. El importe se calcula dinámicamente según la distancia del vuelo.
+Qué hace el asistente: Recibirás una notificación por voz detallando la situación y el análisis de impacto. Ve directamente a la sección de DOCS para firmar tu expediente ya generado.
+
+Pop-up ANÁLISIS DE CRISIS
+Aparece automáticamente con un informe detallado de la IA. El sistema te recomendará la mejor estrategia para ti (basada en si eres viajero VIP, Económico o Equilibrado), pero te permite ver el resto de vías alternativas.
+Pulsa "SOLICITAR CAMBIO DE ESTRATEGIA" si deseas cambiar de criterio táctico.
+Card Demo "CONEXIÓN EN RIESGO" — BA0117
+Tarjeta con borde naranja que muestra una situación de conexión crítica:
+•	Vuelo BA0117, 68 minutos disponibles para conexión.
+•	LHR (Londres Heathrow) → JFK (Nueva York).
+•	Salida 11:00, Terminal T5, Puerta C32.
+•	Alerta: "Tiempo mínimo de conexión en LHR: 60 min. Margen crítico."
+Qué significa: tienes solo 8 minutos de margen por encima del mínimo. Cualquier retraso pequeño haría que perdieses la conexión. El agente lo está vigilando y te avisará si el margen se reduce a cero.
+Botón ✕: cierra esta tarjeta demo.
+Card Demo "HOTEL"
+Tarjeta con borde verde:
+•	Hotel The Standard NYC, 848 Washington St, Nueva York.
+•	CHECK-IN: 15:00 / CHECK-OUT: 12:00 / ESTADO: A TIEMPO
+Qué significa: el agente ha verificado que, con el horario actual del vuelo, llegarás al hotel antes del check-in. Si el vuelo se retrasara y ese estado cambiase a "EN RIESGO", el agente llamaría automáticamente al hotel para notificar la llegada tardía.
+Botón ✕: cierra esta tarjeta demo.
+Botón "SOLICITAR CAMBIO DE ESTRATEGIA (VER OTROS PLANES)"
+Gran botón rojo con sirena. Es el centro de mando táctico ante una crisis.
+Al pulsarlo ocurre lo siguiente:
+1.	El backend llama a Gemini AI con los datos de tu vuelo.
+2.	En 3-5 segundos genera 3 escenarios personalizados según tu situación específica.
+3.	Aparece el modal OPCIONES DE VIAJE.
+Cuándo pulsarlo:
+•	Cuando tu vuelo tiene un retraso importante y quieres ver alternativas.
+•	Cuando te han cancelado el vuelo y necesitas saber qué hacer.
+•	Cuando tienes una conexión en riesgo y quieres evaluar opciones.
+•	Cuando simplemente quieres saber cuáles son tus alternativas antes de que algo pase.
+
+
+
+Modal OPCIONES DE VIAJE (IA)
+Aparece centrado sobre la pantalla con fondo oscuro. Contiene:
+Aviso del asistente: caja negra con escudo morado. Muestra alertas específicas de tu situación. Ejemplo: "Habitación no reembolsable en The Ritz London" → el agente ha detectado que si no apareces esta noche, perderás el dinero de la habitación.
+"HE ENCONTRADO 3 OPCIONES:" seguido de los 3 botones tácticos:
+•	RÁPIDO (rojo/VIP): llegar al destino lo antes posible. Incluye reubicación inmediata, gestiones express y atención preferente. Prioridad absoluta: el tiempo.
+Ejemplo: Tu vuelo se cancela. Opción RÁPIDO: nuevo billete emitido al instante para el próximo vuelo disponible de cualquier compañía.
+•	ECONÓMICO (verde/AHORRO): maximizar el beneficio legal. Incluye la gestión integral de la reclamación EU261 y asistencia de restauración básica en la terminal. El coste para el usuario es 0€. Prioridad absoluta: compensación económica.
+Ejemplo: Esperar al vuelo original gestionando la reclamación de hasta 600€. Llegas con retraso pero el asistente te confirma que la indemnización legal compensa con creces la espera.
+•	CONFORT (azul/ESTANCIA): priorizar el descanso. Incluye reserva inmediata de hotel certificado y vuelo reprogramado para la mañana siguiente con traslado incluido. Prioridad absoluta: bienestar.
+Ejemplo: Es de noche y el retraso es indefinido. Opción CONFORT: habitación confirmada, descanso real y salida cómoda mañana.
+Botón CANCELAR / CERRAR: cierra el modal sin elegir ninguna opción. Puedes volver a abrirlo cuando quieras.
+Sección MIS VUELOS
+Scroll horizontal con tarjetas de todos los vuelos que has guardado previamente.
+Cada tarjeta muestra:
+•	Número de vuelo (blanco, negrita).
+•	"SIGUIENDO" en verde.
+•	"En tiempo real" en gris.
+•	Botón ✕ rojo: elimina el vuelo del seguimiento.
+Para qué sirve guardar vuelos: el agente los monitoriza en background cada 30 minutos aunque no tengas la app abierta. Si detecta un problema, recibes una notificación push aunque tengas el móvil bloqueado.
+Situación posible: Guardas tu vuelo del lunes y el del jueves. El miércoles a las 23:00 recibes una notificación: "ALERTA IB3166: Tu asistente ha detectado un retraso. Tienes un plan de contingencia listo." Abres la app y encuentras todo preparado.
+Panel de Estado del Radar
+En la parte inferior de la pantalla encontrarás un panel de estado en tiempo real que indica si el sistema está "ACTUALIZADO", verificando datos, o en "ESPERA". Incluye un botón de refresco manual.
+
+Historial de Búsquedas (Chips)
+Si acabas de buscar vuelos pero borras tu búsqueda, debajo de la barra aparecerán chips interactivos con tus búsquedas más recientes (ej. "IB3166"). Púlsalos para volver a rastrear ese vuelo instantáneamente sin tener que volver a escribir.
+
+Tarjeta de Cobertura de Radar 
+Cuando no estés rastreando nada, en vez de una pantalla vacía verás una interfaz de radar concéntrico animado confirmando que el espacio aéreo está despejado y los sistemas en alerta.
+________________________________________
+Capítulo 2.3 — Tab DOCS (Vault de Documentos)
+Tu caja fuerte digital de viaje. Todo encriptado con AES-256, el mismo estándar que usan los bancos y los ejércitos.
+Banner ASISTENTE ACTIVO
+Barra superior con punto verde. Muestra:
+•	"🧠 ASISTENTE ACTIVO"
+•	"Conectado con: tu email // Hace X min"
+•	Flecha > para ver más detalles de actividad.
+Qué significa: el agente está conectado y sincronizando. Si ves "Hace 12 min" es normal, el agente hace ciclos de vigilancia cada 30 minutos.
+Botón "ACTUALIZAR CON MIS CORREOS"
+Botón con icono de correo. Conecta con tu Gmail y/o Outlook para que el agente lea tus correos de viaje y extraiga automáticamente:
+•	Confirmaciones de vuelo.
+•	Reservas de hotel.
+•	Alquileres de coche.
+•	Boarding passes.
+•	Confirmaciones de tren.
+Cómo funciona por dentro: el agente usa Gemini AI para leer el contenido de los correos y extraer los datos estructurados (número de vuelo, fechas, números de confirmación, etc.) y los guarda en tu Vault automáticamente con el badge "DETECTADO EN GMAIL" o "DETECTADO EN OUTLOOK".
+Situación posible: Acabas de comprar un vuelo en Iberia.com. Recibes el email de confirmación. Abres Travel Pilot, pulsas "ACTUALIZAR CON MIS CORREOS" y en segundos aparece tu boarding pass en el Vault con todos los datos extraídos.
+Sección MIS DOCUMENTOS
+Badge "AES-256" en la esquina derecha confirma el nivel de encriptación.
+Cada documento tiene:
+•	Icono identificativo (pasaporte azul, avión para boarding pass, hotel amarillo, coche rojo).
+•	Nombre del documento.
+•	Datos clave (número de ID, gate, número de confirmación, proveedor).
+•	Origen: GUARDADO EN LA APP (manual) / DETECTADO EN GMAIL / DETECTADO EN OUTLOOK.
+•	Badge PROTEGIDO (morado): el documento está encriptado y seguro.
+•	Botón VERIFICAR >: abre el documento para revisarlo o actualizarlo.
+Documentos que puedes guardar:
+PASAPORTE
+•	Número de pasaporte, país, fecha de caducidad.
+•	Situación posible: En el aeropuerto te piden el número de pasaporte para el check-in y no lo llevas a mano. Abres Travel Pilot y lo tienes en 2 segundos.
+BOARDING PASS
+•	Número de gate, número de vuelo, asiento.
+•	Situación posible: Tienes el móvil descargado al 5%. El boarding pass está en el Vault offline. No necesitas internet para mostrarlo.
+RESERVA DE HOTEL
+•	Número de confirmación, hotel, ciudad, fechas.
+•	Situación posible: Llegas al hotel a las 2 de la madrugada después de un retraso. Te piden el número de confirmación. Lo tienes en el Vault en 3 segundos.
+COCHE DE ALQUILER
+•	Proveedor, aeropuerto, número de confirmación.
+•	Situación posible: Llegas al mostrador de Sixt y no recuerdas el número de reserva. Abres el Vault y está ahí.
+Añadir documentos manualmente: pulsa el botón de añadir (si está disponible) o usa el escáner con animación láser para fotografiar y verificar un documento físico.
+Sección REEMBOLSOS Y RECLAMACIONES
+Badge verde con número de reclamaciones activas (ej: "1 ACTIVA").
+Botón "MANUAL DE DERECHOS TÁCTICOS EU261"
+Abre el manual legal integrado. Ver Capítulo 2.8 para el detalle completo.
+Tarjeta de Reclamación Activa
+Cuando hay una reclamación en curso aparece una tarjeta con borde verde y animación de carga:
+•	Nombre de aerolínea (ej: British Airways).
+•	Número de vuelo (ej: TP404).
+•	"GENERANDO EXPEDIENTE..." con spinner naranja y barra de progreso verde.
+•	COMPENSACIÓN: 600€ (calculado automáticamente según distancia y minutos de retraso).
+•	Botón "FIRMAR AHORA ✍️" (morado): abre el modal de autorización legal.
+•	Botón "MÁS INFO >": detalles del caso.
+Modal AUTORIZACIÓN LEGAL
+Fondo oscuro con icono de bolígrafo azul. Texto:
+"Al firmar, autorizas a Travel-Pilot a iniciar la reclamación de 600€ en tu nombre según la EU261."
+•	Canvas de firma digital: área blanca donde dibujas tu firma con el dedo.
+•	Botón BORRAR: borra la firma y vuelve a empezar.
+•	Botón CONFIRMAR: valida la firma, genera el PDF oficial y lo envía al sistema de reclamaciones.
+•	Botón CANCELAR PROCESO (rojo): cancela la reclamación. El expediente se elimina.
+Qué ocurre después de firmar: el backend genera un PDF oficial con tu firma digital, los datos del vuelo, el fundamento legal EU261 y el importe de compensación. El PDF se guarda en tu Vault y queda registrado en Supabase con estado "generated". La aerolínea debe responder en 14 días hábiles.
+Texto de seguridad: "SEGURIDAD ENCRIPTADA · GRADO MILITAR AES-256" en la parte inferior.
+________________________________________
+Capítulo 2.4 — Tab PERFIL (Bio)
+Tu centro de control personal. Aquí gestionas tu membresía, tu voz IA y tus métricas de ahorro.
+Banner ESTADO: ACTIVADO / MEMBRESÍA ÉLITE
+Tarjeta dorada con barra de progreso. Muestra:
+•	Estado ACTIVADO: tu protección está activa.
+•	MEMBRESÍA ÉLITE: nivel de suscripción actual.
+•	Fecha de protección: "Tu protección Travel-Pilot está activa hasta el 20/05/2026."
+Si tienes plan gratuito (Explorer), este banner mostrará las funciones bloqueadas y un botón para actualizar.
+Indicador CONEXIÓN TÁCTICA ESTABLE
+•	Punto verde parpadeante.
+•	"Sincronizado con Central Travel-Pilot".
+•	Ping: 42ms: latencia de conexión con el servidor. Un número bajo (menos de 100ms) indica conexión óptima.
+Situación posible: Antes de un vuelo importante, comprueba que el ping está bajo. Si ves un número alto o "SIN CONEXIÓN", verifica tu WiFi o datos móviles.
+Sección LO QUE HAS AHORRADO
+Dos métricas en tiempo real calculadas por el agente:
+•	4.5H TIEMPO AHORRADO: horas que el agente ha gestionado por ti (búsqueda de alternativas, llamadas, formularios).
+•	$320 DINERO AHORRADO: estimación del dinero recuperado o ahorro generado (compensaciones EU261, evitar penalizaciones hoteleras, etc.).
+Estas cifras aumentan con cada gestión que el agente realiza en tu nombre.
+Sección VOZ DEL ASISTENTE
+VOZ SELECCIONADA: muestra el identificador técnico de la voz activa.
+Voces gratuitas (disponibles en todos los planes):
+•	CLARA: voz femenina española, clara y directa.
+•	LUCÍA: voz femenina española, tono más suave.
+•	JORGE: voz masculina española, formal.
+•	ELENA: voz femenina española, natural.
+Para cambiar de voz: simplemente pulsa el botón de la voz que prefieras. El cambio es inmediato.
+Voces Premium (requieren suscripción de pago):
+•	AUTONOE 🔒: Castellano · Gemini. Voz generada con IA de Google, más natural y expresiva.
+•	ENCELADUS 🔒: Castellano · Gemini. Voz masculina generada con IA, tono profundo.
+Texto informativo: "Las voces premium se activarán con tu suscripción."
+Para qué sirve la voz: cuando el asistente genera un plan de contingencia o detecta un problema, puede leerlo en voz alta. Muy útil cuando tienes las manos ocupadas con el equipaje o estás en un aeropuerto ruidoso.
+Botón PROBAR NOTIFICACIONES
+Envía inmediatamente una notificación push de prueba a tu dispositivo. Deberías recibirla en 2-5 segundos con el texto: "Tu asistente está vigilando tu viaje."
+Cuándo usarlo:
+•	La primera vez que configuras la app.
+•	Si crees que las notificaciones no están llegando.
+•	Después de actualizar el sistema operativo del móvil.
+•	Si llevas tiempo sin recibir alertas y quieres verificar que todo funciona.
+Al pulsarlo aparece el pop-up: "✅ Enviada. La notificación debería llegar en unos segundos."
+Sección CENTRO DE INFORMACIÓN
+Botón "VER TUTORIAL DE BIENVENIDA": vuelve a mostrar los 4 slides del onboarding inicial. Útil si quieres repasar cómo funciona la app o mostrársela a alguien.
+Botón "GUÍA DE OPERACIONES": abre el manual de los 9 protocolos clave organizados en 2 fases. Ver Capítulo 2.9 para el detalle completo.
+________________________________________
+Capítulo 2.5 — Barra de Navegación Inferior
+La barra inferior tiene 4 tabs siempre visibles:
+•	VIAJE (icono de brújula): pantalla principal y centro de mando.
+•	VUELOS (icono de avión): radar de búsqueda y seguimiento.
+•	DOCS (icono de escudo): vault de documentos y reclamaciones.
+•	PERFIL (icono de persona): configuración personal y membresía.
+Consejo: el orden de los tabs no es aleatorio. Está diseñado para reflejar el flujo natural de un viajero: primero planificas el viaje, luego buscas y guardas el vuelo, luego organizas tus documentos y finalmente personalizas tu experiencia.
+________________________________________
+Capítulo 2.6 — Botón SOS
+El botón rojo con las letras SOS en la esquina superior izquierda es el acceso de emergencia más rápido de la app. Está visible en todas las pantallas en todo momento. Un solo toque abre el menú de emergencia.
+Modal SOS — AYUDA RÁPIDA DE EMERGENCIA
+Aparece un menú oscuro con 5 opciones de acción inmediata:
+Opción 1: LLAMAR AL HOTEL
+Icono de teléfono con borde morado.
+Subtítulo: "Notificar llegada tardía automáticamente."
+Qué hace: el agente realiza una llamada automática al hotel donde tienes tu reserva activa, usando síntesis de voz, para informar de que llegarás tarde y proteger tu habitación de una posible cancelación por no-show.
+Cuándo usarlo:
+•	Tu vuelo lleva más de 2 horas de retraso y llegarás después de la hora de check-in.
+•	Tienes una reserva no reembolsable y quieres asegurarte de que no la cancelen.
+•	Son las 2 de la madrugada y no quieres llamar tú mismo al hotel.
+Situación posible: Tu vuelo Madrid-Roma se retrasa 3 horas. Tu hotel tiene política de cancelación de reservas no reclamadas después de las 23:00. Son las 22:30. Pulsas "LLAMAR AL HOTEL" y el agente hace la llamada en tu nombre mientras tú esperas en la puerta de embarque.
+Opción 2: CONTACTAR AEROLÍNEA
+Icono de avión con borde azul.
+Subtítulo: "Línea directa de tu compañía aérea."
+Qué hace: te conecta directamente con el teléfono de atención al cliente de la aerolínea correspondiente a tu vuelo activo. No tienes que buscar el número, la app lo tiene registrado y te lo marca directamente.
+Cuándo usarlo:
+•	Quieres reclamar en persona el cambio de vuelo.
+•	Necesitas información sobre equipaje perdido.
+•	La aerolínea no ha comunicado la causa del retraso y quieres saberla (importante para determinar si tienes derecho a compensación EU261).
+Situación posible: Tu vuelo lleva 4 horas de retraso y en el panel del aeropuerto solo pone "RETRASADO" sin más información. Pulsas "CONTACTAR AEROLÍNEA" y en 10 segundos estás hablando con el servicio de atención al cliente de Iberia.
+Opción 3: EMERGENCIA MÉDICA
+Icono de cruz roja con borde rojo.
+Subtítulo: "Localizar hospitales y farmacias cercanas."
+Qué hace: usando tu ubicación actual, muestra los centros médicos, hospitales y farmacias más cercanos al aeropuerto o a donde estés.
+Cuándo usarlo:
+•	Tú o alguien de tu grupo necesita atención médica urgente.
+•	Necesitas medicación y no sabes dónde hay una farmacia en ese país.
+•	Tienes una enfermedad crónica y necesitas encontrar un hospital antes de un viaje largo.
+Situación posible: Tu hijo tiene fiebre alta durante una escala de 4 horas en Frankfurt. Pulsas "EMERGENCIA MÉDICA" y la app te muestra el centro médico del aeropuerto Frankfurt a 200 metros de la puerta C12.
+Opción 4: PROTECCIÓN LEGAL
+Icono de escudo con borde verde.
+Subtítulo: "Reclamar compensación por retraso."
+Qué hace: te lleva directamente al tab DOCS donde encontrarás el expediente EU261 generado automáticamente con tus datos, listo para firmar y enviar.
+Cuándo usarlo:
+•	Tu vuelo lleva más de 3 horas de retraso.
+•	Te han cancelado el vuelo con menos de 14 días de antelación.
+•	Te han denegado el embarque por overbooking.
+Situación posible: Son las 3 de la mañana en el aeropuerto. Tu vuelo se ha cancelado. Estás agotado y no tienes energía para buscar formularios ni abogados. Pulsas "PROTECCIÓN LEGAL" y en 30 segundos tienes el documento de reclamación de 600€ listo para firmar con el dedo.
+Opción 5: HABLAR CON ASISTENTE
+Icono de burbuja de chat con borde morado.
+Subtítulo: "Asistente de viaje en tiempo real."
+Qué hace: abre directamente el chat con el asistente IA. Ver Capítulo 2.7.
+Cuándo usarlo:
+•	Tienes una pregunta específica que no encuentras en la app.
+•	Quieres que el asistente te explique tus opciones con más detalle.
+•	Necesitas consejo personalizado para tu situación concreta.
+Botón CERRAR: cierra el modal SOS y vuelve a la pantalla anterior.
+________________________________________
+Capítulo 2.7 — Chat con el Asistente IA
+Accesible desde el icono de burbuja morada en la esquina superior derecha de cualquier pantalla, o desde el botón SOS → HABLAR CON ASISTENTE.
+Header del Chat
+•	"🧠 ASISTENTE IA" con icono de micrófono para activar dictado por voz.
+•	Botón BORRAR: elimina todo el historial del chat actual.
+•	Botón CERRAR: cierra el chat y vuelve a la pantalla anterior.
+Selector de Voz Táctica
+Scroll horizontal con las voces disponibles. Las voces con candado 🔒 requieren membresía premium.
+•	AUTONOE 🔒 (morado, "EDICIÓN PREMIUM"): la voz más avanzada y humana.
+•	ENCELADUS 🔒 ("VERSION PREMIUM"): voz masculina profunda generada por IA.
+•	LUCÍA: voz gratuita femenina.
+•	JAVIER: voz gratuita masculina.
+La voz seleccionada es la que usará el asistente para leer sus respuestas en voz alta.
+Mensaje de bienvenida
+"TRAVEL-PILOT AI CONNECTED. ¿En qué te puedo ayudar, operativo?"
+Input de texto
+•	Campo "ESCRIBE TU DUDA AQUÍ...".
+•	Botón micrófono (izquierda, negro): activa el dictado por voz. Habla en español y el asistente transcribe tu pregunta automáticamente usando Gemini AI.
+•	Botón enviar (derecha, morado): envía el mensaje al asistente.
+Preguntas que puedes hacerle al asistente
+Sobre tu vuelo:
+•	"¿Cuánto tiempo tengo para mi conexión en Frankfurt?"
+•	"Mi vuelo lleva 3 horas de retraso, ¿tengo derecho a compensación?"
+•	"¿Qué pasa si pierdo mi conexión?"
+•	"¿La huelga de controladores me da derecho a compensación?"
+Sobre el destino:
+•	"¿Qué documentación necesito para entrar en Japón?"
+•	"¿Hay restricciones sanitarias en mi destino?"
+•	"¿Qué moneda se usa en Turquía y puedo pagar con tarjeta?"
+Sobre emergencias:
+•	"He perdido mi pasaporte en el aeropuerto de París, ¿qué hago?"
+•	"Me han robado la maleta, ¿cómo lo reclamo?"
+•	"Estoy enfermo en el aeropuerto, ¿qué debo hacer?"
+Sobre derechos del pasajero:
+•	"¿Cuánto me corresponde por un retraso de 4 horas en un vuelo Madrid-Nueva York?"
+•	"La aerolínea dice que el retraso fue por mal tiempo, ¿tengo derecho a compensación?"
+•	"¿Puedo reclamar si el vuelo se retrasó hace 2 años?"
+El asistente responde siempre en español, de forma concisa y directa, sin tecnicismos innecesarios.
+________________________________________
+Capítulo 2.8 — Manual de Derechos Tácticos EU261
+Accesible desde DOCS → "MANUAL DE DERECHOS TÁCTICOS EU261". Es la guía legal integrada más completa de la app.
+RETRASO +2 HORAS — Derecho de Asistencia
+Borde morado.
+Qué dice la ley: la aerolínea DEBE darte comida, bebida y acceso a comunicación (llamadas o email).
+Qué debes hacer:
+1.	Dirigirte al mostrador de la aerolínea y pedir los vales de comida.
+2.	Si la aerolínea no los da, pagar tú y GUARDAR TODOS LOS TICKETS.
+3.	Fotografiar los tickets y subirlos al Vault de Travel Pilot.
+4.	Reclamarlos después junto con la compensación EU261 si aplica.
+Situación posible: Retraso de 2.5 horas en Barajas. El personal de Vueling no te ofrece nada. Vas al mostrador y muestras este artículo del manual. Tienen obligación legal de darte los vales. Si se niegan, pagas tú un menú de 15€ en el aeropuerto, guardas el ticket y lo incluyes en tu reclamación posterior.
+RETRASO +3 HORAS — Compensación Económica
+Borde verde.
+Qué dice la ley: tienes derecho a entre 250€ y 600€ en efectivo según la distancia del vuelo:
+•	Vuelos hasta 1.500 km: 250€.
+•	Vuelos entre 1.500 y 3.500 km: 400€.
+•	Vuelos de más de 3.500 km: 600€.
+Qué hace Travel Pilot automáticamente: calcula el importe, genera el expediente PDF con firma digital y lo envía a la aerolínea. La aerolínea tiene 14 días hábiles para responder.
+Importante: las "circunstancias extraordinarias" (mal tiempo extremo, huelga de controladores, actos de terrorismo) pueden eximir a la aerolínea de pagar la compensación económica, pero NUNCA el derecho a comida, bebida y hotel.
+RETRASO +5 HORAS — Derecho a Reembolso
+Borde amarillo.
+Qué dice la ley: si el retraso supera las 5 horas y decides NO viajar, tienes derecho al reembolso completo del billete en un plazo de 7 días.
+Cuándo usarlo: cuando el retraso es tan grande que el viaje ya no tiene sentido (ej: retraso de 6 horas en un viaje de negocios cuya reunión era a las 10:00).
+Situación posible: Tu vuelo de negocios Madrid-Berlín sale a las 6:00 y tiene un retraso de 6 horas. La reunión era a las 10:00 y ya no tiene sentido viajar. Tienes derecho al reembolso del 100% del billete + la compensación económica de 400€.
+CANCELACIÓN — Protección Total
+Borde rojo.
+Qué dice la ley: si la aerolínea cancela el vuelo con menos de 14 días de antelación, tienes derecho a:
+•	Vuelo alternativo lo antes posible.
+•	Hotel si hay noche de por medio.
+•	Indemnización económica (mismos importes que el retraso).
+Excepción: si la aerolínea te avisa con más de 14 días de antelación y te ofrece una alternativa razonable, no tienes derecho a compensación económica, pero sí al reembolso del billete.
+OVERBOOKING — Denegación de Embarque
+Borde azul.
+Qué dice la ley: si la aerolínea te niega el embarque por exceso de reservas, tienes derecho a:
+•	Reubicación inmediata en el siguiente vuelo disponible.
+•	Compensación económica inmediata (mismos importes).
+•	Comida, bebida y hotel si es necesario.
+Consejo táctico: antes de aceptar voluntariamente ceder tu asiento a cambio de una compensación de la aerolínea, verifica con el asistente IA si lo que te ofrecen es mejor o peor que lo que te da la ley. A veces las aerolíneas ofrecen vales de vuelo cuando en realidad te corresponde dinero en efectivo.
+Recordatorio Táctico (al final del manual)
+Caja amarilla con bombilla:
+"Las 'circunstancias extraordinarias' (clima extremo, huelgas de controladores) pueden anular la compensación económica, pero NUNCA el derecho a comida, bebida u hotel."
+Botón ENTENDIDO: cierra el manual y vuelve a DOCS.
+________________________________________
+Capítulo 2.9 — Guía de Operaciones (9 Protocolos)
+Accesible desde PERFIL → GUÍA DE OPERACIONES. Los 9 protocolos clave divididos en 2 fases.
+FASE I — CONFIGURACIÓN Y VIGILANCIA
+Protocolo 1: Centro de Operaciones
+En la pestaña VIAJE, crea tu itinerario. La IA cruzará datos de clima y aeropuertos para darte el control total del destino.
+Protocolo 2: Radar Centinela 24/7
+En VUELOS, guarda tu número de vuelo. Se activa un radar digital que rastrea cualquier movimiento fuera de lo previsto.
+Protocolo 3: Alertas Inteligentes
+Sin ruidos. Solo recibirás una notificación si existe un riesgo real para tu conexión. El asistente te hablará para explicarte la situación y tu compensación.
+Protocolo 4: Informe de Inteligencia (Vault)
+Si el retraso supera las 3h, generamos tu expediente legal al instante. Recupera tu compensación legal con un solo toque.
+FASE II — PROTOCOLOS DE ÉLITE
+Protocolo 5: Protocolo SOS
+Asistencia táctica. La IA puede contactar con hoteles y servicios locales para avisar de tu situación en emergencias. Un solo toque activa los 5 canales de respuesta inmediata.
+Protocolo 6: Contingencia Táctica
+Ante una incidencia, calculamos 3 realidades alternativas basadas en tu perfil de viajero. Tú decides con datos estratégicos. Verás cómo el navegador del asistente indica claramente el modo activo: MODO VIP, MODO ECONÓMICO o MODO EQUILIBRADO.
+Protocolo 7: Ejecución Autónoma
+Tu asistente toma los mandos. Verás a la IA navegar y realizar gestiones pesadas por ti en tiempo real. Reservas, llamadas, formularios. Todo sin que tú hagas nada.
+Protocolo 8: Enlace con el Comandante
+Chat contextual por voz o texto. El núcleo Gemini conoce tu itinerario y te dará consejos expertos adaptados a tu situación específica, no respuestas genéricas.
+Protocolo 9: Privacidad Encriptada
+Tus documentos nunca salen de tu dispositivo sin permiso. Encriptación de grado militar AES-256. Ni Travel Pilot puede leer tus documentos sin tu autorización explícita.
+Botón "ENTENDIDO, COMANDANTE": cierra la guía y vuelve al perfil.
+________________________________________
+BLOQUE 3 — SITUACIONES DE EMERGENCIA
+Este bloque es el más importante del manual. Guárdalo, imprímelo o memoriza dónde encontrarlo. Está diseñado para usarse en el aeropuerto, bajo presión, con poco tiempo.
+________________________________________
+Capítulo 3.1 — Tu vuelo se retrasa menos de 2 horas
+Nivel de alerta: bajo. Vigilancia activa.
+Qué hace Travel Pilot automáticamente:
+•	El agente monitoriza el vuelo cada 30 minutos.
+•	Si el retraso aumenta, recibirás una notificación push inmediata.
+•	El informe del asistente en el tab VIAJE se actualiza en tiempo real.
+Qué debes hacer tú:
+1.	No hacer nada todavía. El agente está vigilando.
+2.	Comprobar en el tab VIAJE si tienes alguna conexión en riesgo.
+3.	Si tienes una conexión ajustada, abrir el tab VUELOS y pulsar "SOLICITAR CAMBIO DE ESTRATEGIA" de forma preventiva para tener las opciones ya calculadas.
+Consejo: usa este tiempo para verificar que tienes todos tus documentos en el Vault (DOCS). Si en algún momento el retraso escala a 3 horas, lo tendrás todo listo.
+________________________________________
+Capítulo 3.2 — Tu vuelo se retrasa entre 2 y 3 horas
+Nivel de alerta: medio. Derechos de asistencia activos.
+Qué hace Travel Pilot automáticamente:
+•	El informe del asistente cambia a: "CONSEJO DEL SISTEMA: Tienes derecho a comida y bebida. Guarda los tickets para reclamar gastos."
+•	El agente precalcula en background el plan de contingencia para tenerlo listo si el retraso escala.
+Qué debes hacer tú, paso a paso:
+1.	Ve al mostrador de la aerolínea y pide los vales de comida y bebida. Es un derecho legal, no un favor.
+2.	Si se niegan, paga tú y guarda el ticket. Fotografíalo y súbelo al Vault en DOCS.
+3.	Abre el tab VUELOS y pulsa "SOLICITAR CAMBIO DE ESTRATEGIA". Tendrás los 3 escenarios calculados aunque todavía no los necesites. Es mejor tenerlos y no usarlos.
+4.	Pregunta al asistente IA: "Mi vuelo lleva 2 horas de retraso, ¿crees que llegará a 3 horas?" El agente analizará el histórico del vuelo y te dará su estimación.
+5.	Verifica tu hotel: si llegarás tarde al check-in, pulsa SOS → LLAMAR AL HOTEL para que el agente avise automáticamente.
+Situación real completa:
+Son las 14:00 en el aeropuerto de Barcelona. Tu vuelo VY1234 a Roma sale a las 15:30 pero el panel muestra "RETRASADO - 17:30". Abres Travel Pilot:
+•	El informe del asistente dice: "Retraso de 120 minutos detectado en VY1234."
+•	Vas al mostrador de Vueling y pides los vales de comida.
+•	Pulsas "SOLICITAR CAMBIO DE ESTRATEGIA" y ves que hay un vuelo alternativo Barcelona-Roma a las 19:00 gestionado como prioridad.
+•	Preguntas al asistente: "¿Llegaré a tiempo al hotel?" El asistente responde: "Con llegada estimada a las 20:45, llegarás antes del cierre de recepción. Tu reserva está a salvo."
+•	Tranquilo, vas a comer con los vales y esperas.
+________________________________________
+Capítulo 3.3 — Tu vuelo se retrasa más de 3 horas
+Nivel de alerta: crítico. Análisis de Crisis activado. Compensación legal en trámite.
+Qué hace Travel Pilot automáticamente:
+•	Aparece el banner dorado "COMPENSACIÓN DETECTADA" en el tab VUELOS.
+•	Se genera el pop-up "INFORME DE INTELIGENCIA" con el aviso de compensación EU261.
+•	En el tab DOCS aparece la tarjeta de reclamación con "GENERANDO EXPEDIENTE..." y barra de progreso.
+•	El asistente te confirma por voz tu derecho a reclamación según tu perfil.
+Qué debes hacer tú, paso a paso:
+1.	Revisa el informe de la IA pulsando OK o SOLICITAR CAMBIO DE ESTRATEGIA. El proceso legal ya está iniciado.
+2.	Ve al tab DOCS. Verás la tarjeta de reclamación con el importe calculado.
+3.	Pulsa "FIRMAR AHORA ✍️". Aparece el modal de autorización legal.
+4.	Dibuja tu firma con el dedo en el canvas blanco.
+5.	Pulsa CONFIRMAR. El PDF oficial queda generado y registrado.
+6.	Guarda tus tickets de comida y bebida del tiempo de espera para incluirlos en la reclamación.
+7.	Pide al personal de la aerolínea que confirme por escrito la causa del retraso. Si es causa extraordinaria (meteorología extrema, huelga de controladores) no habrá compensación económica, pero sí comida, bebida y hotel si pernoctas.
+Cálculo automático de tu compensación:
+•	Madrid → París (1.800 km): 400€
+•	Madrid → Londres (1.260 km): 250€
+•	Madrid → Nueva York (5.760 km): 600€
+•	Barcelona → Roma (1.360 km): 250€
+Situación real completa:
+Son las 22:00 en Barajas. Tu vuelo IB3166 a París lleva 195 minutos de retraso (3 horas y 15 minutos). Abres Travel Pilot:
+•	El banner muestra "COMPENSACIÓN DETECTADA (400€)".
+•	Vas a DOCS y encuentras el expediente ya generado con el cálculo dinámico.
+•	Pulsas "FIRMAR AHORA", dibujas tu firma y pulsas CONFIRMAR.
+•	El PDF oficial queda generado con tu firma digital y los datos del vuelo.
+•	Iberia tiene 14 días hábiles para pagar. Si no lo hacen, puedes acudir a AESA (Agencia Estatal de Seguridad Aérea) con el documento generado.
+•	Mientras esperas, pulsas SOS → LLAMAR AL HOTEL para que el agente avise a tu hotel de París de la llegada tardía.
+________________________________________
+Capítulo 3.4 — Te cancelan el vuelo
+Nivel de alerta: máximo. Protocolo de cancelación activo.
+Qué hace Travel Pilot automáticamente:
+•	El estado del vuelo cambia a CANCELADO en la tarjeta.
+•	Se genera inmediatamente el expediente de reclamación.
+•	El agente calcula los 3 escenarios de contingencia.
+•	Si hay noche de por medio, el agente verifica opciones de hotel cerca del aeropuerto.
+Qué debes hacer tú, paso a paso:
+1.	No te muevas de la puerta de embarque todavía. Primero revisa la app.
+2.	Abre el tab VUELOS y pulsa "SOLICITAR CAMBIO DE ESTRATEGIA".
+3.	Evalúa las 3 vías alternativas:
+•	RÁPIDO: ¿hay un vuelo alternativo hoy? ¿Cuánto cuesta?
+•	BARATO: ¿hay tren o autobús? ¿Cuánto recuperas con EU261?
+•	CONFORT: ¿prefieres descansar y volar mañana sin estrés?
+4.	Ve al tab DOCS y firma el expediente de reclamación.
+5.	Pulsa SOS → CONTACTAR AEROLÍNEA para exigir el vuelo alternativo o el reembolso.
+6.	Si la aerolínea ofrece vales o compensación en especie, consulta primero al asistente IA: "Iberia me ofrece un vale de 300€ por la cancelación, ¿lo acepto?" El asistente te dirá si es mejor que lo que te da la ley.
+Importante sobre los vales:
+Muchas aerolíneas ofrecen vales de viaje en lugar de dinero en efectivo. Según la ley EU261, tienes derecho a dinero en efectivo. Los vales solo son válidos si los aceptas voluntariamente. Nunca los aceptes sin consultar al asistente primero.
+Situación real completa:
+Lunes, 7:00 de la mañana en el aeropuerto de Madrid. Tu vuelo de negocios a Londres acaba de cancelarse por huelga de tripulación. Tienes una reunión a las 14:00. Abres Travel Pilot:
+•	La tarjeta del vuelo muestra CANCELADO en rojo.
+•	Pulsas "SOLICITAR CAMBIO DE ESTRATEGIA". La opción RÁPIDO muestra la reubicación inmediata en el próximo vuelo.
+•	Pulsas SOS → CONTACTAR AEROLÍNEA y exiges el cambio de vuelo sin coste adicional (es tu derecho).
+•	En DOCS firmas el expediente de reclamación de 250€.
+•	Llegas a la reunión con 45 minutos de margen. Y en 14 días recibes 250€ de compensación.
+________________________________________
+Capítulo 3.5 — Tienes una conexión en riesgo
+Nivel de alerta: alto. El tiempo es crítico.
+Señales de que tu conexión está en riesgo:
+•	La tarjeta "CONEXIÓN EN RIESGO" aparece en el tab VUELOS con el tiempo disponible en naranja.
+•	El informe del asistente en VIAJE muestra una alerta de margen crítico.
+•	Recibes una notificación push: "Conexión en riesgo: solo X minutos disponibles."
+Qué debes hacer tú, paso a paso:
+1.	Revisa el tiempo disponible en la tarjeta de conexión (ej: "68 MIN DISPONIBLES").
+2.	Compara con el tiempo mínimo de conexión del aeropuerto (ej: "Tiempo mínimo en LHR: 60 min").
+3.	Si el margen es menor de 30 minutos: pulsa "VER PLANES ALTERNATIVOS" inmediatamente.
+4.	Avisa a los auxiliares de vuelo del avión que tienes una conexión ajustada. Pueden ayudarte a bajar antes.
+5.	Cuando aterrices: activa el modo carrera. No pares en tiendas, no esperes en colas. Ve directo a la puerta.
+6.	Si pierdes la conexión: ve al mostrador de la aerolínea. Como la conexión estaba en el mismo billete, tienen obligación de ponerte en el siguiente vuelo sin coste.
+Situación real completa:
+Vuelas de Madrid a Nueva York con escala en Londres Heathrow. Tu primer vuelo llega con 35 minutos de retraso. Tienes 68 minutos para la conexión y el mínimo en LHR es 60 minutos. Te quedan solo 8 minutos de margen. Abres Travel Pilot:
+•	La tarjeta BA0117 muestra "68 MIN DISPONIBLES" en naranja con alerta "Margen crítico".
+•	Pulsas "VER PLANES ALTERNATIVOS". La opción RÁPIDO muestra el siguiente vuelo LHR-JFK en caso de perder la conexión.
+•	Avisas a la auxiliar de vuelo que tienes conexión ajustada. Te ayuda a bajar de los primeros.
+•	Corres a la puerta C32. Llegas con 10 minutos. El vuelo todavía está abierto.
+•	Si no hubieses llegado, tendrías el plan B ya calculado en la app.
+________________________________________
+Capítulo 3.6 — Te deniegan el embarque por overbooking
+Nivel de alerta: alto. Derechos inmediatos.
+Qué hace Travel Pilot automáticamente:
+•	El manual EU261 está accesible en DOCS con el artículo de denegación de embarque.
+•	El agente genera el expediente de reclamación con el importe correspondiente.
+Qué debes hacer tú, paso a paso:
+1.	No te muevas del mostrador. Tienes derechos y la aerolínea lo sabe.
+2.	Abre Travel Pilot → DOCS → MANUAL EU261 → OVERBOOKING.
+3.	Exige por escrito la denegación de embarque (un documento oficial que te da la aerolínea). Sin ese papel, no puedes reclamar después.
+4.	Pregunta al asistente IA si la compensación que te ofrecen es correcta.
+5.	Firma el expediente en el tab DOCS.
+6.	Exige el vuelo alternativo más rápido disponible y todos los derechos de asistencia.
+Antes de aceptar voluntariamente ceder tu asiento:
+La aerolínea puede pedir voluntarios antes de negar el embarque forzosamente. Si eres voluntario, negocia: exige dinero en efectivo (no vales), el vuelo alternativo más cómodo y confirma por escrito las condiciones antes de aceptar.
+Capítulo 3.7 — Emergencia médica en el aeropuerto
+Nivel de alerta: máximo. Actúa rápido.
+Qué hacer inmediatamente:
+1.	Pulsa SOS (botón rojo, esquina superior izquierda).
+2.	Selecciona EMERGENCIA MÉDICA.
+3.	La app localiza hospitales, centros médicos y farmacias cercanas usando tu ubicación GPS.
+4.	Si estás en el aeropuerto, busca también los puntos de socorro señalizados con cruz verde en los pasillos.
+Información útil que puedes pedir al asistente IA en estos momentos:
+•	"¿Cuál es el número de emergencias en Alemania?" (respuesta: 112).
+•	"¿Hay un centro médico en el aeropuerto de Frankfurt?"
+•	"¿Cómo se dice 'necesito un médico' en japonés?"
+•	"¿Mi seguro de viaje cubre emergencias en Estados Unidos?"
+Situación real completa:
+Estás de escala en el aeropuerto de Dubai. Tu acompañante sufre una reacción alérgica severa. No sabes dónde está la farmacia ni hablas árabe. Abres Travel Pilot:
+•	Pulsas SOS → EMERGENCIA MÉDICA.
+•	La app muestra el centro médico del aeropuerto a 300 metros, en la Terminal 3, planta 2.
+•	Preguntas al asistente: "¿Cómo llego al centro médico del aeropuerto de Dubai desde la Terminal 1?" El asistente te da indicaciones precisas.
+•	Mientras caminas hacia allí, preguntas: "¿Cómo se dice 'alergia' y 'adrenalina' en árabe?" El asistente te lo dice en segundos.
+•	Llegas al centro médico con la información necesaria para comunicarte. La situación queda bajo control.
+Importante sobre el seguro médico:
+Si tienes seguro de viaje, pregunta al asistente el número de asistencia en viaje de tu aseguradora antes de incurrir en gastos médicos. Muchos seguros requieren que llames primero para autorizar los gastos. Travel Pilot puede ayudarte a localizar ese número.
+________________________________________
+Capítulo 3.8 — Has perdido un documento importante
+Nivel de alerta: alto pero manejable si tienes el Vault actualizado.
+Escenario A: El documento está en el Vault
+1.	Abre Travel Pilot → tab DOCS.
+2.	Localiza el documento (pasaporte, boarding pass, reserva de hotel).
+3.	Pulsa VERIFICAR para ver los datos completos.
+4.	Muestra la pantalla al personal del aeropuerto o del hotel.
+Escenario B: El documento NO está en el Vault
+1.	Abre el chat con el asistente IA.
+2.	Pregunta: "He perdido mi pasaporte en el aeropuerto de París, ¿qué hago?"
+3.	El asistente te guiará paso a paso: contactar con la embajada española, declarar la pérdida a la policía del aeropuerto, solicitar un documento de emergencia.
+4.	Pregunta también: "¿Dónde está la embajada española más cercana?"
+Situación real completa:
+Llegas al control de pasaportes en el aeropuerto de Tokio y no encuentras tu pasaporte. Pánico. Abres Travel Pilot:
+•	Vas a DOCS. El pasaporte está en el Vault con número ESP-9283.
+•	Muestras la pantalla al agente de control. Con el número de pasaporte pueden verificar tu identidad mientras buscas el documento físico.
+•	Preguntas al asistente: "¿Dónde puedo buscar objetos perdidos en el aeropuerto de Narita?" El asistente te indica la oficina de objetos perdidos en la Terminal 2, planta 1.
+•	Encuentras el pasaporte en el bolsillo de la chaqueta que dejaste en el asiento del avión.
+Lección clave: sube siempre todos tus documentos al Vault antes de salir de casa. Es el primer paso de la configuración inicial (ver Capítulo 1.3).
+________________________________________
+Capítulo 3.9 — Equipaje perdido o dañado
+Nivel de alerta: medio. Tienes derechos aunque la aerolínea no siempre los menciona.
+Qué debes hacer antes de salir del aeropuerto:
+1.	Ve al mostrador de reclamación de equipaje de tu aerolínea (PIR — Property Irregularity Report).
+2.	Pide y rellena el formulario PIR. Sin este documento no puedes reclamar nada después.
+3.	Fotografía el formulario PIR y súbelo al Vault en DOCS.
+4.	Pregunta al asistente IA: "¿Cuánto me corresponde por equipaje perdido en un vuelo internacional?"
+Tus derechos según el Convenio de Montreal:
+•	Equipaje perdido o dañado: hasta 1.288 DEGs (aproximadamente 1.600€) de compensación.
+•	La aerolínea tiene 21 días para encontrar el equipaje. Pasado ese plazo se considera definitivamente perdido.
+•	Si el equipaje llega con retraso, puedes reclamar los gastos de primera necesidad que hayas tenido que comprar (ropa, artículos de higiene).
+Situación real completa:
+Llegas a tu hotel en Londres y tu maleta no llegó. Vuelves al aeropuerto, rellenas el PIR y lo fotografías. Abres Travel Pilot:
+•	Subes la foto del PIR al Vault.
+•	Preguntas al asistente: "Mi maleta no llegó, ¿puedo comprar ropa y reclamarlo?" Respuesta: "Sí. Guarda todos los tickets de compras de primera necesidad. Son reclamables si el equipaje llega con retraso."
+•	Compras lo necesario para esa noche, guardas los tickets y los subes al Vault.
+•	2 días después llega la maleta. Reclamas los gastos de emergencia a la aerolínea con todos los tickets guardados.
+________________________________________
+Capítulo 3.10 — Estás en un país extranjero y no sabes qué hacer
+Nivel de alerta: variable. El asistente es tu guía local 24/7.
+El asistente IA puede ayudarte con:
+Idioma y comunicación:
+•	"¿Cómo se dice 'necesito ayuda' en mandarín?"
+•	"Tradúceme este cartel en japonés: [descripción del cartel]"
+•	"¿Cuál es el número de emergencias en Brasil?"
+Dinero y pagos:
+•	"¿Cuánto son 200 dólares en euros ahora mismo?"
+•	"¿Puedo usar mi tarjeta española en Vietnam?"
+•	"¿Hay comisión por retirar dinero en cajeros en México?"
+Transporte:
+•	"¿Cómo llego desde el aeropuerto de Bangkok al centro en metro?"
+•	"¿Cuánto debería costar un taxi del aeropuerto de Nueva York a Manhattan?"
+•	"¿Puedo usar Uber en Tokio?"
+Seguridad:
+•	"¿Es seguro el barrio X en la ciudad Y a estas horas?"
+•	"He perdido mi tarjeta de crédito en el extranjero, ¿qué hago primero?"
+•	"¿Cuál es el número de la policía en Italia?"
+Salud:
+•	"¿Necesito vacunas para entrar en Kenia?"
+•	"¿El agua del grifo es potable en México?"
+•	"¿Dónde puedo comprar ibuprofeno en Japón? ¿Cómo se llama allí?"
+________________________________________
+APÉNDICE A — Glosario de Términos
+AES-256: estándar de encriptación militar. El mismo nivel de seguridad que usan los bancos. Tus documentos en el Vault están protegidos con este sistema.
+Agente IA: el motor de inteligencia artificial que trabaja en background por ti. Revisa tus vuelos cada 30 minutos, genera planes de contingencia y envía alertas proactivas.
+Boarding Pass: tarjeta de embarque. El documento que muestras en la puerta del avión.
+DEG (Derecho Especial de Giro): unidad monetaria internacional usada en los convenios de aviación para calcular compensaciones por equipaje. Aproximadamente 1,24€ por DEG.
+EU261: Reglamento europeo CE nº 261/2004 que protege los derechos de los pasajeros aéreos en caso de retraso, cancelación y denegación de embarque.
+Gemini AI: motor de inteligencia artificial de Google que alimenta el asistente de Travel Pilot. Es el mismo modelo que usa Google en sus productos principales.
+IATA: código de 3 letras que identifica un aeropuerto. MAD = Madrid Barajas, LHR = Londres Heathrow, JFK = Nueva York JFK, CDG = París Charles de Gaulle.
+Membresía Élite: plan de suscripción premium de Travel Pilot que desbloquea voces IA avanzadas, acceso a salas VIP, viajes ilimitados y atención prioritaria.
+Overbooking: práctica de las aerolíneas de vender más plazas de las disponibles. Legal pero con obligaciones de compensación hacia el pasajero afectado.
+PIR (Property Irregularity Report): formulario oficial de reclamación de equipaje. Imprescindible rellenarlo en el aeropuerto antes de salir si tu maleta no llega.
+Ping: medida de velocidad de conexión entre tu app y el servidor de Travel Pilot. Un ping bajo (menos de 100ms) indica conexión óptima.
+Push Notification: alerta que recibes en tu móvil aunque no tengas la app abierta. El sistema de Travel Pilot las usa para avisarte de cambios en tu vuelo en tiempo real.
+Supabase: base de datos en la nube donde se almacenan de forma segura tus viajes, vuelos y logs de actividad del agente.
+Vault: la caja fuerte digital de Travel Pilot donde guardas tus documentos de viaje encriptados.
+________________________________________
+APÉNDICE B — Preguntas Frecuentes
+¿Necesito tener internet para usar Travel Pilot?
+Para la mayoría de funciones sí. Sin embargo, los documentos guardados en el Vault están disponibles offline una vez que los has cargado. El boarding pass y el pasaporte siempre estarán accesibles aunque no tengas cobertura.
+¿Funciona en vuelos fuera de Europa?
+El radar de vuelos funciona en todo el mundo. Sin embargo, la compensación EU261 solo aplica a vuelos que salgan de un aeropuerto europeo o lleguen a uno operados por aerolíneas europeas. Para vuelos puramente fuera de Europa, el asistente te informará de la normativa local aplicable.
+¿Cuánto tiempo tarda el agente en detectar un retraso?
+El agente revisa todos los vuelos guardados cada 30 minutos. En el peor caso, te avisará con 30 minutos de adelanto sobre cualquier cambio. En la práctica, la mayoría de alertas llegan en menos de 15 minutos desde que la aerolínea confirma el retraso.
+¿Qué pasa si el agente falla o no responde?
+El backend tiene un sistema de logs que registra cualquier error. Si el asistente no responde en el chat, espera 30 segundos y vuelve a intentarlo. Si el problema persiste, verifica tu conexión a internet y comprueba el ping en el tab PERFIL.
+¿Mis documentos están seguros?
+Sí. El Vault usa encriptación AES-256. Ni siquiera el equipo de Travel Pilot puede acceder a tus documentos sin tu autorización explícita. Cada documento requiere tu firma o confirmación para ser enviado a terceros.
+¿Puedo usar Travel Pilot para varios viajeros a la vez?
+Con el plan personal puedes gestionar tus propios vuelos y viajes. El plan Corporativo (299€/mes) permite gestionar hasta 50 viajeros simultáneamente, ideal para empresas con equipos que viajan frecuentemente.
+¿Qué hago si la aerolínea rechaza mi reclamación EU261?
+El PDF generado por Travel Pilot tiene validez legal. Puedes presentarlo directamente a AESA (Agencia Estatal de Seguridad Aérea en España) o a la autoridad aeronáutica equivalente del país donde salió el vuelo. También puedes contactar con el asistente IA para que te guíe en el proceso de escalado.
+¿Las voces premium son muy diferentes a las gratuitas?
+Las voces gratuitas (Clara, Lucía, Jorge, Elena) son voces de síntesis estándar en español de alta calidad. Las voces premium (Autonoe, Enceladus) están generadas con Gemini AI de Google y tienen una naturalidad significativamente mayor, con entonación más humana y mejor manejo de las pausas. Para un uso casual, las gratuitas son más que suficientes. Para viajeros que usan el asistente de voz frecuentemente, el salto de calidad es notable.
+
