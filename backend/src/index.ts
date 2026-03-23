@@ -15,18 +15,7 @@ const fastify = Fastify({ logger: true });
 fastify.register(multipart);
 
 fastify.get('/api/health', async () => {
-    try {
-        const fetchRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GOOGLE_API_KEY}`);
-        const models = await fetchRes.json();
-        return { 
-            status: 'ok', 
-            version: '2.1.1-DEBUG', 
-            timestamp: new Date().toISOString(),
-            availableModels: models.models?.map((m: any) => m.name.split('/').pop()) || "ERROR_LISTING"
-        };
-    } catch (e: any) {
-        return { status: 'error', error: e.message };
-    }
+    return { status: 'ok', version: '2.1.2', timestamp: new Date().toISOString() };
 });
 
 const expo = new Expo();
@@ -350,7 +339,7 @@ fastify.post('/api/chat', async (request, reply) => {
         const errorMsg = error.message || String(error);
         console.error("[Chat Error]:", errorMsg);
         
-        let userFriendlyError = `Error de conexión con Google: ${errorMsg}. Vuelve a intentarlo en unos segundos.`;
+        let userFriendlyError = "Lo siento, mis sistemas están un poco saturados en este momento. Google me tiene en lista de espera. Por favor, vuelve a intentarlo en unos segundos.";
         if (errorMsg.includes("429") || errorMsg.includes("RetryInfo")) {
             userFriendlyError = "El asistente gratuito ha llegado al límite de Google. Espera 60 segundos por favor.";
         }
