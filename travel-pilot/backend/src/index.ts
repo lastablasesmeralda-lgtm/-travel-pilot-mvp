@@ -380,7 +380,7 @@ fastify.post('/api/chat', async (request, reply) => {
 
     try {
         const chatModel = new ChatGoogleGenerativeAI({
-            model: "gemini-flash-latest",
+            model: "gemini-1.5-flash",
             maxOutputTokens: 1024,
             temperature: 0.9,
             apiKey: process.env.GOOGLE_API_KEY,
