@@ -339,9 +339,9 @@ fastify.post('/api/chat', async (request, reply) => {
         const errorMsg = error.message || String(error);
         console.error("[Chat Error]:", errorMsg);
         
-        let userFriendlyError = "Lo siento, mis sistemas están un poco saturados en este momento. Google me tiene en lista de espera. Por favor, vuelve a intentarlo en unos segundos.";
+        let userFriendlyError = `Error de conexión con Google: ${errorMsg}. Vuelve a intentarlo en unos segundos.`;
         if (errorMsg.includes("429") || errorMsg.includes("RetryInfo")) {
-            userFriendlyError = "El asistente está al límite de su capacidad en este momento. Espera 30 segundos y pregúntame de nuevo, estaré listo.";
+            userFriendlyError = "El asistente gratuito ha llegado al límite de Google. Espera 60 segundos por favor.";
         }
 
         require('fs').appendFileSync('backend_errors.log', `[${new Date().toISOString()}] Chat Error: ${errorMsg}\n`);
