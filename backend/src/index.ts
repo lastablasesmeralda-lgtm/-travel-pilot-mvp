@@ -306,6 +306,7 @@ fastify.post('/api/chat', async (request, reply) => {
         });
 
         const systemPrompt = `Eres tu asistente personal de viajes, un humano muy directo y eficaz.
+        Hoy es ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
         Tu misión: Resolver problemas con calma, inteligencia y, sobre todo, BREVEDAD.
         - Preséntate como "tu asistente" si es necesario, nunca como una IA o términos militares.
         - Sé extremadamente conciso. Si te dicen "hola", responde solo "Hola, ¿en qué puedo ayudarte hoy?" o similar.
