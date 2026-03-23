@@ -218,13 +218,7 @@ export const AppProvider = ({ children }) => {
         AsyncStorage.setItem('lastFlightData', JSON.stringify(flightData));
       } else {
         AsyncStorage.removeItem('lastFlightData');
-        // CARGA AUTOMÁTICA DE DEMO PARA BETA TESTERS
-        // Si el usuario está logueado y no hay vuelo, cargamos el TP999 de cortesía
-        if (user && !flightInput && !isSearching && !searchError) {
-           setFlightInput('TP999');
-           // Llamamos a la búsqueda interna para que el estado se actualice
-           setTimeout(() => searchFlight(), 500);
-        }
+        AsyncStorage.removeItem('lastFlightData');
       }
     }
   }, [flightData, isStorageReady, user]);
@@ -837,7 +831,18 @@ export const AppProvider = ({ children }) => {
       setIsGenerating(false);
       setFlightData(null); // Reseteo total de datos de vuelo
       setFlightInput('');  // Limpieza del campo de búsqueda
-      Alert.alert('✅ COMPLETADO', 'Historial y planes de la IA vaciados correctamente.');
+      setMyFlights([]);   // Limpieza de vuelos locales guardados
+      setSearchError(null);
+      
+      // Limpieza atómica de AsyncStorage
+      await AsyncStorage.multiRemove([
+        'lastFlightData', 
+        'lastFlightInput', 
+        'offline_agentLogs', 
+        'offline_myFlights'
+      ]);
+
+      Alert.alert('✅ COMPLETADO', 'Historial, de demos y planes de la IA vaciados correctamente.');
     } catch (e) {
       console.error('[Frontend] Error clearing logs:', e);
     }

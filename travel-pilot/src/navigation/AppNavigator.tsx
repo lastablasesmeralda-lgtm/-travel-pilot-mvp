@@ -63,11 +63,12 @@ export default function AppNavigator() {
                                 borderColor: isFocused ? '#FFFFFF' : 'rgba(255,255,255,0.1)'
                             }}>
                                 <Text style={{
-                                    fontSize: isFocused ? 32 : 23, // Más grandes
-                                    opacity: isFocused ? 1 : 0.35,
-                                    transform: [{ scale: isFocused ? 1.25 : 1 }],
+                                    fontSize: isFocused ? 33 : 24, 
+                                    opacity: isFocused ? 1 : 0.65, // Mucho más visible aun inactivo
+                                    transform: [{ scale: isFocused ? 1.3 : 1 }],
                                     textShadowColor: isFocused ? '#FFFFFF' : 'transparent',
-                                    textShadowRadius: isFocused ? 20 : 0
+                                    textShadowRadius: isFocused ? 25 : 0,
+                                    textShadowOffset: { width: 0, height: 0 },
                                 }}>
                                     {icon}
                                 </Text>
@@ -86,14 +87,15 @@ export default function AppNavigator() {
                                 )}
                             </View>
                             <Text style={{
-                                color: isFocused ? '#FFFFFF' : 'rgba(255, 215, 0, 0.35)', // Máximo contraste
-                                fontSize: 10, // Un pelín más grande para legibilidad
+                                color: isFocused ? '#FFFFFF' : '#FFD700', // Dorado puro inactivo, Blanco puro activo
+                                fontSize: 11,
                                 fontWeight: '900',
+                                opacity: isFocused ? 1 : 0.6, // Inactivo mucho más brillante
                                 marginTop: 4,
                                 textTransform: 'uppercase',
-                                letterSpacing: isFocused ? 3 : 1,
-                                textShadowColor: isFocused ? 'rgba(255, 255, 255, 0.5)' : 'transparent',
-                                textShadowRadius: isFocused ? 10 : 0
+                                letterSpacing: isFocused ? 3 : 1.5,
+                                textShadowColor: isFocused ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 215, 0, 0.3)',
+                                textShadowRadius: isFocused ? 15 : 5
                             }}>
                                 {route.name === 'Intel' ? 'INICIO' :
                                     route.name === 'Radar' ? 'VUELOS' :
