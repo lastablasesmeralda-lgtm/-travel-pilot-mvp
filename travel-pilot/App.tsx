@@ -20,7 +20,7 @@ function RootComponent() {
   const {
     user, showChat, setShowSOSMenu, setShowChat, sosPulse, compensationEligible, speak, stopSpeak, isSpeaking,
     hasSeenOnboarding, setHasSeenOnboarding, isReplayingTutorial, setIsReplayingTutorial, flightData,
-    compBannerDismissed, setCompBannerDismissed
+    compBannerDismissed, setCompBannerDismissed, travelProfile, availableVoices, selectedVoice
   } = useAppContext();
 
   const dynamicAmount = getEU261Amount(flightData);

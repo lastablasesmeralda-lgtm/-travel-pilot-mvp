@@ -15,7 +15,7 @@ const IDLE_PHRASES = [
 ];
 
 export default function IntelScreen() {
-    const { user, myTrips, saveTrip, removeTrip, myFlights, removeMyFlight, setFlightInput, setTab, weather, flightData, clearFlight, simulatePushNotification, tab, selectedVoice, showPlan, travelProfile, hasSeenPlan, selectedRescuePlan, speak, removeActiveSearch } = useAppContext();
+    const { user, myTrips, saveTrip, removeTrip, myFlights, removeMyFlight, setFlightInput, setTab, weather, flightData, clearFlight, simulatePushNotification, tab, selectedVoice, showPlan, travelProfile, hasSeenPlan, selectedRescuePlan, speak, removeActiveSearch, availableVoices } = useAppContext();
     const [newTripTitle, setNewTripTitle] = useState('');
     const [newTripDest, setNewTripDest] = useState('');
     const [showForm, setShowForm] = useState(false);
