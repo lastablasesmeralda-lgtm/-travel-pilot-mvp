@@ -15,7 +15,18 @@ const fastify = Fastify({ logger: true });
 fastify.register(multipart);
 
 fastify.get('/api/health', async () => {
-    return { status: 'ok', version: '2.1.0', timestamp: new Date().toISOString() };
+    try {
+        const fetchRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GOOGLE_API_KEY}`);
+        const models = await fetchRes.json();
+        return { 
+            status: 'ok', 
+            version: '2.1.1-DEBUG', 
+            timestamp: new Date().toISOString(),
+            availableModels: models.models?.map((m: any) => m.name.split('/').pop()) || "ERROR_LISTING"
+        };
+    } catch (e: any) {
+        return { status: 'error', error: e.message };
+    }
 });
 
 const expo = new Expo();
