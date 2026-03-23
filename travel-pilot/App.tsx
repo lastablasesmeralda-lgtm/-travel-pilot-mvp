@@ -28,9 +28,11 @@ function RootComponent() {
   useEffect(() => {
     // Solo hablamos automáticamente si hay una incidencia detectada (Aviso de emergencia)
     const delay = flightData?.departure?.delay || 0;
-    if (user && hasSeenOnboarding === true && delay >= 120) {
+    if (user && hasSeenOnboarding === true && delay >= 60) {
         if (delay >= 180) {
-            speak(`Atención: He detectado un retraso que puede darte derecho a una compensación legal de ${dynamicAmount.replace('€', ' euros')}. Ya estoy gestionando tu asistencia.`);
+            const amt = dynamicAmount.replace('€', ' euros');
+            const role = travelProfile === 'premium' ? "Sigo vigilando tus vuelos y ya he activado tu protocolo VIP" : "Ya estoy gestionando tu asistencia";
+            speak(`Atención. He detectado un retraso crítico que puede darte derecho a una compensación legal de ${amt}. ${role}.`);
         } else {
             speak("Hola. He detectado una incidencia en tu vuelo. Tienes derecho a asistencia inmediata. He preparado un plan para ayudarte.");
         }

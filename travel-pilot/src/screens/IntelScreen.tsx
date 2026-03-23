@@ -138,14 +138,16 @@ Todo parece estar en orden para tu viaje. Si detectamos cualquier riesgo para tu
                     onPress={() => {
                         let msg = '';
                         if (flightData?.status === 'cancelled') {
-                            msg = 'Alerta Roja. Tu vuelo ha sido cancelado. He generado tu documento de reembolso en la bóveda, y he buscado rutas alternativas para salir de aquí de inmediato';
+                            msg = `Vuelo cancelado. He generado tu documento de reembolso en la bóveda, y he buscado rutas alternativas para salir de aquí de inmediato.`;
                         } else if ((flightData?.departure?.delay || 0) >= 180) {
                             const amt = getEU261Amount(flightData).replace('€', ' euros');
-                            msg = `Atención Piloto. Retraso crítico superior a 3 horas. Acabo de preparar tu documentación legal para reclamar ${amt}. Tienes derecho a comida y bebida gratis mientras esperamos`;
+                            msg = travelProfile === 'premium' 
+                                ? `Atención. He detectado un retraso crítico. Como usuario VIP, ya he activado tu protocolo de asistencia prioritaria y bloqueado tu plaza. También tienes derecho a reclamar ${amt}.`
+                                : `Atención. Retraso crítico superior a 3 horas. Acabo de preparar tu documentación legal para reclamar ${amt}. Tienes derecho a asistencia gratuita mientras esperamos.`;
                         } else if ((flightData?.departure?.delay || 0) >= 60) {
-                            msg = `Incidencia detectada. Tenemos un retraso de ${flightData.departure.delay} minutos. Ya tienes exigible por ley tu derecho a asistencia, pide a la aerolínea un vale de comida y llamadas telefónicas`;
+                            msg = `Incidencia detectada. Tenemos un retraso de ${flightData.departure.delay} minutos. Ya tienes exigible por ley tu derecho a asistencia, pide a la aerolínea un vale de comida.`;
                         } else if (flightData?.flightNumber) {
-                            msg = `Todo bajo control con tu vuelo ${flightData.flightNumber}. Estoy monitorizando la red por si hubiera cualquier mínimo cambio`;
+                            msg = `Todo bajo control con tu vuelo ${flightData.flightNumber}. Estoy monitorizando la red por si hubiera cualquier mínimo cambio.`;
                         } else {
                             msg = idlePhrase;
                         }
@@ -198,7 +200,13 @@ Todo parece estar en orden para tu viaje. Si detectamos cualquier riesgo para tu
                                         )}
                                     </Text>
                                     <TouchableOpacity 
-                                        onPress={showPlan}
+                                        onPress={() => {
+                                            if (selectedRescuePlan) {
+                                                const role = availableVoices.find(v => v.identifier === selectedVoice)?.humanName || "Tu asistente";
+                                                speak(`Soy ${role}. Sigo trabajando en tu plan para ${selectedRescuePlan}. La conexión está abierta y las gestiones avanzan.`);
+                                            }
+                                            showPlan();
+                                        }}
                                         style={{ 
                                             backgroundColor: '#D4AF37', 
                                             paddingVertical: 10, 
