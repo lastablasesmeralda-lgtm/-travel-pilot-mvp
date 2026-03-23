@@ -52,6 +52,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add landing-page/app-release.apk
+          git add -f landing-page/app-release.apk
           git commit -m "chore: update build-apk [skip ci]"
           git push
