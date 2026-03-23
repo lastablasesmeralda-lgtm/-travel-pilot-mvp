@@ -20,7 +20,7 @@ export default function AppNavigator() {
                 headerShown: false,
                 tabBarStyle: {
                     position: 'absolute',
-                    bottom: 60, // Elevación máxima para sobresalir de los botones del móvil
+                    bottom: 40, // Bajada para acercar a los botones del sistema
                     left: 15,
                     right: 15,
                     height: 90, // Un poco más alta

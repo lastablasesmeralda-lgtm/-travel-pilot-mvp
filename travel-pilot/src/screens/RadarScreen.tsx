@@ -1,27 +1,46 @@
-import React from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
+
+const RECENT_SEARCHES_KEY = 'recentFlightSearches';
+const MAX_RECENT = 5;
 
 export default function VuelosScreen() {
     const {
         flightInput, setFlightInput, searchFlight, clearFlight, isSearching, searchError,
-        flightData, formatTime, getStatusColor, getStatusLabel, showPlan,
-        agentLogs, fetchAgentLogs, clearAgentLogs, isGenerating,
+        flightData, formatTime, getStatusColor, getStatusLabel,
         myFlights, saveMyFlight, removeMyFlight
     } = useAppContext();
 
-    const [showLogsDetails, setShowLogsDetails] = React.useState(false);
-    const [showDemoConnection, setShowDemoConnection] = React.useState(true);
-    const [showDemoHotel, setShowDemoHotel] = React.useState(true);
-    const [showAltPlans, setShowAltPlans] = React.useState(true);
-    const [showAssistant, setShowAssistant] = React.useState(true);
+    const [recentSearches, setRecentSearches] = useState<string[]>([]);
+    const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
-    React.useEffect(() => {
-        fetchAgentLogs();
-        const intv = setInterval(fetchAgentLogs, 5000);
-        return () => clearInterval(intv);
+    // Cargar historial de búsquedas recientes
+    useEffect(() => {
+        AsyncStorage.getItem(RECENT_SEARCHES_KEY).then(val => {
+            if (val) setRecentSearches(JSON.parse(val));
+        });
     }, []);
+
+    // Guardar búsqueda cuando se obtienen datos de vuelo
+    useEffect(() => {
+        if (flightData?.flightNumber) {
+            setLastUpdate(new Date());
+            setRecentSearches(prev => {
+                const code = flightData.flightNumber.toUpperCase();
+                const updated = [code, ...prev.filter(s => s !== code)].slice(0, MAX_RECENT);
+                AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+                return updated;
+            });
+        }
+    }, [flightData?.flightNumber]);
+
+    const handleQuickSearch = useCallback((code: string) => {
+        setFlightInput(code);
+        setTimeout(() => searchFlight(), 100);
+    }, [setFlightInput, searchFlight]);
 
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20, paddingTop: 100 }}>
@@ -45,10 +64,10 @@ export default function VuelosScreen() {
                 </View>
             </View>
 
+            {/* ——— BUSCADOR ——— */}
             <View style={{ backgroundColor: '#111', borderRadius: 16, padding: 16, marginBottom: 16 }}>
                 <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', marginBottom: 8 }}>🔍 BUSCAR VUELO</Text>
                 <View style={{ flexDirection: 'row', position: 'relative' }}>
-
                     <TextInput
                         placeholder="Ej: IB3166, BA0117..."
                         placeholderTextColor="#B0B0B0"
@@ -56,9 +75,8 @@ export default function VuelosScreen() {
                         onChangeText={setFlightInput}
                         autoCapitalize="characters"
                         style={{
-                        flex: 1, backgroundColor: '#1F2937', color: 'white', paddingHorizontal: 12, paddingVertical: 10, paddingRight: 36, borderRadius: 10, marginRight: 10, fontSize: 15,
-}}
-
+                            flex: 1, backgroundColor: '#1F2937', color: 'white', paddingHorizontal: 12, paddingVertical: 10, paddingRight: 36, borderRadius: 10, marginRight: 10, fontSize: 15,
+                        }}
                     />
                    {(flightData || searchError || flightInput.length > 0) && (
                         <TouchableOpacity
@@ -76,8 +94,35 @@ export default function VuelosScreen() {
                         {isSearching ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={{ color: '#FFF', fontWeight: 'bold' }}>BUSCAR</Text>}
                     </TouchableOpacity>
                 </View>
+
+                {/* ——— D) HISTORIAL DE BÚSQUEDAS RECIENTES ——— */}
+                {recentSearches.length > 0 && !flightData && (
+                    <View style={{ marginTop: 12 }}>
+                        <Text style={{ color: '#666', fontSize: 10, fontWeight: 'bold', letterSpacing: 1, marginBottom: 8 }}>🕐 RECIENTES</Text>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            {recentSearches.map((code, idx) => (
+                                <TouchableOpacity
+                                    key={`${code}-${idx}`}
+                                    onPress={() => handleQuickSearch(code)}
+                                    style={{
+                                        backgroundColor: 'rgba(175, 82, 222, 0.15)',
+                                        paddingHorizontal: 14,
+                                        paddingVertical: 7,
+                                        borderRadius: 20,
+                                        marginRight: 8,
+                                        borderWidth: 1,
+                                        borderColor: 'rgba(175, 82, 222, 0.4)',
+                                    }}
+                                >
+                                    <Text style={{ color: '#AF52DE', fontSize: 12, fontWeight: '900', letterSpacing: 0.5 }}>✈ {code}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+                )}
             </View>
 
+            {/* ——— ERROR DE BÚSQUEDA ——— */}
             {searchError && (
                 <View style={{ backgroundColor: '#111', borderRadius: 16, padding: 16, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: '#FF9500', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <View style={{ flex: 1 }}>
@@ -90,6 +135,7 @@ export default function VuelosScreen() {
                 </View>
             )}
 
+            {/* ——— TARJETA DE VUELO (datos completos) ——— */}
             {flightData ? (
                 <View style={{ backgroundColor: '#111', borderRadius: 16, padding: 16, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: getStatusColor(flightData.status) }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -162,13 +208,38 @@ export default function VuelosScreen() {
                         <Text style={{ color: '#999', fontSize: 16 }}>✕</Text>
                     </TouchableOpacity>
                 </View>
+
             ) : !searchError && !isSearching && (
-                <View style={{ backgroundColor: '#111', borderRadius: 16, padding: 24, marginBottom: 16, alignItems: 'center' }}>
-                    <Text style={{ fontSize: 31, marginBottom: 10 }}>✈️</Text>
-                    <Text style={{ color: '#B0B0B0', fontSize: 14, textAlign: 'center' }}>Introduce el código de tu vuelo (ej: IB3166) y pulsa BUSCAR para que mi IA empiece a vigilarlo en tiempo real.</Text>
+                /* ——— C) TARJETA "RADAR VACÍO" PREMIUM ——— */
+                <View style={{ 
+                    backgroundColor: '#111', 
+                    borderRadius: 20, 
+                    padding: 30, 
+                    marginBottom: 16, 
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: 'rgba(175, 82, 222, 0.2)',
+                }}>
+                    {/* Efecto Radar Visual */}
+                    <View style={{ width: 100, height: 100, borderRadius: 50, borderWidth: 2, borderColor: 'rgba(175, 82, 222, 0.3)', justifyContent: 'center', alignItems: 'center', marginBottom: 20 }}>
+                        <View style={{ width: 70, height: 70, borderRadius: 35, borderWidth: 1.5, borderColor: 'rgba(175, 82, 222, 0.2)', justifyContent: 'center', alignItems: 'center' }}>
+                            <View style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(175, 82, 222, 0.15)', justifyContent: 'center', alignItems: 'center' }}>
+                                <Text style={{ fontSize: 20 }}>📡</Text>
+                            </View>
+                        </View>
+                    </View>
+                    <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '900', letterSpacing: 1, marginBottom: 8 }}>RADAR DE VIGILANCIA</Text>
+                    <Text style={{ color: '#B0B0B0', fontSize: 13, textAlign: 'center', lineHeight: 20 }}>
+                        Tu radar está vacío. Introduce un código de vuelo para activar la vigilancia IA en tiempo real.
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, backgroundColor: 'rgba(76, 217, 100, 0.1)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}>
+                        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#4CD964', marginRight: 8 }} />
+                        <Text style={{ color: '#4CD964', fontSize: 11, fontWeight: 'bold' }}>SISTEMA OPERATIVO · EN ESPERA</Text>
+                    </View>
                 </View>
             )}
 
+            {/* ——— MIS VUELOS GUARDADOS ——— */}
             {myFlights.length > 0 && (
                 <View style={{ marginBottom: 20 }}>
                     <Text style={{ color: '#FFF', fontSize: 14, fontWeight: 'bold', marginBottom: 12 }}>MIS VUELOS</Text>
@@ -189,78 +260,47 @@ export default function VuelosScreen() {
                 </View>
             )}
 
-            {/* Asistente y Otros componentes dinmicos aqu */}
-            {showAssistant && (
-                <View style={{ backgroundColor: '#111', borderRadius: 16, padding: 16, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: '#AF52DE' }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                        <Text style={{ color: '#AF52DE', fontSize: 13, fontWeight: 'bold' }}>🧠 ASISTENTE PERSONAL</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <TouchableOpacity 
-                                onPress={() => {
-                                    if (!showLogsDetails) fetchAgentLogs();
-                                    setShowLogsDetails(!showLogsDetails);
-                                }} 
-                                style={{ backgroundColor: '#111', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginRight: 8, borderWidth: 1, borderColor: '#333' }}
-                            >
-                                <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold' }}>{showLogsDetails ? 'OCULTAR' : 'VER ACTIVIDAD'}</Text>
-                            </TouchableOpacity>
-                            {agentLogs.length > 0 && (
-                                <TouchableOpacity 
-                                    onPress={() => {
-                                        Alert.alert(
-                                            "BORRAR HISTORIAL",
-                                            "¿Estás seguro de que quieres vaciar todo el historial de la IA?",
-                                            [
-                                                { text: "CANCELAR", style: "cancel" },
-                                                { text: "BORRAR TODO", style: "destructive", onPress: clearAgentLogs }
-                                            ]
-                                        );
-                                    }} 
-                                    style={{ backgroundColor: '#111', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginRight: 8, borderWidth: 1, borderColor: 'rgba(255,59,48,0.3)' }}
-                                >
-                                    <Text style={{ color: '#FF3B30', fontSize: 11, fontWeight: 'bold' }}>LIMPIAR</Text>
-                                </TouchableOpacity>
-                            )}
-                            <TouchableOpacity onPress={() => setShowAssistant(false)} style={{ width: 24, height: 24, justifyContent: 'center', alignItems: 'center' }}>
-                                <Text style={{ color: '#555', fontSize: 18 }}>✕</Text>
-                            </TouchableOpacity>
-                        </View>
+            {/* ——— A) PANEL DE ESTADO EN TIEMPO REAL ——— */}
+            <View style={{ 
+                backgroundColor: '#111', 
+                borderRadius: 16, 
+                padding: 16, 
+                marginBottom: 20,
+                borderWidth: 1,
+                borderColor: '#1A1A1A',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+            }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: flightData ? '#4CD964' : '#666', marginRight: 10 }} />
+                    <View>
+                        <Text style={{ color: '#FFF', fontSize: 12, fontWeight: 'bold' }}>
+                            {flightData 
+                                ? (flightData.departure?.delay || 0) >= 60 
+                                    ? '⚠️ 1 vuelo con incidencia' 
+                                    : '✅ Sin incidencias'
+                                : '— Sin vuelos activos'}
+                        </Text>
+                        <Text style={{ color: '#666', fontSize: 10, marginTop: 2 }}>
+                            Última consulta: {lastUpdate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
                     </View>
-                    <Text style={{ color: '#B0B0B0', fontSize: 11, marginBottom: 12 }}>Acciones realizadas para proteger tu viaje</Text>
-
-                    {showLogsDetails && (
-                        agentLogs.length === 0 ? (
-                            <View style={{ alignItems: 'center', padding: 16 }}>
-                                <Text style={{ fontSize: 25, marginBottom: 6 }}>🛡️</Text>
-                                <Text style={{ color: '#B0B0B0', fontSize: 13, textAlign: 'center' }}>Tu asistente está vigilando.{'\n'}Pulsa REVISAR para ver su actividad.</Text>
-                            </View>
-                        ) : (
-                            agentLogs.map((log) => {
-                                const label = log.event_type === 'contingency_planned' ? '✈️ Plan alternativo generado'
-                                    : log.event_type === 'test_connection' || log.event_type === 'test_connection_v2' ? '🔗 Verificación de conexión'
-                                        : log.event_type === 'quick_test' || log.event_type === 'min_test' ? '🔗 Verificación de conexión'
-                                            : log.event_type === 'agent_standby' ? '🧠 Asistente en espera (vigilando)'
-                                                : log.event_type === 'shield_active' ? '🛡️ Blindaje legal activado'
-                                                    : log.event_type === 'fly_scan' ? '📡 Escáner de vuelo completado'
-                                                        : `📋 Gestión: ${log.event_type}`;
-                                const statusText = log.status === 'executed' ? '✅ Completado' : '⏳ Procesando...';
-                                const statusColor = log.status === 'executed' ? '#4CD964' : '#FF9500';
-                                return (
-                                    <View key={log.id} style={{ backgroundColor: '#0A0A0A', borderRadius: 10, padding: 12, marginBottom: 6 }}>
-                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '600', flex: 1 }}>{label}</Text>
-                                            <Text style={{ color: statusColor, fontSize: 11, fontWeight: 'bold' }}>{statusText}</Text>
-                                        </View>
-                                        <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 4 }}>
-                                            {new Date(log.created_at).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                        </Text>
-                                    </View>
-                                );
-                            })
-                        )
-                    )}
                 </View>
-            )}
+                <TouchableOpacity 
+                    onPress={() => { if (flightData) { searchFlight(); setLastUpdate(new Date()); } }}
+                    style={{ 
+                        backgroundColor: flightData ? 'rgba(175, 82, 222, 0.2)' : 'rgba(255,255,255,0.05)', 
+                        paddingHorizontal: 12, 
+                        paddingVertical: 6, 
+                        borderRadius: 10,
+                        borderWidth: 1,
+                        borderColor: flightData ? 'rgba(175, 82, 222, 0.4)' : '#222',
+                    }}
+                >
+                    <Text style={{ color: flightData ? '#AF52DE' : '#666', fontSize: 10, fontWeight: 'bold' }}>ACTUALIZAR</Text>
+                </TouchableOpacity>
+            </View>
 
             <View style={{ height: 120 }} />
 

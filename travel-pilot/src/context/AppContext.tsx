@@ -218,7 +218,6 @@ export const AppProvider = ({ children }) => {
         AsyncStorage.setItem('lastFlightData', JSON.stringify(flightData));
       } else {
         AsyncStorage.removeItem('lastFlightData');
-        AsyncStorage.removeItem('lastFlightData');
       }
     }
   }, [flightData, isStorageReady, user]);

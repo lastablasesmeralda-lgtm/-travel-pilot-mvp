@@ -1,16 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
 import { getEU261Amount } from '../utils/flightUtils';
 
-// Lógica de cálculo de compensación UE261 simplificada por distancia
+// Frases rotativas premium para cuando no hay vuelo
+const IDLE_PHRASES = [
+    'Todos los sistemas operativos. Tu próximo viaje está bajo mi protección.',
+    'Escaneando condiciones atmosféricas y conexiones aéreas... Todo en orden.',
+    'Red de monitorización activa. Cualquier incidencia será gestionada al instante.',
+    'Vigilancia en tiempo real activada. Ningún cambio pasará desapercibido.',
+    'Protocolos de defensa cargados. Introduce un vuelo y activaré el blindaje completo.',
+    'Mi radar está limpio. Añade un vuelo en VUELOS para activar la vigilancia 24h.',
+];
 
 export default function IntelScreen() {
     const { user, myTrips, saveTrip, removeTrip, myFlights, removeMyFlight, setFlightInput, setTab, weather, flightData, clearFlight, simulatePushNotification, tab, selectedVoice, showPlan, travelProfile, hasSeenPlan, selectedRescuePlan, speak } = useAppContext();
     const [newTripTitle, setNewTripTitle] = useState('');
     const [newTripDest, setNewTripDest] = useState('');
     const [showForm, setShowForm] = useState(false);
+
+    // Frase rotativa que cambia cada vez que se monta la pantalla
+    const idlePhrase = useMemo(() => IDLE_PHRASES[Math.floor(Math.random() * IDLE_PHRASES.length)], []);
 
     const handleCreate = () => {
         if (!newTripTitle || !newTripDest) return Alert.alert('Error', 'Completa los campos');
@@ -136,9 +147,7 @@ Todo parece estar en orden para tu viaje. Si detectamos cualquier riesgo para tu
                         } else if (flightData?.flightNumber) {
                             msg = `Todo bajo control con tu vuelo ${flightData.flightNumber}. Estoy monitorizando la red por si hubiera cualquier mínimo cambio`;
                         } else {
-                            msg = travelProfile === 'premium' 
-                                ? 'Hola Piloto. He analizado las condiciones de red y el tráfico aéreo, todo despejado. Estoy en guardia proactiva para tu próximo movimiento'
-                                : 'Estoy conectado y en espera. Añade un vuelo en la pestaña VUELOS para que empiece a vigilarlo';
+                            msg = idlePhrase;
                         }
                         speak(msg, selectedVoice);
                     }}
@@ -176,10 +185,7 @@ Todo parece estar en orden para tu viaje. Si detectamos cualquier riesgo para tu
                             {!flightData?.flightNumber ? (
                                 <View>
                                     <Text style={{ color: '#E0E0E0', fontSize: 13, lineHeight: 20, fontStyle: 'italic', letterSpacing: 0.3 }}>
-                                        {travelProfile === 'premium' 
-                                            ? `Hola Piloto. He analizado las condiciones de red y el tráfico aéreo: todo despejado. Estoy en guardia proactiva para tu próximo movimiento.`
-                                            : `Estoy conectado y en espera. Añade un vuelo en la pestaña VUELOS para que empiece a vigilarlo.`
-                                        }
+                                        {idlePhrase}
                                     </Text>
                                 </View>
                             ) : (flightData?.departure?.delay || 0) >= 60 ? (
