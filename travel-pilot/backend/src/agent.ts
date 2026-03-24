@@ -119,7 +119,7 @@ export function evaluateImpact(ctx: FlightContext) {
 
 function getModel() {
     return new ChatGoogleGenerativeAI({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-flash-latest',
         apiKey: process.env.GOOGLE_API_KEY,
         temperature: 0.2, // Más bajo = más rápido/consistente
         maxOutputTokens: 512, // Suficiente para JSON de planes

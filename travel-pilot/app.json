@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Travel-Pilot",
-    "slug": "travel-pilot",
+    "slug": "travel-pilot-v2",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.jpg",
@@ -16,7 +16,9 @@
     },
     "android": {
       "package": "com.travelpilot.app",
-      "permissions": ["INTERNET"],
+      "permissions": [
+        "INTERNET"
+      ],
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.jpg",
@@ -25,7 +27,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "2412be5e-b11-2e15ab4d20de"
+        "projectId": "71acd23d-946c-4b17-8637-2e7eae12016f"
       }
     },
     "plugins": [
@@ -36,7 +38,7 @@
             "enableJetifier": true,
             "gradleCommand": "assembleRelease",
             "extraParams": {
-               "org.gradle.jvmargs": "-Xmx3g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
+              "org.gradle.jvmargs": "-Xmx3g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
             }
           }
         }
