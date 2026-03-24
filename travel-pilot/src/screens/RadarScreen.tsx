@@ -1,11 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
-
-const RECENT_SEARCHES_KEY = 'recentFlightSearches';
-const MAX_RECENT = 5;
 
 export default function VuelosScreen() {
     const {
@@ -14,33 +10,14 @@ export default function VuelosScreen() {
         myFlights, saveMyFlight, removeMyFlight, activeSearches, removeActiveSearch
     } = useAppContext();
 
-    const [recentSearches, setRecentSearches] = useState<string[]>([]);
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
-    // Cargar historial de búsquedas recientes
-    useEffect(() => {
-        AsyncStorage.getItem(RECENT_SEARCHES_KEY).then(val => {
-            if (val) setRecentSearches(JSON.parse(val));
-        });
-    }, []);
-
-    // Guardar búsqueda cuando se obtienen datos de vuelo
+    // Actualizar timestamp cuando se obtienen datos de vuelo
     useEffect(() => {
         if (flightData?.flightNumber) {
             setLastUpdate(new Date());
-            setRecentSearches(prev => {
-                const code = flightData.flightNumber.toUpperCase();
-                const updated = [code, ...prev.filter(s => s !== code)].slice(0, MAX_RECENT);
-                AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
-                return updated;
-            });
         }
     }, [flightData?.flightNumber]);
-
-    const handleQuickSearch = useCallback((code: string) => {
-        setFlightInput(code);
-        setTimeout(() => searchFlight(), 100);
-    }, [setFlightInput, searchFlight]);
 
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20, paddingTop: 100 }}>
@@ -95,31 +72,6 @@ export default function VuelosScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* ——— D) HISTORIAL DE BÚSQUEDAS RECIENTES ——— */}
-                {recentSearches.length > 0 && activeSearches.length === 0 && (
-                    <View style={{ marginTop: 12 }}>
-                        <Text style={{ color: '#666', fontSize: 10, fontWeight: 'bold', letterSpacing: 1, marginBottom: 8 }}>🕐 RECIENTES</Text>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                            {recentSearches.map((code, idx) => (
-                                <TouchableOpacity
-                                    key={`${code}-${idx}`}
-                                    onPress={() => handleQuickSearch(code)}
-                                    style={{
-                                        backgroundColor: 'rgba(175, 82, 222, 0.15)',
-                                        paddingHorizontal: 14,
-                                        paddingVertical: 7,
-                                        borderRadius: 20,
-                                        marginRight: 8,
-                                        borderWidth: 1,
-                                        borderColor: 'rgba(175, 82, 222, 0.4)',
-                                    }}
-                                >
-                                    <Text style={{ color: '#AF52DE', fontSize: 12, fontWeight: '900', letterSpacing: 0.5 }}>✈ {code}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-                    </View>
-                )}
             </View>
 
             {/* ——— ERROR DE BÚSQUEDA ——— */}

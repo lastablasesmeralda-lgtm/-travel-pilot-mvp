@@ -280,37 +280,54 @@ export const AppProvider = ({ children }) => {
     (async () => {
       const voices = await Speech.getAvailableVoicesAsync();
       // Buscar voces en español (incluyendo variantes MX, US, etc.)
-      const esVoices = voices.filter(v => v.language.startsWith('es'));
-      
-      console.log('--- REPORTE DE VOCES NATIVAS ES ---');
-      esVoices.forEach((v, i) => console.log(`[ES-${i}] Nombre: ${v.name} | ID: ${v.identifier} | Lenguaje: ${v.language}`));
+      let esVoices = voices.filter(v => v.language.startsWith('es'));
+
+      // Ordenar para priorizar voces de Alta Definición (Evitar el efecto "Radio de la IA")
+      esVoices.sort((a, b) => {
+          const idA = a.identifier.toLowerCase();
+          const idB = b.identifier.toLowerCase();
+          let scoreA = 0; let scoreB = 0;
+
+          // Premiar voces HD/Network
+          if (idA.includes('network') || a.quality === 'Enhanced') scoreA += 10;
+          if (idB.includes('network') || b.quality === 'Enhanced') scoreB += 10;
+
+          // Penalizar voces robóticas/locales muy comprimidas
+          if (idA.includes('local') || idA.includes('compact')) scoreA -= 5;
+          if (idB.includes('local') || idB.includes('compact')) scoreB -= 5;
+
+          return scoreB - scoreA;
+      });
+
+      console.log('--- REPORTE DE VOCES NATIVAS ES (ORDENADAS POR CALIDAD HQ) ---');
+      esVoices.forEach((v, i) => console.log(`[ES-${i}] Nombre: ${v.name} | ID: ${v.identifier} | Calidad: ${v.quality || 'N/A'}`));
       console.log('-----------------------------------');
-      
+
       try {
-          fetch(`${BACKEND_URL}/api/logVoices`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ voices: esVoices })
-          });
+        fetch(`${BACKEND_URL}/api/logVoices`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ voices: esVoices })
+        });
       } catch (e) {
-          console.warn('No se pudieron logear las voces');
+        console.warn('No se pudieron logear las voces');
       }
 
       // Mapeo dinámico y traducción de identificadores nativos (iOS/Android)
       const categorizedVoices = esVoices.map(v => {
-          let gender = 'unknown';
-          const id = (v.identifier + ' ' + v.name).toLowerCase();
-          
-          // Clasificación absoluta basada en el hardware y feedback del usuario
-          // Femeninas: a, b, c, e / Masculinas: d, f
-          if (id.includes('monica') || id.includes('clara') || id.includes('paulina') || id.includes('luciana') || 
-              id.includes('-esa') || id.includes('-esc') || id.includes('-esb') || id.includes('-ese')) {
-              gender = 'female';
-          } else if (id.includes('juan') || id.includes('carlos') || id.includes('jorge') || id.includes('diego') || 
-                     id.includes('manuel') || id.includes('pablo') || id.includes('-esd') || id.includes('-esf')) {
-              gender = 'male';
-          }
-          return { ...v, gender };
+        let gender = 'unknown';
+        const id = (v.identifier + ' ' + v.name).toLowerCase();
+
+        // Clasificación absoluta basada en el hardware y feedback del usuario
+        // Femeninas: a, b, c, e / Masculinas: d, f
+        if (id.includes('monica') || id.includes('clara') || id.includes('paulina') || id.includes('luciana') ||
+          id.includes('-esa') || id.includes('-esc') || id.includes('-esb') || id.includes('-ese')) {
+          gender = 'female';
+        } else if (id.includes('juan') || id.includes('carlos') || id.includes('jorge') || id.includes('diego') ||
+          id.includes('manuel') || id.includes('pablo') || id.includes('-esd') || id.includes('-esf')) {
+          gender = 'male';
+        }
+        return { ...v, gender };
       });
 
       const males = categorizedVoices.filter(v => v.gender === 'male');
@@ -324,7 +341,7 @@ export const AppProvider = ({ children }) => {
       // Separar por acento para la asignación Premium (Español de España: es-ES)
       const esEsFemales = fPool.filter((v: any) => v.language === 'es-ES' || v.identifier.toLowerCase().includes('es-es'));
       const otherFemales = fPool.filter((v: any) => v.language !== 'es-ES' && !v.identifier.toLowerCase().includes('es-es'));
-      
+
       const esEsMales = mPool.filter((v: any) => v.language === 'es-ES' || v.identifier.toLowerCase().includes('es-es'));
       const otherMales = mPool.filter((v: any) => v.language !== 'es-ES' && !v.identifier.toLowerCase().includes('es-es'));
 
@@ -339,12 +356,12 @@ export const AppProvider = ({ children }) => {
       // Instanciación forzosa y blindada de los 4 roles (Nombres nuevos)
       const luciaV = { ...(freeFemalePool[0] || fPool[0] || esVoices[0]), humanName: 'Lucía', isPremium: false };
       const javierV = { ...(freeMalePool[0] || mPool[0] || esVoices[0]), humanName: 'Javier', isPremium: false };
-      
+
       // Premium (Acento es-ES garantizado si existe en el OS)
       // Si la voz libre cogió la misma (ej. solo hay 1 voz de mujer), forzamos a pillar el índice 1 del fPool si existe
       const fPremVoice = premiumFemalePool[0].identifier === luciaV.identifier && premiumFemalePool.length > 1 ? premiumFemalePool[1] : (premiumFemalePool[0] || fPool[0]);
       const claraV = { ...(fPremVoice || esVoices[0]), humanName: 'Clara', isPremium: true };
-      
+
       const mPremVoice = premiumMalePool[0].identifier === javierV.identifier && premiumMalePool.length > 1 ? premiumMalePool[1] : (premiumMalePool[0] || mPool[0]);
       const marcoV = { ...(mPremVoice || esVoices[0]), humanName: 'Marco', isPremium: true };
 
@@ -354,7 +371,7 @@ export const AppProvider = ({ children }) => {
       const visibleRoles = roles.map((r, i) => ({ ...r, uniqueId: r.identifier + '_' + i }));
 
       setAvailableVoices(visibleRoles);
-      
+
       if (visibleRoles.length > 0) {
         // Javier por defecto si existe, si no, la de Clara (index 0)
         const defaultVoiceId = javierV.identifier || visibleRoles[0].identifier;
@@ -469,14 +486,14 @@ export const AppProvider = ({ children }) => {
 
       // Limpiar grabación anterior si existe
       if (recordingRef.current) {
-        try { await recordingRef.current.stopAndUnloadAsync(); } catch(e) {}
+        try { await recordingRef.current.stopAndUnloadAsync(); } catch (e) { }
         recordingRef.current = null;
       }
 
       const { recording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
-      
+
       recordingRef.current = recording;
       setIsDictating(true);
       Vibration.vibrate(50);
@@ -494,10 +511,10 @@ export const AppProvider = ({ children }) => {
         setIsDictating(false);
         return;
       }
-      
+
       console.log("[Audio] Deteniendo grabación...");
       setIsDictating(false);
-      
+
       await recordingRef.current.stopAndUnloadAsync();
       const uri = recordingRef.current.getURI();
       recordingRef.current = null;
@@ -507,12 +524,12 @@ export const AppProvider = ({ children }) => {
         console.log("[Audio] Analizando voz...");
         const formData = new FormData();
         // @ts-ignore
-        formData.append('audio', { 
-          uri, 
+        formData.append('audio', {
+          uri,
           name: 'audio.m4a',
           type: 'audio/mp4'
         });
-        
+
         try {
           const res = await fetch(`${BACKEND_URL}/api/transcribe`, {
             method: 'POST',
@@ -522,7 +539,7 @@ export const AppProvider = ({ children }) => {
               'Content-Type': 'multipart/form-data',
             },
           });
-          
+
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
           const data = await res.json();
@@ -595,27 +612,27 @@ export const AppProvider = ({ children }) => {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: (flightData?.departure?.delay || 0) >= 180 ? "🚨 CRISIS: Retraso Crítico" : "⚠️ AVISO: Incidencia de Vuelo",
-        body: (flightData?.departure?.delay || 0) >= 180 
-          ? `Tu vuelo tiene +3h de retraso. He preparado tu rescate. Pulsa para solucionarlo.` 
+        body: (flightData?.departure?.delay || 0) >= 180
+          ? `Tu vuelo tiene +3h de retraso. He preparado tu rescate. Pulsa para solucionarlo.`
           : `Retraso de ${(flightData?.departure?.delay || 0)} min detectado. He preparado tu plan de asistencia. Pulsa para verlo.`,
         sound: true,
         vibrate: [0, 500, 200, 500],
         priority: Notifications.AndroidNotificationPriority.MAX,
       },
       trigger: {
-         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-         seconds: 5,
-         channelId: 'tactical'
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 5,
+        channelId: 'tactical'
       },
     });
-    
+
     // Forzar vibración a nivel de hardware (Por si el SO bloquea la de la notificación)
     setTimeout(() => {
       Vibration.vibrate([0, 500, 200, 500]);
     }, 5000);
 
     Alert.alert(
-      "Simulación Iniciada", 
+      "Simulación Iniciada",
       "1. Cierra esta ventana.\n2. Inmediatamente vete al menú inicio de tu teléfono (sin cerrar la app del todo).\n3. Espera 5 segundos."
     );
     console.log("[Push] Local notification scheduled in 5 seconds");
@@ -633,12 +650,12 @@ export const AppProvider = ({ children }) => {
   const handleRegister = async () => {
     if (!authEmail || !authPassword || !authName) return Alert.alert('Registro', 'Introduce nombre, email y contraseña.');
     if (authMode === 'register' && !userPhone) return Alert.alert('Registro', 'El teléfono SOS es obligatorio para el blindaje.');
-    
-    try { 
-      setAuthLoading(true); 
-      const cred = await createUserWithEmailAndPassword(auth, authEmail, authPassword); 
+
+    try {
+      setAuthLoading(true);
+      const cred = await createUserWithEmailAndPassword(auth, authEmail, authPassword);
       await updateProfile(cred.user, { displayName: authName });
-      
+
       // PERSISTENCIA EN BACKEND (Supabase)
       await fetch(`${BACKEND_URL}/api/registerUser`, {
         method: 'POST',
@@ -650,7 +667,7 @@ export const AppProvider = ({ children }) => {
         })
       });
 
-      Alert.alert('Registro', 'Éxito. ¡Bienvenido a Travel-Pilot!'); 
+      Alert.alert('Registro', 'Éxito. ¡Bienvenido a Travel-Pilot!');
     }
     catch (e: any) { Alert.alert('Error', e.message); } finally { setAuthLoading(false); }
   };
@@ -717,13 +734,17 @@ export const AppProvider = ({ children }) => {
   const searchFlight = async () => {
     const code = flightInput.trim();
     if (!code) return;
+
+    // 1) LIMPIAR TODO del circuito anterior para evitar conflictos
+    stopSpeak();
+    setShowSOS(false);
     setIsSearching(true); setSearchError(null); setFlightData(null); setPrefetchedData(null);
-    setCompensationEligible(false); // Reseteo para nueva busqueda
-    
-    // Si el usuario busca este vuelo de nuevo, lo perdonamos de la lista negra de borrados
+    setCompensationEligible(false);
+    setSelectedRescuePlan(null);
     setDismissedClaims(prev => prev.filter(f => f !== code.toUpperCase()));
 
     try {
+      // 2) BUSCAR EL VUELO
       const response = await fetch(`${BACKEND_URL}/api/flightInfo?flight=${code}`);
       if (!response.ok) {
         const err = await response.json();
@@ -732,32 +753,18 @@ export const AppProvider = ({ children }) => {
       }
       const data = await response.json();
       setFlightData(data);
-      
-      // AÑADIR A BÚSQUEDAS ACTIVAS (Sin duplicados por número de vuelo)
+
+      // 3) AÑADIR A BÚSQUEDAS ACTIVAS
       setActiveSearches(prev => {
-          const exists = prev.find(f => f.flightNumber === data.flightNumber);
-          if (exists) return [data, ...prev.filter(f => f.flightNumber !== data.flightNumber)];
-          return [data, ...prev];
+        const exists = prev.find(f => f.flightNumber === data.flightNumber);
+        if (exists) return [data, ...prev.filter(f => f.flightNumber !== data.flightNumber)];
+        return [data, ...prev];
       });
 
-      // AUTO-VOZ REACTIVA
-      if (data.status === 'cancelled') {
-        speak('Alerta Roja. Tu vuelo ha sido cancelado. He generado tu reembolso oficial en DOCS.', selectedVoice);
-      } else if ((data.departure?.delay || 0) >= 180) {
-        const amt = getEU261Amount(data).replace('€', ' euros');
-        speak(`Retraso crítico de tres horas. Documento legal preparado para reclamar ${amt}. Tienes derecho a asistencia gratuita`, selectedVoice);
-      } else if ((data.departure?.delay || 0) >= 120) {
-        speak(`Incidencia media. Te corresponde derecho legal a comida gratuita en mostrador. He calculado planes alternativos`, selectedVoice);
-      } else if ((data.departure?.delay || 0) >= 60) {
-        speak(`Aviso: Retraso grave. Entra en inicio para ver el diagnóstico del asistente. Ya puedes reclamar tu vale de manutención por ley`, selectedVoice);
-      }
-
+      // 4) GENERAR EXPEDIENTE LEGAL (silencioso, sin voz aquí)
       if (data.departure?.delay >= 180 || data.status === 'cancelled') {
         setCompensationEligible(true);
-        
-        // Generar reclamación de inmediato para evitar problemas de re-renderizado
         setClaims(prevBase => {
-          // Filtramos primero por vuelo para asegurar que no se duplica
           const prev = prevBase.filter(c => c.vuelo !== data.flightNumber);
           return [{
             id: `C-${data.flightNumber}-${Date.now()}`,
@@ -769,18 +776,47 @@ export const AppProvider = ({ children }) => {
             isDynamic: true
           }, ...prev];
         });
-        
-        // Aviso Push UI explícito para el usuario
-        Alert.alert(
-            "📋 EXPEDIENTE LEGAL LISTO",
-            `He depositado tu documento de reclamación EU261 para cobrar ${getEU261Amount(data).replace('€',' euros')} a la aerolínea.\n\nVete a la pestaña 'DOCS' y pulsa sobre la reclamación para FIRMAR.`,
-            [{ text: "ENTENDIDO", style: "default" }]
-        );
       }
-      if (data.departure?.delay >= 120 || data.status === 'cancelled') {
-        showPlan();
+
+      // 5) UNA SOLA VOZ — el resumen completo de la situación adaptado al perfil
+      const delay = data.departure?.delay || 0;
+      let finalSpeech = "";
+
+      if (data.status === 'cancelled') {
+        const amt = getEU261Amount(data).replace('€', ' euros');
+        if (travelProfile === 'premium') {
+            finalSpeech = `Alerta roja, vuelo cancelado. Ya he activado tu protocolo VIP y el expediente por ${amt}. Priorizando rutas alternativas en clase superior.`;
+        } else if (travelProfile === 'budget') {
+            finalSpeech = `Tu vuelo ha sido cancelado. He generado tu reembolso de ${amt} en la bóveda. Buscando la conexión más barata disponible.`;
+        } else {
+            finalSpeech = `Tu vuelo se ha cancelado. Reembolso de ${amt} preparado. Buscando la mejor combinación de hotel o vuelo alternativo.`;
+        }
+      } else if (delay >= 180) {
+        const amt = getEU261Amount(data).replace('€', ' euros');
+        if (travelProfile === 'premium') {
+            finalSpeech = `Retraso severo detectado. Tu confort es mi prioridad. He preparado la reclamación de ${amt} y estoy buscando acceso a sala VIP u hotel de máxima categoría.`;
+        } else if (travelProfile === 'budget') {
+            finalSpeech = `Retraso de tres horas. Expediente de ${amt} completado. Esto cubrirá tus gastos. Buscando alternativas de bajo coste.`;
+        } else {
+            finalSpeech = `Retraso crítico de tres horas. Documentos para reclamar ${amt} listos. Analizando opciones de asistencia y reemplazo de vuelo.`;
+        }
+      } else if (delay >= 60) {
+        if (travelProfile === 'premium') {
+            finalSpeech = `Atención. Tu vuelo se retrasa ${delay} minutos. Activo modo VIP para asegurar tu comodidad inmediata.`;
+        } else if (travelProfile === 'budget') {
+            finalSpeech = `Aviso. Retraso de ${delay} minutos. Evaluando opciones económicas para no descuadrar tu presupuesto.`;
+        } else {
+            finalSpeech = `Retraso de ${delay} minutos detectado. Tienes derecho a asistencia. Calculando soluciones equilibradas para ti.`;
+        }
       }
-      prefetchPlan();
+
+      if (finalSpeech !== "") {
+          speak(finalSpeech, selectedVoice);
+      }
+
+      // 6) LA VENTANA DE CRISIS LA ABRE GlobalOverlays automáticamente
+      //    (ya tiene el auto-trigger que se resetea con cada nuevo vuelo)
+
     } catch (e) {
       setSearchError('Error de conexión con el servidor. Revisa el túnel ngrok.');
       console.error(e);
@@ -799,25 +835,35 @@ export const AppProvider = ({ children }) => {
 
   const removeActiveSearch = (flightNumber: string) => {
     setActiveSearches(prev => {
-        const updated = prev.filter(f => f.flightNumber !== flightNumber);
-        // Si borramos el que está en flightData, actualizamos flightData al siguiente o null
-        if (flightData?.flightNumber === flightNumber) {
-            setFlightData(updated.length > 0 ? updated[0] : null);
-        }
-        return updated;
+      const updated = prev.filter(f => f.flightNumber !== flightNumber);
+      // Si borramos el que está en flightData, actualizamos flightData al siguiente o null
+      if (flightData?.flightNumber === flightNumber) {
+        setFlightData(updated.length > 0 ? updated[0] : null);
+      }
+      return updated;
     });
   };
 
-  const showPlan = () => { 
-    Vibration.vibrate(50); 
+  const showPlan = () => {
+    Vibration.vibrate(50);
     setHasSeenPlan(true);
     if (prefetchedData) { setApiPlan(prefetchedData); setShowSOS(true); }
     else { fetchContingencyPlan(); }
   };
 
   const fetchContingencyPlan = async () => {
-    setIsGenerating(true); setApiPlan(null); setShowSOS(true); setLoadingStep(0); setHasSeenPlan(true);
-    let intv = setInterval(() => setLoadingStep(p => (p + 1) % 4), 800);
+    // Plan local instantáneo: se muestra YA, sin esperar a la IA
+    const instantPlan = {
+      options: [
+        { type: 'RÁPIDO', title: 'Ruta Alternativa Urgente', description: 'Vuelo directo de sustitución gestionado de forma prioritaria para evitar esperas.', estimatedCost: 850 },
+        { type: 'ECONÓMICO', title: 'Gestión de Reembolso Inteligente', description: 'Trámite legal EU261 activo combinado con la mejor conexión de bajo coste disponible.', estimatedCost: 150 },
+        { type: 'EQUILIBRADO', title: 'Plan de Estancia y Descanso', description: 'Noche en hotel seleccionado y salida programada para mañana con total comodidad.', estimatedCost: 300 }
+      ],
+      impact: { hotelAlert: "He asegurado tu reserva de alojamiento. Sin riesgo de cancelación." }
+    };
+    setApiPlan(instantPlan); setShowSOS(true); setHasSeenPlan(true); setIsGenerating(false);
+
+    // En segundo plano: si la IA responde con algo mejor, se actualiza en silencio
     try {
       const response = await fetch(`${BACKEND_URL}/api/monitorFlight`, {
         method: 'POST',
@@ -828,20 +874,10 @@ export const AppProvider = ({ children }) => {
       if (data.contingencyPlan) {
         setApiPlan(data.contingencyPlan);
         setPrefetchedData(data.contingencyPlan);
-      } else {
-        throw new Error("No hay plan en la respuesta");
       }
     } catch (e) {
-      console.error("Error IA:", e);
-      setApiPlan({
-        options: [
-          { type: 'RÁPIDO', title: 'Ruta Alternativa Urgente', description: 'Vuelo directo de sustitución gestionado de forma prioritaria para evitar esperas.', estimatedCost: 850 },
-          { type: 'ECONÓMICO', title: 'Gestión de Reembolso Inteligente', description: 'Trámite legal EU261 activo combinado con la mejor conexión de bajo coste disponible.', estimatedCost: 150 },
-          { type: 'EQUILIBRADO', title: 'Plan de Estancia y Descanso', description: 'Noche en hotel seleccionado y salida programada para mañana con total comodidad.', estimatedCost: 300 }
-        ],
-        impact: { hotelAlert: "He asegurado tu reserva de alojamiento. Sin riesgo de cancelación." }
-      });
-    } finally { setIsGenerating(false); clearInterval(intv); }
+      console.error("Error IA (plan local ya visible):", e);
+    }
   };
 
   const fetchAgentLogs = async () => {
@@ -866,12 +902,12 @@ export const AppProvider = ({ children }) => {
       setFlightInput('');  // Limpieza del campo de búsqueda
       setMyFlights([]);   // Limpieza de vuelos locales guardados
       setSearchError(null);
-      
+
       // Limpieza atómica de AsyncStorage
       await AsyncStorage.multiRemove([
-        'lastFlightData', 
-        'lastFlightInput', 
-        'offline_agentLogs', 
+        'lastFlightData',
+        'lastFlightInput',
+        'offline_agentLogs',
         'offline_myFlights'
       ]);
 
@@ -887,25 +923,32 @@ export const AppProvider = ({ children }) => {
     const history = [...messages, newMessage];
     setMessages(history);
     setInputText(''); Keyboard.dismiss();
+
     (async () => {
       setIsTyping(true);
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); 
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+      // Saneamiento estructural (Gemini da error 400 si el historial no empieza por 'human')
+      let safeHistory = history.slice(-10);
+      while (safeHistory.length > 0 && !safeHistory[0].isUser) {
+        safeHistory.shift();
+      }
 
       try {
-        const response = await fetch(`${BACKEND_URL}/api/chat`, { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ 
-            text, 
-            history: history.slice(-10),
+        const response = await fetch(`${BACKEND_URL}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text,
+            history: safeHistory,
             flightId: flightInput.trim() || undefined
           }),
           signal: controller.signal
         });
         clearTimeout(timeoutId);
         const data = await response.json();
-        const aiText = data.text || "Lo siento, mi conexión táctica ha fallado.";
+        const aiText = data.text || "Lo siento, mi conexiónN ha fallado.";
         setMessages(prev => [...prev, { id: Date.now().toString(), text: aiText, isUser: false }]);
         speak(aiText);
       } catch (error: any) {
@@ -1038,14 +1081,14 @@ export const AppProvider = ({ children }) => {
   const removeExtraDoc = (id: string) => {
     console.log(`📡 [AppContext] Intentando borrar documento ID: ${id}`);
     setExtraDocs(prev => {
-        let filtered = prev.filter((d: any) => d.id !== id);
-        // Si no se borró nada por ID, intentar por título como respaldo
-        if (filtered.length === prev.length) {
-          const idx = prev.findIndex((d: any) => d.t === id || d.id === id);
-          if (idx >= 0) filtered = [...prev.slice(0, idx), ...prev.slice(idx + 1)];
-        }
-        console.log(`📡 [AppContext] Quedan ${filtered.length} en la Bóveda.`);
-        return filtered;
+      let filtered = prev.filter((d: any) => d.id !== id);
+      // Si no se borró nada por ID, intentar por título como respaldo
+      if (filtered.length === prev.length) {
+        const idx = prev.findIndex((d: any) => d.t === id || d.id === id);
+        if (idx >= 0) filtered = [...prev.slice(0, idx), ...prev.slice(idx + 1)];
+      }
+      console.log(`📡 [AppContext] Quedan ${filtered.length} en la Bóveda.`);
+      return filtered;
     });
   };
 
@@ -1071,7 +1114,7 @@ export const AppProvider = ({ children }) => {
         icon: '🅿️',
         verified: true,
       };
-      
+
       setExtraDocs(prev => [...prev, newDoc]);
       setIsExtracting(false);
       Alert.alert('✅ EXTRACCIÓN COMPLETADA', 'IA ha detectado y extraído 1 documento nuevo: Ticket de Parking (P1) detectado en tu cuenta de correo.');

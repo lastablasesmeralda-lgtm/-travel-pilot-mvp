@@ -119,7 +119,7 @@ export function evaluateImpact(ctx: FlightContext) {
 
 function getModel() {
     return new ChatGoogleGenerativeAI({
-        model: 'gemini-1.5-flash-latest',
+        model: 'gemini-2.0-flash',
         apiKey: process.env.GOOGLE_API_KEY,
         temperature: 0.2, // Más bajo = más rápido/consistente
         maxOutputTokens: 512, // Suficiente para JSON de planes
@@ -312,6 +312,33 @@ export async function handleFlightMonitoring(flightId: string) {
     const context = await checkFlightStatus(flightId);
     const impact = evaluateImpact(context);
 
+    // 🛡️ QUOTA SHIELD: Buscar si ya existe un plan para este vuelo y este retraso hoy
+    try {
+        const { data: cached } = await supabase
+            .from('agent_logs')
+            .select('*')
+            .eq('event_type', 'contingency_planned')
+            .order('created_at', { ascending: false })
+            .limit(10); // Revisar últimos 10 planes
+
+        if (cached && cached.length > 0) {
+            const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+            const hit = cached.find(log => {
+                const p = JSON.parse(log.payload || '{}');
+                return p.flightId === code && 
+                       p.delayMinutes === context.delayMinutes && 
+                       log.created_at > sixHoursAgo;
+            });
+
+            if (hit) {
+                console.log(`[QuotaShield] 🛡️ CACHE HIT para ${code} (${context.delayMinutes} min). Reutilizando plan.`);
+                return JSON.parse(hit.payload);
+            }
+        }
+    } catch (e) {
+        console.warn("[QuotaShield] Error consultando caché, procediendo con IA:", e);
+    }
+
     // ✅ FAST-PATH: Respuestas instantáneas para códigos de prueba (BETA)
     if (code === 'TP999' || code === 'TP404' || code === 'IB3166' || code === 'TK1860' || code === 'IB0123') {
         console.log(`[Agent] ⚡ Fast-Path detectado para ${code}. Devolviendo planes precargados.`);
@@ -393,7 +420,7 @@ IMPORTANT: Return ONLY the raw JSON object. Do not include markdown code blocks 
             if (!jsonMatch) throw new Error("No JSON in AI response after cleanup");
 
             const parsedPlan = JSON.parse(jsonMatch[0].trim());
-            const result = { ...parsedPlan, impact };
+            const result = { ...parsedPlan, impact, flightId: code, delayMinutes: context.delayMinutes };
             console.log(`[Agent] ✅ AI Plan Generated successfully with ${result.options?.length || 0} options.`);
             return result;
         } catch (e: any) {

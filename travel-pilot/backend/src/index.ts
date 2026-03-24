@@ -380,7 +380,7 @@ fastify.post('/api/chat', async (request, reply) => {
 
     try {
         const chatModel = new ChatGoogleGenerativeAI({
-            model: "gemini-1.5-flash",
+            model: "gemini-2.0-flash",
             maxOutputTokens: 1024,
             temperature: 0.9,
             apiKey: process.env.GOOGLE_API_KEY,
@@ -432,9 +432,13 @@ fastify.post('/api/chat', async (request, reply) => {
         const errorMsg = error.message || String(error);
         console.error("[Chat Error]:", errorMsg);
         
+        // Error amigable: Diferenciar entre saturación real y límite de cuota (429)
         let userFriendlyError = "Lo siento, mis sistemas avanzados están saturados ahora mismo. Google me tiene en lista de espera. Por favor, vuelve a intentarlo en unos segundos.";
-        if (errorMsg.includes("429") || errorMsg.includes("RetryInfo")) {
-            userFriendlyError = "El núcleo de Gemini está al límite de su capacidad gratuita. Espera 30 segundos y pregúntame de nuevo, estaré listo.";
+        
+        if (errorMsg.includes("429") || errorMsg.includes("quota") || errorMsg.includes("RetryInfo")) {
+            userFriendlyError = "¡Ups! Hemos agotado las consultas gratuitas diarias de Google para hoy. Prueba de nuevo en unos minutos o mañana, estaré listo para seguir ayudándote.";
+        } else if (errorMsg.includes("404")) {
+            userFriendlyError = "Mi núcleo de IA no responde correctamente. El equipo técnico ha sido avisado, vuelve a intentarlo pronto.";
         }
 
         require('fs').appendFileSync('backend_errors.log', `[${new Date().toISOString()}] Chat Error: ${errorMsg}\n`);
@@ -843,7 +847,7 @@ fastify.post('/api/transcribe', async (request, reply) => {
         } catch(e) {}
         
         const chatModel = new ChatGoogleGenerativeAI({
-            model: "gemini-1.5-flash",
+            model: "gemini-2.0-flash",
             apiKey: process.env.GOOGLE_API_KEY,
             maxRetries: 1, 
         });

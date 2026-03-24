@@ -32,15 +32,16 @@ export default function GlobalOverlays() {
     const [showAllOptions, setShowAllOptions] = React.useState(false);
     const [hasAutoTriggered, setHasAutoTriggered] = React.useState(false);
 
-    // AUTO-TRIGGER DE CRISIS (EXPERIENCIA PREMIUM)
+    // Resetear el trigger cuando cambia el vuelo buscado
     React.useEffect(() => {
-        if (flightData && (flightData.departure?.delay || 0) >= 120 && !hasAutoTriggered && !showSOS) {
-            // Pequeño delay para que no sea un choque visual al abrir la app
-            const timer = setTimeout(() => {
-                showPlan();
-                setHasAutoTriggered(true);
-            }, 1000);
-            return () => clearTimeout(timer);
+        setHasAutoTriggered(false);
+    }, [flightData?.flightNumber]);
+
+    // AUTO-TRIGGER DE CRISIS (EXPERIENCIA PREMIUM) — SIN DELAY
+    React.useEffect(() => {
+        if (flightData && (flightData.departure?.delay || 0) >= 60 && !hasAutoTriggered && !showSOS) {
+            showPlan();
+            setHasAutoTriggered(true);
         }
     }, [flightData, hasAutoTriggered, showSOS]);
 
