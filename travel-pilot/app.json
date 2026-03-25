@@ -4,7 +4,7 @@
     "slug": "travel-pilot-v2",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.jpg",
+    "icon": "./assets/icon_v3.png",
     "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash.jpg",
@@ -21,7 +21,7 @@
       ],
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.jpg",
+        "foregroundImage": "./assets/icon_v3.png",
         "backgroundColor": "#020617"
       }
     },

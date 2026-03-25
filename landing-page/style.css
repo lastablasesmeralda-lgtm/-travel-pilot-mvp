@@ -53,6 +53,19 @@ header nav {
     align-items: center;
 }
 
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo-icon-img {
+    height: 32px;
+    width: 32px;
+    border-radius: 6px;
+    margin-right: 10px;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
 .logo-text {
     font-size: 1.5rem;
     font-weight: 900;
