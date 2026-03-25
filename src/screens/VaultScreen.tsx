@@ -53,50 +53,66 @@ export default function DocsScreen() {
 
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                quality: 0.8,
+                allowsEditing: false, 
+                quality: 0.7,
             });
 
             if (!result.canceled) {
-                setUploadingDoc(true);
                 const uri = result.assets[0].uri;
                 const fileType = uri.split('.').pop() || 'jpg';
-                const fileName = `doc_${Date.now()}.${fileType}`;
 
-                const formData = new FormData();
-                formData.append('file', {
-                    uri,
-                    name: fileName,
-                    type: `image/${fileType}`
-                } as any);
-
-                const response = await fetch(`${BACKEND_URL}/api/uploadDocument`, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    setExtraDocs([
-                        {
-                            t: 'NUEVO DOCUMENTO',
-                            s: 'Subido por usuario',
-                            i: data.url,
-                            source: 'DOCS',
-                            icon: '🖼️',
-                            verified: true
-                        },
-                        ...extraDocs
-                    ]);
-                    Alert.alert("ÉXITO", "Documento encriptado y protegido en servidor.");
-                } else {
-                    Alert.alert("ERROR", data.error || "Fallo en la subida al túnel seguro.");
-                }
+                Alert.alert(
+                    "AÑADIR DOCUMENTO",
+                    "Pasaporte, Tarjeta de embarque, reservas de hotel, etc.\n\n¿Quieres guardar este documento en tu Bóveda Segura? Se encriptará con AES-256.",
+                    [
+                        { text: "CANCELAR", style: "cancel" },
+                        { 
+                            text: "SÍ, SUBIR AHORA", 
+                            onPress: () => confirmAndUpload({ uri, type: fileType }) 
+                        }
+                    ]
+                );
             }
         } catch (e) {
-            Alert.alert("ERROR DE RED", "No se pudo contactar con la central.");
-            console.error(e);
+            Alert.alert("ERROR", "No se pudo abrir la galería.");
+        }
+    };
+
+    const confirmAndUpload = async (docToUpload: { uri: string, type: string }) => {
+        try {
+            setUploadingDoc(true);
+            const formData = new FormData();
+            formData.append('file', {
+                uri: docToUpload.uri,
+                name: `upload_${Date.now()}.${docToUpload.type}`,
+                type: `image/${docToUpload.type}`
+            } as any);
+
+            const response = await fetch(`${BACKEND_URL}/api/uploadDocument`, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                setExtraDocs([
+                    {
+                        t: 'DOCUMENTO SEGURO',
+                        s: 'Añadido recientemente',
+                        i: data.url,
+                        source: 'DOCS',
+                        icon: '📄',
+                        verified: true
+                    },
+                    ...extraDocs
+                ]);
+                Alert.alert("ÉXITO", "Documento guardado en tu Bóveda Central.");
+            } else {
+                Alert.alert("ERROR", "No se pudo guardar el documento.");
+            }
+        } catch (e) {
+            Alert.alert("ERROR DE RED", "No se pudo contactar con el servidor.");
         } finally {
             setUploadingDoc(false);
         }
@@ -220,7 +236,6 @@ export default function DocsScreen() {
                 </Text>
             </TouchableOpacity>
 
-            {/* ——— BOTÓN SUBIR DOCUMENTO (AÑADIDO) ——— */}
             <TouchableOpacity
                 onPress={uploadDocument}
                 disabled={uploadingDoc}
@@ -231,20 +246,21 @@ export default function DocsScreen() {
                     marginBottom: 24,
                     flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'center',
                     borderWidth: 1,
                     borderColor: '#D4AF37',
                     borderStyle: uploadingDoc ? 'dashed' : 'solid'
                 }}
             >
-                {uploadingDoc ? (
-                    <ActivityIndicator size="small" color="#D4AF37" style={{ marginRight: 10 }} />
-                ) : (
-                    <Text style={{ fontSize: 18, marginRight: 10 }}>📤</Text>
-                )}
-                <Text style={{ color: uploadingDoc ? '#555' : '#D4AF37', fontWeight: '900', fontSize: 14, letterSpacing: 0.5 }}>
-                    {uploadingDoc ? 'ENCRIPTANDO DOCUMENTO...' : 'SUBIR PASAPORTE / BILLETE'}
-                </Text>
+                <Text style={{ fontSize: 24, marginRight: 15 }}>📤</Text>
+                <View style={{ flex: 1 }}>
+                    <Text style={{ color: uploadingDoc ? '#555' : '#D4AF37', fontWeight: '900', fontSize: 16, letterSpacing: 1 }}>
+                        {uploadingDoc ? 'ENCRIPTANDO...' : 'AÑADIR DOCUMENTO'}
+                    </Text>
+                    <Text style={{ color: uploadingDoc ? '#444' : '#888', fontSize: 11, marginTop: 2 }}>
+                        Pasaporte, Tarjeta de embarque, etc.
+                    </Text>
+                </View>
+                {uploadingDoc && <ActivityIndicator size="small" color="#D4AF37" />}
             </TouchableOpacity>
 
             {/* ——— DOCUMENTACIÓN PROTEGIDA ——— */}

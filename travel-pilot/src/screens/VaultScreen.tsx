@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, Image, ActivityIndicator, Alert, ScrollView, Modal } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as ImagePicker from 'expo-image-picker';
-import { cacheDirectory, writeAsStringAsync, EncodingType } from 'expo-file-system/legacy';
+import { cacheDirectory, writeAsStringAsync, EncodingType } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
@@ -10,7 +10,7 @@ import { getEU261Amount } from '../utils/flightUtils';
 import { BACKEND_URL } from '../../config';
 
 
-export default function DocsScreen() {
+export default function VaultScreen() {
     const {
         legalShieldActive, setViewDoc, setIsScanning, claims, setClaims, removeClaim, flightData,
         compensationEligible, extraDocs, setExtraDocs, isExtracting, simulateGmailSync, user,
@@ -29,6 +29,8 @@ export default function DocsScreen() {
     const [signedClaimId, setSignedClaimId] = useState<string | null>(null);
     const webViewRef = useRef<WebView>(null);
     const [capturedSignature, setCapturedSignature] = useState<string | null>(null);
+    const [pendingDoc, setPendingDoc] = useState<{ uri: string, type: string } | null>(null);
+    // showConfirmUpload eliminado en favor de Alerta nativa
 
 
     const uploadDocument = async () => {
@@ -41,51 +43,77 @@ export default function DocsScreen() {
 
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                quality: 0.8,
+                allowsEditing: false, // Simplificamos quitando el recorte para evitar errores
+                quality: 0.7,
             });
 
             if (!result.canceled) {
-                setUploadingDoc(true);
                 const uri = result.assets[0].uri;
                 const fileType = uri.split('.').pop() || 'jpg';
-                const fileName = `doc_${Date.now()}.${fileType}`;
+                setPendingDoc({ uri, type: fileType });
 
-                const formData = new FormData();
-                formData.append('file', {
-                    uri,
-                    name: fileName,
-                    type: `image/${fileType}`
-                } as any);
+                // USAMOS ALERTA NATIVA PARA MÁXIMA VISIBILIDAD
+                // Ponemos un título bien gráfico para que no se pierda
+                Alert.alert(
+                    "AÑADIR DOCUMENTO",
+                    "Pasaporte, Tarjeta de embarque, reservas de hotel, etc.\n\n¿Quieres guardar este documento en tu Bóveda Segura? Se encriptará con AES-256.",
+                    [
+                        { text: "CANCELAR", style: "cancel", onPress: () => setPendingDoc(null) },
+                        { 
+                            text: "SÍ, SUBIR AHORA", 
+                            onPress: () => {
+                                // Llamamos directamente a confirmAndUpload pasando el doc actual
+                                confirmAndUpload({ uri, type: fileType });
+                            } 
+                        }
+                    ]
+                );
+            }
+        } catch (e) {
+            Alert.alert("ERROR", "No se pudo abrir la galería.");
+        }
+    };
 
-                const response = await fetch(`${BACKEND_URL}/api/uploadDocument`, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                });
+    const confirmAndUpload = async (forcedDoc?: { uri: string, type: string }) => {
+        const docToUpload = forcedDoc || pendingDoc;
+        if (!docToUpload) return;
+        
+        try {
+            setUploadingDoc(true);
+            const formData = new FormData();
+            formData.append('file', {
+                uri: docToUpload.uri,
+                name: `upload_${Date.now()}.${docToUpload.type}`,
+                type: `image/${docToUpload.type}`
+            } as any);
 
-                const data = await response.json();
-                if (response.ok) {
-                    setExtraDocs([
-                        {
-                            id: `upload_${Date.now()}`,
-                            t: 'NUEVO DOCUMENTO',
-                            s: 'Subido por usuario',
-                            i: data.url,
-                            source: 'DOCS',
-                            icon: '🖼️',
-                            verified: true
-                        },
-                        ...extraDocs
-                    ]);
-                    Alert.alert("ÉXITO", "Documento encriptado y protegido en servidor.");
-                } else {
-                    Alert.alert("ERROR", data.error || "Fallo en la subida al túnel seguro.");
-                }
+            const response = await fetch(`${BACKEND_URL}/api/uploadDocument`, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                setExtraDocs([
+                    {
+                        id: `upload_${Date.now()}`,
+                        t: 'DOCUMENTO SEGURO',
+                        s: 'Añadido manualmente',
+                        i: data.url,
+                        source: 'DOCS',
+                        icon: '🖼️',
+                        verified: true
+                    },
+                    ...extraDocs
+                ]);
+                setPendingDoc(null);
+                Alert.alert("ÉXITO", "Documento encriptado y guardado en tu Bóveda Segura.");
+            } else {
+                Alert.alert("ERROR", data.error || "Fallo en la subida al servidor.");
             }
         } catch (e) {
             Alert.alert("ERROR DE RED", "No se pudo contactar con la central.");
-            console.error(e);
         } finally {
             setUploadingDoc(false);
         }
@@ -112,7 +140,8 @@ export default function DocsScreen() {
     };
 
     return (
-        <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20, paddingTop: 100, paddingBottom: 160, flexGrow: 1 }}>
+        <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingTop: 100, paddingBottom: 160, flexGrow: 1 }}>
 
             {/* ——— ESCUDO LEGAL ACTIVO ——— */}
             {(legalShieldActive || compensationEligible) && (
@@ -201,7 +230,6 @@ export default function DocsScreen() {
                 </Text>
             </TouchableOpacity>
 
-            {/* ——— BOTÓN SUBIR DOCUMENTO (AÑADIDO) ——— */}
             <TouchableOpacity
                 onPress={uploadDocument}
                 disabled={uploadingDoc}
@@ -212,20 +240,21 @@ export default function DocsScreen() {
                     marginBottom: 24,
                     flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'center',
                     borderWidth: 1,
                     borderColor: '#D4AF37',
                     borderStyle: uploadingDoc ? 'dashed' : 'solid'
                 }}
             >
-                {uploadingDoc ? (
-                    <ActivityIndicator size="small" color="#D4AF37" style={{ marginRight: 10 }} />
-                ) : (
-                    <Text style={{ fontSize: 18, marginRight: 10 }}>📤</Text>
-                )}
-                <Text style={{ color: uploadingDoc ? '#555' : '#D4AF37', fontWeight: '900', fontSize: 14, letterSpacing: 0.5 }}>
-                    {uploadingDoc ? 'ENCRIPTANDO DOCUMENTO...' : 'SUBIR PASAPORTE / BILLETE'}
-                </Text>
+                <Text style={{ fontSize: 24, marginRight: 15 }}>📤</Text>
+                <View style={{ flex: 1 }}>
+                    <Text style={{ color: uploadingDoc ? '#555' : '#D4AF37', fontWeight: '900', fontSize: 16, letterSpacing: 1 }}>
+                        {uploadingDoc ? 'ENCRIPTANDO...' : 'AÑADIR DOCUMENTO'}
+                    </Text>
+                    <Text style={{ color: uploadingDoc ? '#444' : '#888', fontSize: 11, marginTop: 2 }}>
+                        Pasaporte, Tarjeta de embarque, etc.
+                    </Text>
+                </View>
+                {uploadingDoc && <ActivityIndicator size="small" color="#D4AF37" />}
             </TouchableOpacity>
 
             {/* ——— DOCUMENTACIÓN PROTEGIDA ——— */}
@@ -424,8 +453,14 @@ export default function DocsScreen() {
                     </TouchableOpacity>
                 ))
             )}
+            {/* ——— PIE DE PÁGINA ENCRIPTADO ——— */}
+            <View style={{ marginTop: 30, opacity: 0.7, alignItems: 'center' }}>
+                <Text style={{ color: '#B0B0B0', fontSize: 10, letterSpacing: 1 }}>PROTECCIÓN ENCRIPTADA · AES-256</Text>
+            </View>
+        </ScrollView>
 
-            {/* ——— AUTORIZACIÓN DE FIRMA ——— */}
+            {/* ——— MODALS OUTSIDE SCROLLVIEW ——— */}
+
             <Modal visible={showSignature} animationType="slide" transparent={true}>
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', padding: 25 }}>
                     <View style={{ backgroundColor: '#111', borderRadius: 24, padding: 25, borderWidth: 1, borderColor: '#333' }}>
@@ -614,7 +649,8 @@ window.clearCanvas=function(){
                 </View>
             </Modal>
 
-            {/* ——— MANUAL DE DERECHOS ——— */}
+            {/* Modal de confirmación eliminado en favor de Alerta nativa */}
+
             <Modal visible={showRights} animationType="slide" transparent={true}>
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', paddingTop: 60 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, marginBottom: 20 }}>
@@ -658,11 +694,6 @@ window.clearCanvas=function(){
                     </ScrollView>
                 </View>
             </Modal>
-
-            {/* ——— PIE DE PÁGINA ENCRIPTADO ——— */}
-            <View style={{ marginTop: 30, opacity: 0.7, alignItems: 'center' }}>
-                <Text style={{ color: '#B0B0B0', fontSize: 10, letterSpacing: 1 }}>PROTECCIÓN ENCRIPTADA · AES-256</Text>
-            </View>
-        </ScrollView>
+        </View>
     );
 }

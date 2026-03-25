@@ -373,7 +373,7 @@ export default function GlobalOverlays() {
                                 return imgSource ? (
                                     <Image 
                                         source={imgSource} 
-                                        resizeMode="cover" 
+                                        resizeMode="contain" 
                                         style={{ 
                                             position: 'absolute', 
                                             top: 0, left: 0, right: 0, bottom: 0,

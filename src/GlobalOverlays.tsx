@@ -262,7 +262,11 @@ export default function GlobalOverlays() {
                     <View style={[s.mc, { backgroundColor: '#000', padding: 0, overflow: 'hidden' }]}>
                         <View style={{ width: '100%', height: 300 }}>
                             {isScanning && <Animated.View style={[s.laser, { transform: [{ translateY: scanAnim }] }]} />}
-                            <Image source={{ uri: viewDoc?.i }} style={{ width: '100%', height: '100%', opacity: isScanning ? 0.3 : 1 }} />
+                            <Image 
+                                source={{ uri: viewDoc?.i }} 
+                                resizeMode="contain"
+                                style={{ width: '100%', height: '100%', opacity: isScanning ? 0.3 : 1 }} 
+                            />
                         </View>
                         <View style={{ padding: 20 }}>
                             <Text style={{ color: '#FFF', textAlign: 'center' }}>{isScanning ? 'ESCANEANDO FIRMA...' : 'VERIFICACIÓN COMPLETA'}</Text>
