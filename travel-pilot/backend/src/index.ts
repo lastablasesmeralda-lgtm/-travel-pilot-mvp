@@ -400,11 +400,27 @@ fastify.post('/api/chat', async (request, reply) => {
                 maxRetries: 1, 
             });
 
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
+
+            // Pre-fetch weather for context
+            let weatherContext = "";
+            try {
+                const wRes = await fetch(`http://localhost:${process.env.PORT || 3000}/api/weather?location=Madrid`);
+                if (wRes.ok) {
+                    const wData = await wRes.json();
+                    weatherContext = `\n[CLIMA ACTUAL en Madrid]: ${wData.temp}°C, ${wData.condition} ${wData.icon}`;
+                }
+            } catch(e) { /* silently ignore */ }
+
             const systemPrompt = `Eres tu asistente personal de viajes, un humano muy directo y eficaz.
-            Hoy es ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+            Hoy es ${dateStr}. La hora actual en España es ${timeStr}.${weatherContext}
             Tu misión: Resolver problemas con calma, inteligencia y, sobre todo, BREVEDAD.
             - Preséntate como "tu asistente" si es necesario, nunca como una IA o términos militares.
             - Sé extremadamente conciso. Si te dicen "hola", responde solo "Hola, ¿en qué puedo ayudarte hoy?" o similar.
+            - Si te preguntan la hora, responde con la hora que tienes en tu contexto (${timeStr}).
+            - Si te preguntan por el clima, usa los datos que tienes en tu contexto.
             - Ve al grano. No des explicaciones largas si no te las piden.
             - Habla de tú, con tono amable pero profesional y rápido.
             - Prohibido usar más de dos párrafos excepto en planes de crisis complejos.
