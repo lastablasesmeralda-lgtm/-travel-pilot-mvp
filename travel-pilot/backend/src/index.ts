@@ -920,7 +920,8 @@ fastify.post('/api/transcribe', async (request, reply) => {
         } catch(e) {}
         
         const chatModel = new ChatGoogleGenerativeAI({
-            model: "gemini-flash-latest",
+            model: "gemini-2.5-flash",
+            apiVersion: "v1beta",
             apiKey: process.env.GOOGLE_API_KEY,
             maxRetries: 1, 
         });
