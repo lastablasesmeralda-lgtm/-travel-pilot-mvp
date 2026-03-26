@@ -385,62 +385,78 @@ fastify.post('/api/chat', async (request, reply) => {
     const { text, history, flightId } = request.body as { text: string, history?: any[], flightId?: string };
     if (!text) return reply.status(400).send({ error: 'text is required' });
 
-    try {
-        const chatModel = new ChatGoogleGenerativeAI({
-            model: "gemini-flash-latest",
-            maxOutputTokens: 1024,
-            temperature: 0.9,
-            apiKey: process.env.GOOGLE_API_KEY,
-            maxRetries: 2, // Intentar un par de veces si Google está saturado
-        });
+    let retryCount = 0;
+    const maxManualRetries = 2;
 
-        const systemPrompt = `Eres tu asistente personal de viajes, un humano muy directo y eficaz.
-        Hoy es ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
-        Tu misión: Resolver problemas con calma, inteligencia y, sobre todo, BREVEDAD.
-        - Preséntate como "tu asistente" si es necesario, nunca como una IA o términos militares.
-        - Sé extremadamente conciso. Si te dicen "hola", responde solo "Hola, ¿en qué puedo ayudarte hoy?" o similar.
-        - Ve al grano. No des explicaciones largas si no te las piden.
-        - Habla de tú, con tono amable pero profesional y rápido.
-        - Prohibido usar más de dos párrafos excepto en planes de crisis complejos.
-        - Responde SIEMPRE en español.
-        - PROHIBIDO usar Markdown (no uses asteriscos ** para negritas). Responde solo con texto plano.` ;
-
-        let flightContextStr = "";
-        if (flightId) {
-            try {
-                const ctx = await checkFlightStatus(flightId);
-                const imp = evaluateImpact(ctx);
-                flightContextStr = `\n[CONTEXTO VUELO ACTUAL]\nVuelo: ${ctx.flightNumber}\nOrigen: ${ctx.departure_airport}\nDestino: ${ctx.arrival_airport}\nRetraso: ${ctx.delayMinutes} min\nEstado: ${ctx.status}\nSeveridad: ${imp.severity}\nCompensación: ${imp.compensationEligible ? imp.compensationAmount + '€' : 'No elegible'}`;
-            } catch (e) {
-                console.error("[Chat Context Error]:", e);
-            }
-        }
-
-        const messages: any[] = [["system", systemPrompt + flightContextStr]];
-        
-        if (history && Array.isArray(history)) {
-            history.forEach(m => {
-                const role = m.isUser ? "human" : "ai";
-                messages.push([role, m.text]);
+    const attemptChat = async (): Promise<any> => {
+        try {
+            const chatModel = new ChatGoogleGenerativeAI({
+                model: "gemini-1.5-flash-latest",
+                maxOutputTokens: 1024,
+                temperature: 0.9,
+                apiKey: process.env.GOOGLE_API_KEY,
+                maxRetries: 1, 
             });
-        } else {
-            messages.push(["human", text]);
-        }
 
-        const response = await chatModel.invoke(messages);
-        let aiText = response.content.toString();
-        
-        // Limpiar asteriscos por si acaso la IA ignora el prompt
-        aiText = aiText.replace(/\*\*/g, '');
-        
+            const systemPrompt = `Eres tu asistente personal de viajes, un humano muy directo y eficaz.
+            Hoy es ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+            Tu misión: Resolver problemas con calma, inteligencia y, sobre todo, BREVEDAD.
+            - Preséntate como "tu asistente" si es necesario, nunca como una IA o términos militares.
+            - Sé extremadamente conciso. Si te dicen "hola", responde solo "Hola, ¿en qué puedo ayudarte hoy?" o similar.
+            - Ve al grano. No des explicaciones largas si no te las piden.
+            - Habla de tú, con tono amable pero profesional y rápido.
+            - Prohibido usar más de dos párrafos excepto en planes de crisis complejos.
+            - Responde SIEMPRE en español.
+            - PROHIBIDO usar Markdown (no uses asteriscos ** para negritas). Responde solo con texto plano.`;
+
+            let flightContextStr = "";
+            if (flightId) {
+                try {
+                    const ctx = await checkFlightStatus(flightId);
+                    const imp = evaluateImpact(ctx);
+                    flightContextStr = `\n[CONTEXTO VUELO ACTUAL]\nVuelo: ${ctx.flightNumber}\nOrigen: ${ctx.departure_airport}\nDestino: ${ctx.arrival_airport}\nRetraso: ${ctx.delayMinutes} min\nEstado: ${ctx.status}\nSeveridad: ${imp.severity}\nCompensación: ${imp.compensationEligible ? imp.compensationAmount + '€' : 'No elegible'}`;
+                } catch (e) {
+                    console.error("[Chat Context Error]:", e);
+                }
+            }
+
+            const messages: any[] = [["system", systemPrompt + flightContextStr]];
+            
+            if (history && Array.isArray(history)) {
+                history.forEach(m => {
+                    const role = m.isUser ? "human" : "ai";
+                    messages.push([role, m.text]);
+                });
+            } else {
+                messages.push(["human", text]);
+            }
+
+            const response = await chatModel.invoke(messages);
+            let aiText = response.content.toString();
+            aiText = aiText.replace(/\*\*/g, '');
+            return aiText;
+        } catch (error: any) {
+            const errorMsg = error.message || String(error);
+            console.error(`[Chat Attempt ${retryCount}] Error:`, errorMsg);
+
+            if (errorMsg.includes('429') && retryCount < maxManualRetries) {
+                retryCount++;
+                console.log(`[Chat Retry] Reintentando en 2 segundos... (Intento ${retryCount})`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                return attemptChat();
+            }
+            throw error;
+        }
+    };
+
+    try {
+        const aiText = await attemptChat();
         console.log(`[Chat AI Response]: ${aiText}`);
         return reply.send({ text: aiText });
     } catch (error: any) {
         const errorMsg = error.message || String(error);
-        console.error("[Chat Error]:", errorMsg);
         
-        // FALLBACK RESILIENTE: En lugar de un error seco, damos una respuesta de "Modo Supervivencia"
-        // Esto evita que el usuario se frustre si Google falla un momento.
+        // FALLBACK RESILIENTE FINAL
         const fallbacks = [
             "Entendido. Estoy procesando tu solicitud con prioridad. ¿En qué más puedo ayudarte con tu viaje?",
             "Recibido. Mis sistemas están algo saturados pero sigo aquí para proteger tu vuelo. ¿Necesitas que revise algo específico?",
@@ -448,7 +464,10 @@ fastify.post('/api/chat', async (request, reply) => {
         ];
         const randomFallback = fallbacks[Math.floor(Math.random() * fallbacks.length)];
 
-        require('fs').appendFileSync('backend_errors.log', `[${new Date().toISOString()}] Chat Error: ${errorMsg}\n`);
+        try {
+            require('fs').appendFileSync('backend_errors.log', `[${new Date().toISOString()}] Final Chat Error after retries: ${errorMsg}\n`);
+        } catch(e) {}
+        
         return reply.send({ text: randomFallback });
     }
 });
