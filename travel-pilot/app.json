@@ -7,9 +7,9 @@
     "icon": "./assets/icon_v3.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/splash.jpg",
+      "image": "./assets/icon_v3.png",
       "resizeMode": "contain",
-      "backgroundColor": "#020617"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true
@@ -22,7 +22,7 @@
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon_v3.png",
-        "backgroundColor": "#020617"
+        "backgroundColor": "#000000"
       }
     },
     "extra": {
