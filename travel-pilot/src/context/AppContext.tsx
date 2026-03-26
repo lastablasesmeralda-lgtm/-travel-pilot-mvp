@@ -648,8 +648,11 @@ export const AppProvider = ({ children }) => {
 
   // FUNCIONES DE RED LOCAL Y AUTH
   const handleRegister = async () => {
-    if (!authEmail || !authPassword || !authName) return Alert.alert('Registro', 'Introduce nombre, email y contraseña.');
-    if (authMode === 'register' && !userPhone) return Alert.alert('Registro', 'El teléfono SOS es obligatorio para el blindaje.');
+    if (!authEmail) return Alert.alert('Registro', 'Por favor, introduce tu email.');
+    if (!authPassword) return Alert.alert('Registro', 'Por favor, crea una contraseña.');
+    if (authPassword.length < 6) return Alert.alert('Seguridad', 'La contraseña debe tener al menos 6 caracteres.');
+    if (!authName) return Alert.alert('Registro', 'Por favor, introduce tu nombre completo.');
+    if (authMode === 'register' && !userPhone) return Alert.alert('Registro', 'El teléfono SOS es obligatorio para poder avisarte de retrasos críticos.');
 
     try {
       setAuthLoading(true);

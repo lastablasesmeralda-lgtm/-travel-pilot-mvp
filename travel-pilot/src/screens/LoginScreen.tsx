@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
 
@@ -11,7 +11,11 @@ export default function LoginScreen() {
     } = useAppContext();
 
     return (
-        <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 12 }}>
+        <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1, backgroundColor: '#0A0A0A' }}
+        >
+            <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 100 }}>
             {!user ? (
                 <View style={{ padding: 16, backgroundColor: '#111', borderRadius: 16, marginBottom: 12, marginTop: 40, borderWidth: 1, borderColor: '#222' }}>
                     <View style={{ marginBottom: 24, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#333' }}>
@@ -134,5 +138,6 @@ export default function LoginScreen() {
                 </View>
             )}
         </ScrollView>
+    </KeyboardAvoidingView>
     );
 }
