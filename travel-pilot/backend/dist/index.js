@@ -405,28 +405,29 @@ fastify.post('/api/chat', async (request, reply) => {
             const now = new Date();
             const dateStr = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
-            // Pre-fetch weather for context
-            let weatherContext = "";
+            // Contexto inteligente de clima: buscar Madrid por defecto + el destino del vuelo si existe
+            let wContext = "";
             try {
-                const wRes = await fetch(`http://localhost:${process.env.PORT || 3000}/api/weather?location=Madrid`);
-                if (wRes.ok) {
-                    const wData = await wRes.json();
-                    weatherContext = `\n[CLIMA ACTUAL en Madrid]: ${wData.temp}°C, ${wData.condition} ${wData.icon}`;
+                const locations = ['Madrid'];
+                if (flightId)
+                    locations.push(flightId.substring(0, 3)); // Intento con código de aeropuerto
+                for (const loc of locations) {
+                    const wRes = await fetch(`http://localhost:${process.env.PORT || 3000}/api/weather?location=${encodeURIComponent(loc)}`);
+                    if (wRes.ok) {
+                        const wData = await wRes.json();
+                        wContext += `\n[Clima en ${wData.city || loc}]: ${wData.temp}°C, ${wData.condition} ${wData.icon}`;
+                    }
                 }
             }
-            catch (e) { /* silently ignore */ }
+            catch (e) { }
             const systemPrompt = `Eres tu asistente personal de viajes, un humano muy directo y eficaz.
-            Hoy es ${dateStr}. La hora actual en España es ${timeStr}.${weatherContext}
+            Hoy es ${dateStr}. La hora actual en España es ${timeStr}.${wContext}
             Tu misión: Resolver problemas con calma, inteligencia y, sobre todo, BREVEDAD.
-            - Preséntate como "tu asistente" si es necesario, nunca como una IA o términos militares.
-            - Sé extremadamente conciso. Si te dicen "hola", responde solo "Hola, ¿en qué puedo ayudarte hoy?" o similar.
-            - Si te preguntan la hora, responde con la hora que tienes en tu contexto (${timeStr}).
-            - Si te preguntan por el clima, usa los datos que tienes en tu contexto.
-            - Ve al grano. No des explicaciones largas si no te las piden.
-            - Habla de tú, con tono amable pero profesional y rápido.
-            - Prohibido usar más de dos párrafos excepto en planes de crisis complejos.
-            - Responde SIEMPRE en español.
-            - PROHIBIDO usar Markdown (no uses asteriscos ** para negritas). Responde solo con texto plano.`;
+            - Si te preguntan la hora, responde con ${timeStr}.
+            - Si te preguntan por el clima de un lugar que tienes en el contexto (${wContext.replace(/\n/g, ' ')}), dalo.
+            - Si te preguntan por el clima de otro lugar, di que "estás consultándolo" pero que hoy en Madrid hace lo que ponga en tu contexto.
+            - Sé extremadamente conciso. No des explicaciones largas.
+            - Responde SIEMPRE en español y en texto plano (sin negritas ni markdown).`;
             let flightContextStr = "";
             if (flightId) {
                 try {
@@ -909,10 +910,10 @@ fastify.post('/api/transcribe', async (request, reply) => {
             {
                 role: "user",
                 content: [
-                    { type: "text", text: "Eres un experto en transcripción. Transcribe el siguiente audio a texto en español. Si no hay voz inteligible, devuelve vacío. No añadas comentarios extra." },
+                    { type: "text", text: "Transcripción literal de este audio en español (sin comentarios extra):" },
                     {
                         type: "media",
-                        mimeType: "audio/mp4",
+                        mimeType: data.mimetype || "audio/mp4",
                         data: buffer.toString('base64'),
                     },
                 ],
