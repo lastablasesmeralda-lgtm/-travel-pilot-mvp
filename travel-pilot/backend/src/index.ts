@@ -819,27 +819,38 @@ fastify.get('/api/weather', async (request, reply) => {
     try {
         console.log(`[Weather] 🌤️ Consultando clima para: ${target}`);
 
-        // Paso 1: Geocodificar el nombre de la ciudad a coordenadas con Open-Meteo
-        let geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(target)}&count=1&language=es`);
-        let geoData: any = await geoRes.json();
+        // Paso 1: Geocodificar con soporte para múltiples resultados y filtrado por país
+        const cleanTarget = target.replace(/,/, ' ').trim();
+        const parts = cleanTarget.split(' ');
+        const mainQuery = parts[0];
+        const countryHint = parts.length > 1 ? parts.slice(1).join(' ').toLowerCase() : null;
 
-        // Si falla con nombre completo, intentar solo con la primera parte (ej: "Salamanca España" -> "Salamanca")
-        if (!geoData.results || geoData.results.length === 0) {
-            const firstPart = target.split(' ')[0];
-            if (firstPart !== target) {
-                console.log(`[Weather] 🔍 Re-intentando con: ${firstPart}`);
-                geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(firstPart)}&count=1&language=es`);
-                geoData = await geoRes.json();
-            }
-        }
+        console.log(`[Weather] 🔍 Buscando: ${mainQuery}${countryHint ? ' con pista de país: ' + countryHint : ''}`);
+
+        let geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(mainQuery)}&count=10&language=es`);
+        let geoData: any = await geoRes.json();
 
         if (!geoData.results || geoData.results.length === 0) {
             throw new Error(`Ciudad "${target}" no encontrada en el geocodificador`);
         }
 
-        const { latitude, longitude, name: cityName } = geoData.results[0];
+        // Buscar el mejor resultado basado en el país proporcionado
+        let bestMatch = geoData.results[0];
+        if (countryHint) {
+            const match = geoData.results.find((r: any) => 
+                (r.country && r.country.toLowerCase().includes(countryHint)) || 
+                (r.country_code && r.country_code.toLowerCase() === countryHint) ||
+                (r.admin1 && r.admin1.toLowerCase().includes(countryHint))
+            );
+            if (match) {
+                bestMatch = match;
+                console.log(`[Weather] 🎯 Match encontrado por país: ${bestMatch.name}, ${bestMatch.country}`);
+            }
+        }
 
-        // Paso 2: Obtener clima real con Open-Meteo (gratis, sin API key)
+        const { latitude, longitude, name: cityName } = bestMatch;
+
+        // Paso 2: Obtener clima real con Open-Meteo
         const weatherRes = await fetch(
             `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`
         );
