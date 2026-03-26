@@ -372,7 +372,7 @@ let chatModel: ChatGoogleGenerativeAI;
 function getChatModel() {
     if (!chatModel) {
         chatModel = new ChatGoogleGenerativeAI({
-            model: "gemini-1.5-flash",
+            model: "gemini-2.5-flash",
             apiVersion: "v1",
             maxOutputTokens: 512,
             temperature: 0.7,
@@ -392,7 +392,7 @@ fastify.post('/api/chat', async (request, reply) => {
     const attemptChat = async (): Promise<any> => {
         try {
             const chatModel = new ChatGoogleGenerativeAI({
-                model: "gemini-1.5-flash",
+                model: "gemini-2.5-flash",
                 apiVersion: "v1",
                 maxOutputTokens: 1024,
                 temperature: 0.9,
