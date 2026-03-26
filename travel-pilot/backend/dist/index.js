@@ -45,9 +45,14 @@ const voice_1 = require("./voice");
 const supabase_1 = require("./supabase");
 const expo_server_sdk_1 = require("expo-server-sdk");
 const multipart_1 = __importDefault(require("@fastify/multipart"));
+const cors_1 = __importDefault(require("@fastify/cors"));
 const fastify = (0, fastify_1.default)({
     logger: true,
     bodyLimit: 10485760 // 10MB limit
+});
+fastify.register(cors_1.default, {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 });
 fastify.register(multipart_1.default, {
     limits: {

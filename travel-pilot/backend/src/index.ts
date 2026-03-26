@@ -10,11 +10,18 @@ import { supabase } from './supabase';
 import { Expo } from 'expo-server-sdk';
 
 import multipart from '@fastify/multipart';
+import cors from '@fastify/cors';
 
 const fastify = Fastify({ 
     logger: true,
     bodyLimit: 10485760 // 10MB limit
 });
+
+fastify.register(cors, {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+});
+
 fastify.register(multipart, {
     limits: {
         fileSize: 10 * 1024 * 1024 // 10MB
