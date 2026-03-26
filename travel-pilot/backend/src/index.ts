@@ -820,8 +820,18 @@ fastify.get('/api/weather', async (request, reply) => {
         console.log(`[Weather] 🌤️ Consultando clima para: ${target}`);
 
         // Paso 1: Geocodificar el nombre de la ciudad a coordenadas con Open-Meteo
-        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(target)}&count=1&language=es`);
-        const geoData: any = await geoRes.json();
+        let geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(target)}&count=1&language=es`);
+        let geoData: any = await geoRes.json();
+
+        // Si falla con nombre completo, intentar solo con la primera parte (ej: "Salamanca España" -> "Salamanca")
+        if (!geoData.results || geoData.results.length === 0) {
+            const firstPart = target.split(' ')[0];
+            if (firstPart !== target) {
+                console.log(`[Weather] 🔍 Re-intentando con: ${firstPart}`);
+                geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(firstPart)}&count=1&language=es`);
+                geoData = await geoRes.json();
+            }
+        }
 
         if (!geoData.results || geoData.results.length === 0) {
             throw new Error(`Ciudad "${target}" no encontrada en el geocodificador`);
@@ -831,7 +841,7 @@ fastify.get('/api/weather', async (request, reply) => {
 
         // Paso 2: Obtener clima real con Open-Meteo (gratis, sin API key)
         const weatherRes = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`
         );
         const weatherData: any = await weatherRes.json();
 
@@ -840,19 +850,38 @@ fastify.get('/api/weather', async (request, reply) => {
         const cw = weatherData.current_weather;
         const tempC = Math.round(cw.temperature);
 
-        // Mapear código WMO a descripción e icono
+        // Mapear código WMO a descripción e icono (MÁS GRANULAR)
         const wmoCode = cw.weathercode;
         let condition = 'Despejado';
         let icon = '☀️';
-        if (wmoCode === 0) { condition = 'Despejado'; icon = '☀️'; }
-        else if (wmoCode <= 3) { condition = 'Parcialmente nublado'; icon = '⛅'; }
-        else if (wmoCode <= 48) { condition = 'Nublado'; icon = '☁️'; }
-        else if (wmoCode <= 57) { condition = 'Llovizna'; icon = '🌦️'; }
-        else if (wmoCode <= 67) { condition = 'Lluvia'; icon = '🌧️'; }
-        else if (wmoCode <= 77) { condition = 'Nieve'; icon = '❄️'; }
-        else if (wmoCode <= 82) { condition = 'Aguacero'; icon = '⛈️'; }
-        else if (wmoCode <= 86) { condition = 'Nevada'; icon = '🌨️'; }
-        else if (wmoCode >= 95) { condition = 'Tormenta'; icon = '⛈️'; }
+        
+        switch(wmoCode) {
+            case 0: condition = 'Despejado'; icon = '☀️'; break;
+            case 1: condition = 'Mayormente despejado'; icon = '🌤️'; break;
+            case 2: condition = 'Parcialmente nublado'; icon = '⛅'; break;
+            case 3: condition = 'Nublado'; icon = '☁️'; break;
+            case 45: 
+            case 48: condition = 'Niebla'; icon = '🌫️'; break;
+            case 51:
+            case 53:
+            case 55: condition = 'Llovizna'; icon = '🌦️'; break;
+            case 61:
+            case 63:
+            case 65: condition = 'Lluvia'; icon = '🌧️'; break;
+            case 71:
+            case 73:
+            case 75: condition = 'Nieve'; icon = '❄️'; break;
+            case 77: condition = 'Granizo'; icon = '🌨️'; break;
+            case 80:
+            case 81:
+            case 82: condition = 'Chubascos'; icon = '⛈️'; break;
+            case 85:
+            case 86: condition = 'Nevada fuerte'; icon = '🌨️'; break;
+            case 95:
+            case 96:
+            case 99: condition = 'Tormenta'; icon = '⛈️'; break;
+            default: condition = 'Despejado'; icon = '☀️';
+        }
 
         const result = {
             temp: String(tempC),
