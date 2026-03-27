@@ -170,7 +170,8 @@ fastify.post('/api/monitorFlight', async (request, reply) => {
             .order('created_at', { ascending: false })
             .limit(1);
         const oneMinAgo = new Date(Date.now() - 60000).toISOString();
-        const isDuplicate = recent && recent[0] && recent[0].created_at > oneMinAgo && JSON.parse(recent[0].payload || '{}').flightId === flightId;
+        const payload = recent && recent[0] ? (typeof recent[0].payload === 'string' ? JSON.parse(recent[0].payload) : recent[0].payload) : {};
+        const isDuplicate = recent && recent[0] && recent[0].created_at > oneMinAgo && payload.flightId === flightId;
         if (!isDuplicate) {
             await createAgentLog('contingency_planned', 'executed', { flightId });
         }
