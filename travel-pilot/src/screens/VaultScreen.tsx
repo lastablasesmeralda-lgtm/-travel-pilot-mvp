@@ -30,6 +30,7 @@ export default function VaultScreen() {
     const webViewRef = useRef<WebView>(null);
     const [capturedSignature, setCapturedSignature] = useState<string | null>(null);
     const [pendingDoc, setPendingDoc] = useState<{ uri: string, type: string } | null>(null);
+    const [currentClaimForSig, setCurrentClaimForSig] = useState<any>(null);
     // showConfirmUpload eliminado en favor de Alerta nativa
 
 
@@ -382,7 +383,9 @@ export default function VaultScreen() {
                         key={c.id || i}
                         activeOpacity={0.7}
                         onPress={() => {
-                            if (c.isDynamic && signedClaimId !== c.id) {
+                            if (signedClaimId !== c.id) {
+                                setCapturedSignature(null); // Reset signature
+                                setCurrentClaimForSig(c);
                                 setHasSigned(false);
                                 setShowSignature(true);
                             } else if (signedClaimId === c.id) {
@@ -583,12 +586,12 @@ window.clearCanvas=function(){
                                         const res = await fetch(`${BACKEND_URL}/api/generateClaim`, {
                                             method: 'POST',
                                             headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({
-                                                flightNumber: flightData?.flightNumber,
-                                                airline: flightData?.airline,
-                                                delayMinutes: flightData?.departure?.delay || 0,
-                                                departureAirport: flightData?.departure?.airport,
-                                                arrivalAirport: flightData?.arrival?.airport,
+                                    body: JSON.stringify({
+                                                flightNumber: currentClaimForSig?.vuelo,
+                                                airline: currentClaimForSig?.aerolinea,
+                                                delayMinutes: currentClaimForSig?.delayActual || 0,
+                                                departureAirport: currentClaimForSig?.ruta?.split('>')[0]?.trim() || 'Desconocido',
+                                                arrivalAirport: currentClaimForSig?.ruta?.split('>')[1]?.trim() || 'Desconocido',
                                                 userEmail: user?.email || 'pasajero@travel-pilot.com',
                                                 signatureBase64: capturedSignature,
                                             })
