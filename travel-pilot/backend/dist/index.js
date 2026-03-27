@@ -49,13 +49,20 @@ const fastify = (0, fastify_1.default)({
     logger: true,
     bodyLimit: 10485760 // 10MB limit
 });
-// Registrar CORS lo más pronto posible con configuración permisiva técnica (Versión compatible con Fastify v4)
+// Registrar CORS con configuración técnica permisiva (Versión Fastify v4)
 fastify.register(require('@fastify/cors'), {
     origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With'],
     credentials: true,
     preflight: true
+});
+// HOOK DE SEGURIDAD TOTAL: Forzar cabeceras en cada respuesta (Solución definitiva Error de Red)
+fastify.addHook('onSend', async (request, reply, payload) => {
+    reply.header('Access-Control-Allow-Origin', '*');
+    reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, Accept, X-Requested-With');
+    return payload;
 });
 fastify.register(multipart_1.default, {
     limits: {
