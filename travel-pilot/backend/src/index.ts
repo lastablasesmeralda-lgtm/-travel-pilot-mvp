@@ -15,20 +15,21 @@ const fastify = Fastify({
     bodyLimit: 10485760 // 10MB limit
 });
 
-// Registrar CORS con configuración técnica permisiva (Versión Fastify v4)
+// Registrar CORS con configuración técnica compatible (Solución Conflicto Credentials-Origin)
 fastify.register(require('@fastify/cors'), {
     origin: true, 
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With'],
-    credentials: true,
+    credentials: false, // Desactivar credentials para permitir origin: true sin bloqueos móviles
     preflight: true
 });
 
-// HOOK DE SEGURIDAD TOTAL: Forzar cabeceras en cada respuesta (Solución definitiva Error de Red)
+// HOOK DE SEGURIDAD TOTAL: Forzar cabeceras en cada respuesta (Versión compatible)
 fastify.addHook('onSend', async (request, reply, payload) => {
     reply.header('Access-Control-Allow-Origin', '*');
     reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, Accept, X-Requested-With');
+    reply.header('Access-Control-Allow-Credentials', 'false'); // Sincronizado
     return payload;
 });
 
