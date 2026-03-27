@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { Alert, Animated, Keyboard, Vibration } from 'react-native';
 import * as Speech from 'expo-speech';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { auth, db } from '../../firebaseConfig';
 import { BACKEND_URL } from '../../config';
 import { Platform } from 'react-native';
@@ -658,6 +658,9 @@ export const AppProvider = ({ children }) => {
       setAuthLoading(true);
       const cred = await createUserWithEmailAndPassword(auth, authEmail, authPassword);
       await updateProfile(cred.user, { displayName: authName });
+      
+      // ENVÍO DE VERIFICACIÓN (Seguridad)
+      await sendEmailVerification(cred.user);
 
       // PERSISTENCIA EN BACKEND (Supabase)
       await fetch(`${BACKEND_URL}/api/registerUser`, {
@@ -670,7 +673,7 @@ export const AppProvider = ({ children }) => {
         })
       });
 
-      Alert.alert('Registro', 'Éxito. ¡Bienvenido a Travel-Pilot!');
+      Alert.alert('Registro', '¡Bienvenido! Hemos enviado un enlace de confirmación a tu email. Por favor, verifícalo para activar tu Escudo Legal.');
     }
     catch (e: any) { Alert.alert('Error', e.message); } finally { setAuthLoading(false); }
   };

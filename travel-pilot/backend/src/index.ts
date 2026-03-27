@@ -17,9 +17,13 @@ const fastify = Fastify({
     bodyLimit: 10485760 // 10MB limit
 });
 
-fastify.register(cors, {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+// Registrar CORS lo más pronto posible con configuración permisiva técnica
+fastify.register(require('@fastify/cors'), {
+    origin: true, // Permitir todo
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+    credentials: true,
+    preflight: true
 });
 
 fastify.register(multipart, {
@@ -672,6 +676,11 @@ fastify.post('/api/registerUser', async (request, reply) => {
             .select();
 
         if (error) throw error;
+        
+        // ENVÍO DE EMAIL DE BIENVENIDA (MOCK HASTA INTEGRAR API KEY)
+        console.log(`[Email] 📧 Enviando Bienvenida a: ${email}`);
+        console.log(`[Email] Contenido: "Hola ${name}, bienvenido a bordo de Travel-Pilot. Tu Escudo Legal está activo."`);
+        
         console.log(`[User] ✅ Perfil de usuario actualizado para ${email}`);
         return reply.send({ success: true, user: data?.[0] });
     } catch (err: any) {
