@@ -70,7 +70,7 @@ fastify.register(multipart_1.default, {
     }
 });
 fastify.get('/api/health', async () => {
-    return { status: 'ok', version: '2.5.0-gemini25flash', timestamp: new Date().toISOString() };
+    return { status: 'ok', version: '2.6.0-cors-fix', timestamp: new Date().toISOString() };
 });
 const expo = new expo_server_sdk_1.Expo();
 console.log('[Backend] Environment loaded. API Key present:', !!process.env.GOOGLE_API_KEY);
