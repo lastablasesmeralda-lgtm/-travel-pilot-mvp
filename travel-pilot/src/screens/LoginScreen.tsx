@@ -10,12 +10,19 @@ export default function LoginScreen() {
         userPhone, setUserPhone
     } = useAppContext();
 
+    const [showPassword, setShowPassword] = useState(false);
+    const [focusedField, setFocusedField] = useState<string | null>(null);
+
     return (
         <KeyboardAvoidingView 
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={{ flex: 1, backgroundColor: '#0A0A0A' }}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
-            <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 100 }}>
+            <ScrollView 
+                contentContainerStyle={{ flexGrow: 1, padding: 12, paddingBottom: 150 }}
+                keyboardShouldPersistTaps="handled"
+            >
             {!user ? (
                 <View style={{ padding: 16, backgroundColor: '#111', borderRadius: 16, marginBottom: 12, marginTop: 40, borderWidth: 1, borderColor: '#222' }}>
                     <View style={{ marginBottom: 24, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#333' }}>
@@ -73,7 +80,9 @@ export default function LoginScreen() {
                         onChangeText={setAuthEmail}
                         autoCapitalize="none"
                         keyboardType="email-address"
-                        style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 12, paddingVertical: 12, borderRadius: 10, marginTop: 8, borderWidth: 1, borderColor: '#333', fontSize: 14 }}
+                        onFocus={() => setFocusedField('email')}
+                        onBlur={() => setFocusedField(null)}
+                        style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 16, paddingVertical: 14, borderRadius: 12, marginTop: 8, borderWidth: 1, borderColor: focusedField === 'email' ? '#AF52DE' : '#222', fontSize: 14 }}
                     />
 
                     {authMode === 'register' && (
@@ -83,7 +92,9 @@ export default function LoginScreen() {
                                 placeholderTextColor="#444"
                                 value={authName}
                                 onChangeText={setAuthName}
-                                style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 12, paddingVertical: 12, borderRadius: 10, marginTop: 12, borderWidth: 1, borderColor: '#333', fontSize: 14 }}
+                                onFocus={() => setFocusedField('name')}
+                                onBlur={() => setFocusedField(null)}
+                                style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 16, paddingVertical: 14, borderRadius: 12, marginTop: 12, borderWidth: 1, borderColor: focusedField === 'name' ? '#AF52DE' : '#222', fontSize: 14 }}
                             />
                             <TextInput
                                 placeholder="Teléfono de contacto (ej: +34...)"
@@ -91,28 +102,53 @@ export default function LoginScreen() {
                                 value={userPhone}
                                 onChangeText={setUserPhone}
                                 keyboardType="phone-pad"
-                                style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 12, paddingVertical: 12, borderRadius: 10, marginTop: 12, borderWidth: 1, borderColor: '#AF52DE', fontSize: 14 }}
+                                onFocus={() => setFocusedField('phone')}
+                                onBlur={() => setFocusedField(null)}
+                                style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 16, paddingVertical: 14, borderRadius: 12, marginTop: 12, borderWidth: 1, borderColor: focusedField === 'phone' ? '#AF52DE' : '#222', fontSize: 14 }}
                             />
                         </>
                     )}
 
-                    <TextInput
-                        placeholder="Contraseña"
-                        placeholderTextColor="#444"
-                        value={authPassword}
-                        onChangeText={setAuthPassword}
-                        secureTextEntry
-                        style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 12, paddingVertical: 12, borderRadius: 10, marginTop: 12, borderWidth: 1, borderColor: '#333', fontSize: 14 }}
-                    />
+                    <View style={{ position: 'relative', marginTop: 12 }}>
+                        <TextInput
+                            placeholder="Contraseña"
+                            placeholderTextColor="#444"
+                            value={authPassword}
+                            onChangeText={setAuthPassword}
+                            secureTextEntry={!showPassword}
+                            onFocus={() => setFocusedField('password')}
+                            onBlur={() => setFocusedField(null)}
+                            style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 16, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: focusedField === 'password' ? '#AF52DE' : '#222', fontSize: 14 }}
+                        />
+                        <TouchableOpacity 
+                            onPress={() => setShowPassword(!showPassword)}
+                            style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 50, justifyContent: 'center', alignItems: 'center' }}
+                            activeOpacity={0.6}
+                        >
+                            <Text style={{ fontSize: 20, color: '#666' }}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                        </TouchableOpacity>
+                    </View>
 
                     <View style={{ flexDirection: 'row', marginTop: 28 }}>
                         <TouchableOpacity
                             onPress={authMode === 'login' ? handleLogin : handleRegister}
-                            style={{ backgroundColor: '#AF52DE', paddingVertical: 14, paddingHorizontal: 28, borderRadius: 12, marginRight: 12, opacity: authLoading ? 0.6 : 1, shadowColor: '#AF52DE', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 5 }}
+                            style={{ 
+                                backgroundColor: authMode === 'login' ? '#007AFF' : '#AF52DE', 
+                                paddingVertical: 14, 
+                                paddingHorizontal: 28, 
+                                borderRadius: 12, 
+                                marginRight: 12, 
+                                opacity: authLoading ? 0.6 : 1, 
+                                shadowColor: authMode === 'login' ? '#007AFF' : '#AF52DE', 
+                                shadowOffset: { width: 0, height: 4 }, 
+                                shadowOpacity: 0.4, 
+                                shadowRadius: 8, 
+                                elevation: 5 
+                            }}
                             disabled={authLoading}
                         >
                             <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 13, letterSpacing: 1 }}>
-                                {authMode === 'login' ? 'ACCEDER' : 'REGISTRARME'}
+                                {authMode === 'login' ? 'INICIAR SESIÓN' : 'CONFIRMAR REGISTRO'}
                             </Text>
                         </TouchableOpacity>
 
