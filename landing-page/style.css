@@ -314,110 +314,145 @@ header nav {
     line-height: 1.5;
 }
 
-/* --- PRECIOS --- */
+/* --- PRECIOS (CORREGIDO) --- */
 .pricing-section {
-    padding: 100px 0;
+    padding: 120px 0;
+    text-align: center;
 }
 
 .section-subtitle-pricing {
-    text-align: center;
     color: var(--gold);
     margin-bottom: 60px;
     font-size: 1.1rem;
-    opacity: 0.8;
+    opacity: 0.9;
+    font-weight: 500;
 }
 
 .pricing-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 30px;
+    align-items: stretch;
 }
 
 .pricing-card {
-    padding: 40px;
+    padding: 50px 30px;
     text-align: center;
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: all 0.4s ease;
+    flex-direction: column !important; /* FORZAR VERTICAL */
+    align-items: center;
+    justify-content: flex-start;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(155, 48, 255, 0.1);
+    border-radius: 24px;
 }
 
 .pricing-card.highlighted {
     border-color: #9B30FF;
-    box-shadow: 0 20px 60px rgba(155, 48, 255, 0.2);
+    border-width: 2px;
+    box-shadow: 0 0 40px rgba(155, 48, 255, 0.2);
     transform: scale(1.05);
     background: rgba(155, 48, 255, 0.05);
-    position: relative;
-    z-index: 10;
+    z-index: 20;
 }
 
 .popular-badge {
     position: absolute;
-    top: -15px;
+    top: -20px;
     left: 50%;
     transform: translateX(-50%);
     background: #9B30FF;
     color: white;
-    padding: 5px 15px;
+    padding: 8px 20px;
     border-radius: 50px;
-    font-size: 0.7rem;
-    font-weight: 800;
+    font-size: 0.8rem;
+    font-weight: 900;
+    white-space: nowrap;
+    box-shadow: 0 10px 20px rgba(155, 48, 255, 0.4);
+    pointer-events: none;
+    z-index: 100;
+}
+
+.pricing-header {
+    width: 100%;
 }
 
 .pricing-header h3 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     color: white;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
 }
 
 .price {
-    font-size: 2rem;
-    font-weight: 800;
+    font-size: 2.2rem;
+    font-weight: 900;
     color: white;
+    margin-bottom: 5px;
 }
 
 .beta-notice {
     color: var(--gold);
-    font-weight: 700;
-    margin-top: 5px;
-    font-size: 0.9rem;
+    font-weight: 800;
+    font-size: 0.95rem;
+    letter-spacing: 1px;
 }
 
 .divider {
+    width: 60%;
     height: 1px;
-    background: var(--border);
-    margin: 25px 0;
+    background: linear-gradient(90deg, transparent, rgba(155, 48, 255, 0.3), transparent);
+    margin: 30px auto;
 }
 
 .pricing-features {
     list-style: none;
     text-align: left;
-    margin-bottom: 30px;
-    flex-grow: 1;
+    margin-bottom: 40px;
+    width: 100%;
+    padding: 0;
 }
 
 .pricing-features li {
-    margin-bottom: 12px;
-    font-size: 0.9rem;
-    color: #BBB;
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+    color: #F5F5F5; /* CASI BLANCO */
     display: flex;
-    gap: 10px;
+    gap: 12px;
+    line-height: 1.4;
 }
 
 .check { color: #00FF88; font-weight: bold; }
-.cross { color: #555; }
-.restricted { opacity: 0.5; }
+.cross { color: #D1D1D1; opacity: 0.4; } /* PLATA SUAVE CON OPACIDAD */
+.restricted { color: #D1D1D1 !important; } /* PLATA SUAVE */
 
 .plan-btn {
-    width: 100%;
-    font-size: 0.8rem;
-    padding: 15px;
-    margin-bottom: 0;
+    width: 100% !important;
+    font-size: 0.85rem !important;
+    padding: 18px !important;
+    margin-top: auto;
+    border-radius: 12px !important;
+}
+
+/* --- ACTUALIZACIÓN DE COLORES GLOBALES --- */
+p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
+    color: #F5F5F5 !important; /* CASI BLANCO PARA MEJORAR LUZ */
+}
+
+.hero-status p, .voice-card p, .form-footer p {
+    color: #D1D1D1 !important; /* PLATA SUAVE PARA SECUNDARIOS */
+}
+
+.terminal-status {
+    color: var(--gold) !important;
 }
 
 @media (max-width: 900px) {
     .pricing-grid { grid-template-columns: 1fr; }
     .pricing-card.highlighted { transform: scale(1); }
+    .pricing-card { margin-bottom: 40px; }
 }
 
 /* --- FAQ --- */
