@@ -316,39 +316,46 @@ header nav {
 
 /* --- PRECIOS (CORREGIDO) --- */
 .pricing-section {
-    padding: 180px 0; /* Más espacio arriba y abajo para que nada se corte */
+    padding: 100px 0 150px 0;
     text-align: center;
-    overflow: visible !important; /* Vital para que el badge respire */
+    overflow: visible !important;
+}
+
+.section-subtitle-pricing {
+    color: var(--gold);
+    margin-bottom: 100px; /* MUCHO MÁS MARGEN para que el badge no pise el texto */
+    font-size: 1.1rem;
+    opacity: 0.9;
+    font-weight: 500;
 }
 
 .pricing-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 40px;
+    gap: 30px;
     align-items: stretch;
     max-width: 1200px;
     margin: 0 auto;
-    overflow: visible !important; /* Vital para evitar cortes laterales o inferiores */
+    overflow: visible !important;
 }
 
 .pricing-card {
-    padding: 80px 45px 60px 45px; /* Más padding para que el contenido no toque los bordes */
+    padding: 60px 35px 50px 35px; /* Padding un poco más moderado */
     text-align: center;
     display: flex;
     flex-direction: column !important;
     align-items: center;
     justify-content: space-between;
-    min-height: 850px; /* Más larga para acomodar todo con elegancia */
+    min-height: 780px; /* Un poco más pequeña pero aún espaciosa */
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(155, 48, 255, 0.15);
-    border-radius: 32px;
+    border-radius: 28px;
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
-    overflow: visible !important; /* Asegura que el badge se vea completo */
+    overflow: visible !important;
 }
 
-/* Forzar que la clase glass de precios no corte el contenido */
 .pricing-card.glass {
     overflow: visible !important;
     backdrop-filter: blur(15px);
@@ -358,38 +365,38 @@ header nav {
     border-color: #9B30FF;
     border-width: 2px;
     box-shadow: 0 0 50px rgba(155, 48, 255, 0.25);
-    transform: scale(1.08); 
+    transform: scale(1.05); /* Escala más suave */
     background: rgba(155, 48, 255, 0.07);
-    z-index: 50; /* Mayor z-index para que destaque sobre las demás */
+    z-index: 50;
 }
 
 .popular-badge {
     position: absolute;
-    top: -25px; /* Un poco más arriba */
+    top: -20px; /* Más cerca de la tarjeta */
     left: 50%;
     transform: translateX(-50%);
     background: #9B30FF;
     color: white;
-    padding: 12px 28px;
+    padding: 10px 24px;
     border-radius: 50px;
-    font-size: 0.9rem;
+    font-size: 0.8rem; /* Un pelín más pequeño */
     font-weight: 900;
     white-space: nowrap;
-    box-shadow: 0 15px 30px rgba(155, 48, 255, 0.6);
+    box-shadow: 0 15px 30px rgba(155, 48, 255, 0.4);
     pointer-events: none;
-    z-index: 1000; /* Asegurar que esté por encima de TODO */
+    z-index: 1000;
     display: block;
 }
 
 .pricing-header h3 {
-    font-size: 2.2rem; /* Título mucho más grande */
+    font-size: 1.8rem; /* Reducido de 2.2 para elegancia */
     color: white;
-    margin-bottom: 15px;
-    letter-spacing: 3px;
+    margin-bottom: 12px;
+    letter-spacing: 2px;
 }
 
 .price {
-    font-size: 2.8rem; /* Precio con gran impacto */
+    font-size: 2.4rem; /* Reducido de 2.8 para equilibrio */
     font-weight: 900;
     color: white;
     margin-bottom: 8px;
