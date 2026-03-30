@@ -331,96 +331,96 @@ header nav {
 .pricing-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
+    gap: 40px; /* Más espacio entre tarjetas */
     align-items: stretch;
+    max-width: 1200px; /* Asegurar ancho máximo potente */
+    margin: 0 auto;
 }
 
 .pricing-card {
-    padding: 50px 30px;
+    padding: 70px 45px; /* Más aire en los extremos */
     text-align: center;
     display: flex;
-    flex-direction: column !important; /* FORZAR VERTICAL */
+    flex-direction: column !important;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between; /* Botón siempre a la base, contenido arriba */
+    min-height: 750px; /* Forzar que sean largas y consistentes */
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(155, 48, 255, 0.1);
-    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(155, 48, 255, 0.15);
+    border-radius: 32px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
 }
 
 .pricing-card.highlighted {
     border-color: #9B30FF;
     border-width: 2px;
-    box-shadow: 0 0 40px rgba(155, 48, 255, 0.2);
-    transform: scale(1.05);
-    background: rgba(155, 48, 255, 0.05);
+    box-shadow: 0 0 50px rgba(155, 48, 255, 0.25);
+    transform: scale(1.08); /* Un poco más de escala para destacar */
+    background: rgba(155, 48, 255, 0.07);
     z-index: 20;
 }
 
 .popular-badge {
     position: absolute;
-    top: -20px;
+    top: -22px;
     left: 50%;
     transform: translateX(-50%);
     background: #9B30FF;
     color: white;
-    padding: 8px 20px;
+    padding: 10px 24px;
     border-radius: 50px;
-    font-size: 0.8rem;
+    font-size: 0.85rem; /* Texto de badge más grande */
     font-weight: 900;
     white-space: nowrap;
-    box-shadow: 0 10px 20px rgba(155, 48, 255, 0.4);
+    box-shadow: 0 10px 20px rgba(155, 48, 255, 0.5);
     pointer-events: none;
     z-index: 100;
 }
 
-.pricing-header {
-    width: 100%;
-}
-
 .pricing-header h3 {
-    font-size: 1.8rem;
+    font-size: 2.2rem; /* Título mucho más grande */
     color: white;
-    margin-bottom: 10px;
-    letter-spacing: 2px;
+    margin-bottom: 15px;
+    letter-spacing: 3px;
 }
 
 .price {
-    font-size: 2.2rem;
+    font-size: 2.8rem; /* Precio con gran impacto */
     font-weight: 900;
     color: white;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
 
 .beta-notice {
     color: var(--gold);
     font-weight: 800;
-    font-size: 0.95rem;
+    font-size: 1.1rem; /* Aviso beta más legible */
     letter-spacing: 1px;
 }
 
 .divider {
-    width: 60%;
+    width: 80%; /* Divisor más ancho */
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(155, 48, 255, 0.3), transparent);
-    margin: 30px auto;
+    background: linear-gradient(90deg, transparent, rgba(155, 48, 255, 0.4), transparent);
+    margin: 40px auto;
 }
 
 .pricing-features {
     list-style: none;
     text-align: left;
-    margin-bottom: 40px;
+    margin-bottom: 50px;
     width: 100%;
-    padding: 0;
+    padding: 0 10px;
 }
 
 .pricing-features li {
-    margin-bottom: 15px;
-    font-size: 0.95rem;
-    color: #F5F5F5; /* CASI BLANCO */
+    margin-bottom: 20px; /* Más aire entre beneficios */
+    font-size: 1.05rem; /* Texto de beneficios más grande */
+    color: #F5F5F5;
     display: flex;
-    gap: 12px;
+    gap: 15px;
     line-height: 1.4;
 }
 
