@@ -178,22 +178,22 @@
                             <!-- Estado: Resuelto -->
                             <div id="plans-ui" class="plans-ui">
                                 <div class="plan-card-sim" onclick="selectPlan('ECO')">
-                                    <span class="plan-tag">Opción 01: ECONÓMICO</span>
-                                    <h4>Ahorro Máximo</h4>
-                                    <div class="price">Prioridad: Ahorro</div>
+                                    <span class="plan-tag">OPCIÓN 02: EQUILIBRADO</span>
+                                    <h4>EQUILIBRADO</h4>
+                                    <div class="price">Prioridad: Rapidez / Precio</div>
                                     <div class="time">Mínimo gasto | Máxima compensación</div>
                                 </div>
                                 <div class="plan-card-sim" onclick="selectPlan('Equilibrado')">
-                                    <span class="plan-tag">Opción 02: EQ</span>
-                                    <h4>Equilibrado</h4>
-                                    <div class="price">Prioridad: Confort</div>
+                                     <span class="plan-num">OPCIÓN 02: EQUILIBRADO</span>
+                                     <h3>EQUILIBRADO</h3>
+                                     <p>Prioridad: Rapidez / Precio</p>
                                     <div class="time">Optimización de tiempo y escala</div>
                                 </div>
-                                <div class="plan-card-sim vip" onclick="selectPlan('VIP')">
-                                    <span class="plan-tag">Opción 03: VIP</span>
-                                    <h4>Prioridad Élite</h4>
-                                    <div class="price">Prioridad: Tiempo</div>
-                                    <div class="time">Inmediato | Business Class</div>
+                                <div class="plan-card-sim vip" onclick="selectPlan('RÁPIDO')">
+                                    <span class="plan-tag">OPCIÓN 03: RÁPIDO</span>
+                                    <h4>RÁPIDO</h4>
+                                    <div class="price">Prioridad: Velocidad</div>
+                                    <div class="time">Vuelo alternativo inmediato</div>
                                 </div>
                             </div>
 
@@ -401,11 +401,11 @@
 
             // Texto de apoyo visual (Sincronizado con audios reales)
             if(plan === 'ECO') {
-                iaText.innerText = "Entendido. He procesado tu solicitud de ahorro máximo. He registrado tu reclamación legal y recibirás tu compensación sin gestiones adicionales. Te avisaré cuando falte una hora para tu nuevo embarque. Relájate y disfruta del tiempo extra.";
-            } else if(plan === 'VIP') {
-                iaText.innerText = "Acceso VIP confirmado. Tu nuevo vuelo en Clase Ejecutiva está listo en la puerta B12 y el acceso a la Sala VIP ha sido activado. He coordinado un transporte privado para que tu traslado entre terminales sea impecable. Tu viaje continúa sin interrupciones.";
+                iaText.innerText = "Entendido. He registrado tu reclamación legal EU261. Recibirás hasta 600€ de compensación sin rellenar un solo formulario. Tu vuelo original sigue activo y te avisaré cuando falte una hora para el embarque. Relájate, el dinero ya está en camino.";
+            } else if(plan === 'VIP' || plan === 'RÁPIDO') {
+                iaText.innerText = "Acción inmediata activada. He localizado el próximo vuelo disponible hacia tu destino y bloqueado tu plaza. Tus nuevas tarjetas de embarque ya están en tu Bóveda Digital. Dirígete ahora a la puerta B12. Llegarás hoy.";
             } else {
-                iaText.innerText = "Perfecto. He reservado el vuelo directo más cercano disponible para ti. Tus nuevas tarjetas de embarque y el itinerario actualizado ya están descansando en tu Bóveda Digital segura. Estaré monitorizando tu conexión para que el resto del trayecto sea impecable.";
+                iaText.innerText = "Perfecto. He encontrado el mejor equilibrio para ti. He reservado alojamiento cerca del aeropuerto para que descanses, y tu nueva salida está programada para mañana a primera hora. Tu reclamación de compensación ya está activa en segundo plano. Todo bajo control.";
             }
         }
 
