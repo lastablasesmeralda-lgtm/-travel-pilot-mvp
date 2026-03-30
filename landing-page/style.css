@@ -316,67 +316,69 @@ header nav {
 
 /* --- PRECIOS (CORREGIDO) --- */
 .pricing-section {
-    padding: 120px 0;
+    padding: 180px 0; /* Más espacio arriba y abajo para que nada se corte */
     text-align: center;
-}
-
-.section-subtitle-pricing {
-    color: var(--gold);
-    margin-bottom: 60px;
-    font-size: 1.1rem;
-    opacity: 0.9;
-    font-weight: 500;
+    overflow: visible !important; /* Vital para que el badge respire */
 }
 
 .pricing-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 40px; /* Más espacio entre tarjetas */
+    gap: 40px;
     align-items: stretch;
-    max-width: 1200px; /* Asegurar ancho máximo potente */
+    max-width: 1200px;
     margin: 0 auto;
+    overflow: visible !important; /* Vital para evitar cortes laterales o inferiores */
 }
 
 .pricing-card {
-    padding: 70px 45px; /* Más aire en los extremos */
+    padding: 80px 45px 60px 45px; /* Más padding para que el contenido no toque los bordes */
     text-align: center;
     display: flex;
     flex-direction: column !important;
     align-items: center;
-    justify-content: space-between; /* Botón siempre a la base, contenido arriba */
-    min-height: 750px; /* Forzar que sean largas y consistentes */
+    justify-content: space-between;
+    min-height: 850px; /* Más larga para acomodar todo con elegancia */
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(155, 48, 255, 0.15);
     border-radius: 32px;
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+    overflow: visible !important; /* Asegura que el badge se vea completo */
+}
+
+/* Forzar que la clase glass de precios no corte el contenido */
+.pricing-card.glass {
+    overflow: visible !important;
+    backdrop-filter: blur(15px);
 }
 
 .pricing-card.highlighted {
     border-color: #9B30FF;
     border-width: 2px;
     box-shadow: 0 0 50px rgba(155, 48, 255, 0.25);
-    transform: scale(1.08); /* Un poco más de escala para destacar */
+    transform: scale(1.08); 
     background: rgba(155, 48, 255, 0.07);
-    z-index: 20;
+    z-index: 50; /* Mayor z-index para que destaque sobre las demás */
 }
 
 .popular-badge {
     position: absolute;
-    top: -22px;
+    top: -25px; /* Un poco más arriba */
     left: 50%;
     transform: translateX(-50%);
     background: #9B30FF;
     color: white;
-    padding: 10px 24px;
+    padding: 12px 28px;
     border-radius: 50px;
-    font-size: 0.85rem; /* Texto de badge más grande */
+    font-size: 0.9rem;
     font-weight: 900;
     white-space: nowrap;
-    box-shadow: 0 10px 20px rgba(155, 48, 255, 0.5);
+    box-shadow: 0 15px 30px rgba(155, 48, 255, 0.6);
     pointer-events: none;
-    z-index: 100;
+    z-index: 1000; /* Asegurar que esté por encima de TODO */
+    display: block;
 }
 
 .pricing-header h3 {
