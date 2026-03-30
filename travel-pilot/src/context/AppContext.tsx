@@ -126,7 +126,66 @@ export const AppProvider = ({ children }) => {
   const [hasSeenPlan, setHasSeenPlan] = useState(false);
   const [selectedRescuePlan, setSelectedRescuePlan] = useState<string | null>(null);
   const [isReplayingTutorial, setIsReplayingTutorial] = useState(false);
-  const [travelProfile, setTravelProfile] = useState<'budget' | 'balanced' | 'premium'>('balanced');
+  const [travelProfile, setTravelProfile] = useState<'budget' | 'balanced' | 'fast' | 'premium'>('balanced');
+  const [pendingVIPRedirect, setPendingVIPRedirect] = useState(false);
+  
+  // Limpieza inicial para Beta (si no hay ahorros guardados, forzar 0)
+  const [savedTime, setSavedTime] = useState(0);
+  const [recoveredMoney, setRecoveredMoney] = useState(0);
+
+  const masterReset = async () => {
+    try {
+      // 1. Limpiar Estados de React
+      setMyFlights([]);
+      setMyTrips([]);
+      setClaims([
+        { id: 'C-VLG8321', aerolinea: 'Vueling', vuelo: 'VY8321', ruta: 'BCN > ORY', estado: 'EN REVISIÓN LEGAL', compensacion: '250' },
+        { id: 'C-RYR992', aerolinea: 'Ryanair', vuelo: 'FR992', ruta: 'MAD > STN', estado: 'PRESENTADA AL AEROLÍNEA', compensacion: '400' }
+      ]);
+      setExtraDocs(demoItems);
+      setSavedTime(0);
+      setRecoveredMoney(0);
+      setFlightData(null);
+      setFlightInput('');
+      setMessages([{ id: '1', text: 'TRAVEL-PILOT REINICIADO. Modo Beta activado. ¿En qué puedo ayudarte?', isUser: false }]);
+      setTravelProfile('balanced');
+      setUserPhone('');
+      setDismissedClaims([]);
+      setHasSeenPlan(false);
+      setSelectedRescuePlan(null);
+      
+      // 2. Limpiar AsyncStorage (Nuclear)
+      const keys = [
+        'lastFlightData', 'lastFlightInput', 'activeSearches', 
+        'offline_claims', 'offline_extraDocs', 'savedTime', 
+        'recoveredMoney', 'travelProfile', 'userPhone',
+        'offline_dismissedClaims', 'hasSeenOnboarding', 'hasSeenPlan',
+        'disclaimerOnboardingAccepted'
+      ];
+      await AsyncStorage.multiRemove(keys);
+
+      Alert.alert("🔄 RESET MAESTRO", "Limpieza nuclear completada. El sistema está 100% puro para la siguiente prueba Beta.");
+    } catch (e) {
+      console.error("Error en Master Reset:", e);
+    }
+  };
+
+  // Cargar ahorros al inicio
+  useEffect(() => {
+    const loadSavings = async () => {
+      const sT = await AsyncStorage.getItem('savedTime');
+      const rM = await AsyncStorage.getItem('recoveredMoney');
+      if (sT) setSavedTime(parseFloat(sT));
+      if (rM) setRecoveredMoney(parseFloat(rM));
+    };
+    loadSavings();
+  }, []);
+
+  // Guardar ahorros cuando cambien
+  useEffect(() => {
+    AsyncStorage.setItem('savedTime', savedTime.toString());
+    AsyncStorage.setItem('recoveredMoney', recoveredMoney.toString());
+  }, [savedTime, recoveredMoney]);
 
   // ESTADO DE PLANES Y CRISIS RECUPERADO
   const [planes, setPlanes] = useState<any[]>([
@@ -144,7 +203,8 @@ export const AppProvider = ({ children }) => {
     const loadState = async () => {
       try {
         const savedInput = await AsyncStorage.getItem('lastFlightInput');
-        if (savedInput) setFlightInput(savedInput);
+        // Limpiamos el input inicial para esta versión Beta renovada (aunque lo recordamos en Storage si fuera necesario)
+        setFlightInput(''); 
 
         const savedData = await AsyncStorage.getItem('lastFlightData');
         if (savedData) {
@@ -190,8 +250,14 @@ export const AppProvider = ({ children }) => {
 
         const savedProfile = await AsyncStorage.getItem('travelProfile');
         if (savedProfile) {
-          setTravelProfile(savedProfile as 'budget' | 'balanced' | 'premium');
+          setTravelProfile(savedProfile as 'budget' | 'balanced' | 'fast' | 'premium');
         }
+
+        const sTime = await AsyncStorage.getItem('savedTime');
+        if (sTime) setSavedTime(parseFloat(sTime));
+
+        const rMoney = await AsyncStorage.getItem('recoveredMoney');
+        if (rMoney) setRecoveredMoney(parseFloat(rMoney));
       } catch (error) {
         console.error("Error loading from AsyncStorage:", error);
         setFlightData(null);
@@ -242,6 +308,18 @@ export const AppProvider = ({ children }) => {
       AsyncStorage.setItem('offline_claims', JSON.stringify(claims));
     }
   }, [claims, isStorageReady]);
+
+  useEffect(() => {
+    if (isStorageReady) {
+      AsyncStorage.setItem('savedTime', savedTime.toString());
+    }
+  }, [savedTime, isStorageReady]);
+
+  useEffect(() => {
+    if (isStorageReady) {
+      AsyncStorage.setItem('recoveredMoney', recoveredMoney.toString());
+    }
+  }, [recoveredMoney, isStorageReady]);
 
   useEffect(() => {
     if (isStorageReady) {
@@ -405,9 +483,9 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     let interval: any;
     if (showBrowser && selectedPlan) {
-      const airline = flightData?.airline || "Travel-Pilot Air";
+      const airline = flightData?.airline || "la aerolínea";
       const destCity = flightData?.arrival?.airport || "tu destino";
-      const routeStr = flightData ? `${flightData.departure?.iata} → ${flightData.arrival?.iata}` : "tu ruta";
+      const routeStr = (flightData && flightData.departure?.iata && flightData.arrival?.iata) ? `${flightData.departure.iata} → ${flightData.arrival.iata}` : "tu ruta";
 
       const sequence = [
         "> Iniciando conexión segura con Travel-Core...",
@@ -416,18 +494,25 @@ export const AppProvider = ({ children }) => {
         `> 🔍 Buscando la mejor ruta para el tramo ${routeStr}...`
       ];
 
-      if (selectedPlan.actionType === 'hotel' || selectedPlan.type?.includes('CONFORT')) {
-        sequence.push(`> 🏨 Reservando estancia de emergencia en ${destCity}...`);
-        sequence.push("> 🛌 Confirmando disponibilidad de habitación y servicios...");
-        sequence.push("> ✉️ Enviando bono de alojamiento a tu Bóveda...");
+      if (travelProfile === 'premium') {
+        sequence.push(`> 💎 Acceso VIP verificado. Protocolo élite activado...`);
+        sequence.push("> 🧠 Analizando tu situación en tiempo real...");
+        sequence.push("> ⚖️ Calculando compensación legal aplicable...");
+        sequence.push("> 🔍 Buscando las 3 mejores alternativas para ti...");
+        sequence.push("> 📝 Preparando expediente EU261 listo para firmar...");
+        sequence.push("> ✅ Informe táctico completo generado.");
+      } else if (selectedPlan.actionType === 'hotel' || selectedPlan.type?.includes('CONFORT')) {
+        sequence.push(`> 🏨 Buscando hoteles disponibles cerca de ${destCity}...`);
+        sequence.push("> 🛌 Analizando opciones de precio y disponibilidad...");
+        sequence.push("> ✉️ Preparando guía de alojamiento para tu Bóveda...");
       } else if (selectedPlan.type?.includes('ECONÓMIC')) {
-        sequence.push(`> ⚖️ Activando protocolo de reclamación EU261 por ${airline}...`);
-        sequence.push("> 🍔 Solicitando bono de restauración para la espera...");
-        sequence.push("> ✅ Gestión de compensación iniciada en segundo plano...");
+        sequence.push(`> ⚖️ Calculando tu compensación EU261 con ${airline}...`);
+        sequence.push("> 📝 Preparando documentación legal de reclamación...");
+        sequence.push("> ✅ Generando expediente listo para firmar...");
       } else {
-        sequence.push(`> ✨ ¡Vuelo preferente detectado! Bloqueando plaza temporal...`);
-        sequence.push(`> 📋 Sincronizando datos de pasaje con ${airline}...`);
-        sequence.push("> ✅ Recalculando itinerario óptimo para llegada hoy...");
+        sequence.push(`> ✨ Buscando vuelos alternativos disponibles hoy...`);
+        sequence.push(`> 📋 Analizando opciones más rápidas hacia tu destino...`);
+        sequence.push("> ✅ Preparando comparativa de rutas alternativas...");
       }
 
       sequence.push("> ✅ Operación completada con éxito. Actualizando tu App.");
@@ -448,10 +533,56 @@ export const AppProvider = ({ children }) => {
       setBrowserLogs([]);
     }
     return () => clearInterval(interval);
-  }, [showBrowser, selectedPlan]);
+  }, [showBrowser, selectedPlan, travelProfile, flightData]);
 
   useEffect(() => {
-    const sub = onAuthStateChanged(auth, (firebaseUser) => {
+    const sub = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Si el usuario cambia o se desloguea, LIMPIEZA ATÓMICA Y DE DISCO
+      if (!firebaseUser || (user && firebaseUser.uid !== user.uid)) {
+        setMyFlights([]);
+        setClaims([
+            {
+              id: 'C-VLG8321',
+              aerolinea: 'Vueling',
+              vuelo: 'VY8321',
+              ruta: 'BCN > ORY',
+              estado: 'EN REVISIÓN LEGAL',
+              compensacion: '250',
+            },
+            {
+              id: 'C-RYR992',
+              aerolinea: 'Ryanair',
+              vuelo: 'FR992',
+              ruta: 'MAD > STN',
+              estado: 'PRESENTADA AL AEROLÍNEA',
+              compensacion: '400',
+            }
+        ]); 
+        setExtraDocs(demoItems); 
+        setAgentLogs([]);
+        setMessages([{ id: '1', text: 'TRAVEL-PILOT CONECTADO. Hola, soy tu asistente. ¿En qué te puedo ayudar hoy?', isUser: false }]);
+        setApiPlan(null);
+        setFlightData(null);
+        setFlightInput('');
+        setMyTrips([]);
+        setUserPhone(''); 
+        setHasSeenOnboarding(false); // Reset para que el próximo vea el Onboarding
+        setTravelProfile('balanced');
+        setSavedTime(0);
+        setRecoveredMoney(0);
+        setSelectedRescuePlan(null);
+
+        // Formatear memoria del móvil para este dispositivo
+        await AsyncStorage.multiRemove([
+            'lastFlightData', 'lastFlightInput', 'activeSearches', 
+            'offline_claims', 'offline_myFlights', 'offline_myTrips', 
+            'offline_extraDocs', 'userPhone', 'hasSeenOnboarding',
+            'travelProfile', 'savedTime', 'recoveredMoney', 'hasSeenPlan',
+            'disclaimerOnboardingAccepted'
+        ]);
+        console.log("🛡️ [Privacidad] Memoria local formateada al 100% para nueva cuenta.");
+      }
+
       setUser(firebaseUser);
       if (firebaseUser?.email) {
         loadMyFlights(firebaseUser.email);
@@ -659,6 +790,10 @@ export const AppProvider = ({ children }) => {
       const cred = await createUserWithEmailAndPassword(auth, authEmail, authPassword);
       await updateProfile(cred.user, { displayName: authName });
       
+      // FORZAR ONBOARDING PARA NUEVO USUARIO
+      await AsyncStorage.removeItem('hasSeenOnboarding');
+      setHasSeenOnboarding(false);
+      
       // ENVÍO DE VERIFICACIÓN (Seguridad)
       await sendEmailVerification(cred.user);
 
@@ -741,6 +876,20 @@ export const AppProvider = ({ children }) => {
     const code = flightInput.trim();
     if (!code) return;
 
+    // LÍMITE GRATUITO: Solo 1 vuelo simultáneo para usuarios no-VIP
+    const isNewFlight = !activeSearches.find(f => f.flightNumber === code.toUpperCase());
+    if (travelProfile !== 'premium' && activeSearches.length >= 1 && isNewFlight) {
+      Alert.alert(
+        'LÍMITE ALCANZADO',
+        'Con el plan gratuito solo puedes vigilar 1 vuelo a la vez. Actualiza a VIP para vigilar vuelos ilimitados simultáneamente.',
+        [
+          { text: 'CANCELAR', style: 'cancel' },
+          { text: 'VER VIP', onPress: () => setPendingVIPRedirect(true) }
+        ]
+      );
+      return;
+    }
+
     // 1) LIMPIAR TODO del circuito anterior para evitar conflictos
     stopSpeak();
     setShowSOS(false);
@@ -759,6 +908,8 @@ export const AppProvider = ({ children }) => {
       }
       const data = await response.json();
       setFlightData(data);
+      // INCREMENTO DE AHORRO: Buscar un vuelo ahorra al menos 15 mins (0.25h) de burocracia
+      setSavedTime(prev => prev + 0.25);
 
       // 3) AÑADIR A BÚSQUEDAS ACTIVAS
       setActiveSearches(prev => {
@@ -768,27 +919,37 @@ export const AppProvider = ({ children }) => {
       });
 
       // 4) GENERAR EXPEDIENTE LEGAL (silencioso, sin voz aquí)
-      if (data.departure?.delay >= 180 || data.status === 'cancelled') {
+      const effectiveDelay = data.departure?.delay || data.delayMinutes || 0;
+      if (effectiveDelay >= 180 || data.status === 'cancelled') {
         setCompensationEligible(true);
         setClaims(prevBase => {
           const prev = prevBase.filter(c => c.vuelo !== data.flightNumber);
-          return [{
+          const newClaim = {
             id: `C-${data.flightNumber}-${Date.now()}`,
             aerolinea: data.airline || 'Aerolínea',
             vuelo: data.flightNumber,
             ruta: `${data.departure?.iata} > ${data.arrival?.iata}`,
             estado: 'EXPEDIENTE PREPARADO',
+            status: data.status || 'delayed',
+            delayActual: effectiveDelay,
             compensacion: getEU261Amount(data),
             isDynamic: true
-          }, ...prev];
+          };
+          // INCREMENTO DE AHORRO: Generar una reclamación recupera dinero real
+          setRecoveredMoney(prev => prev + parseFloat(getEU261Amount(data).replace('€', '')));
+          setSavedTime(prev => prev + 1); // Generar la reclamación ahorra 1h de papeleo
+          return [newClaim, ...prev];
         });
       }
 
       // 5) UNA SOLA VOZ — el resumen completo de la situación adaptado al perfil
-      const delay = data.departure?.delay || 0;
+      const delay = data.departure?.delay || data.delayMinutes || 0;
       let finalSpeech = "";
 
-      if (data.status === 'cancelled') {
+      if (data.status === 'landed' && delay >= 180) {
+        const amt = getEU261Amount(data).replace('€', ' euros');
+        finalSpeech = `¡Vuelo aterrizado con retraso de ${delay} minutos! He generado tu reclamación de ${amt} euros instantáneamente. El documento de firma te espera en la bóveda.`;
+      } else if (data.status === 'cancelled') {
         const amt = getEU261Amount(data).replace('€', ' euros');
         if (travelProfile === 'premium') {
             finalSpeech = `Alerta roja, vuelo cancelado. Ya he activado tu protocolo VIP y el expediente por ${amt}. Priorizando rutas alternativas en clase superior.`;
@@ -859,27 +1020,69 @@ export const AppProvider = ({ children }) => {
 
   const fetchContingencyPlan = async () => {
     // Plan local instantáneo: se muestra YA, sin esperar a la IA
+    const allOptions: any[] = [
+      { type: 'RÁPIDO', title: 'Ruta Alternativa Urgente', description: 'Vuelo directo de sustitución gestionado de forma prioritaria para evitar esperas.', estimatedCost: 850 },
+      { type: 'ECONÓMICO', title: 'Gestión de Reembolso Inteligente', description: 'Trámite legal EU261 activo combinado con la mejor conexión de bajo coste disponible.', estimatedCost: 150 },
+      { type: 'CONFORT', title: 'Plan de Estancia y Descanso', description: 'Noche en hotel seleccionado y salida programada para mañana con total comodidad.', estimatedCost: 300 }
+    ];
+
+    let finalOptions = allOptions;
+
     const instantPlan = {
-      options: [
-        { type: 'RÁPIDO', title: 'Ruta Alternativa Urgente', description: 'Vuelo directo de sustitución gestionado de forma prioritaria para evitar esperas.', estimatedCost: 850 },
-        { type: 'ECONÓMICO', title: 'Gestión de Reembolso Inteligente', description: 'Trámite legal EU261 activo combinado con la mejor conexión de bajo coste disponible.', estimatedCost: 150 },
-        { type: 'EQUILIBRADO', title: 'Plan de Estancia y Descanso', description: 'Noche en hotel seleccionado y salida programada para mañana con total comodidad.', estimatedCost: 300 }
-      ],
+      options: allOptions,
       impact: { hotelAlert: "He asegurado tu reserva de alojamiento. Sin riesgo de cancelación." }
     };
-    setApiPlan(instantPlan); setShowSOS(true); setHasSeenPlan(true); setIsGenerating(false);
+
+    if (travelProfile !== 'premium') {
+      const econOption = instantPlan.options.find(
+        (o: any) => o.type === 'ECONÓMICO'
+      );
+      const lockedCard = {
+        type: 'VIP_LOCKED',
+        title: '2 opciones más disponibles en VIP',
+        description: 'Desbloquea la opción RÁPIDA y CONFORT con planes personalizados y gestión prioritaria.',
+        estimatedCost: 0,
+        actionType: 'locked'
+      };
+      setApiPlan({ ...instantPlan, options: [econOption, lockedCard] });
+    } else {
+      setApiPlan(instantPlan);
+    }
+    setShowSOS(true); setHasSeenPlan(true); setIsGenerating(false);
+    setSavedTime(prev => prev + 0.5); // Generar un plan ahorra 30 mins
 
     // En segundo plano: si la IA responde con algo mejor, se actualiza en silencio
     try {
       const response = await fetch(`${BACKEND_URL}/api/monitorFlight`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ flightId: flightInput.trim() || 'TP404' })
+        body: JSON.stringify({ 
+          flightId: flightInput.trim() || 'TP404',
+          travelProfile: travelProfile 
+        })
       });
       const data = await response.json();
       if (data.contingencyPlan) {
-        setApiPlan(data.contingencyPlan);
-        setPrefetchedData(data.contingencyPlan);
+        let finalPlan = data.contingencyPlan;
+        if (travelProfile !== 'premium') {
+          // Buscamos la opción económica en el plan de la IA
+          const ecoFromIA = finalPlan.options.find((o: any) => 
+            o.type?.includes('ECONÓMIC') || o.type?.includes('BARAT')
+          ) || { type: 'ECONÓMICO', title: 'Plan de Contingencia Estándar', description: 'Gestión de reembolso y transporte básico.', estimatedCost: 150 };
+          
+          finalPlan.options = [
+            ecoFromIA,
+            {
+              type: 'VIP_LOCKED',
+              title: '2 opciones más disponibles en VIP',
+              description: 'Desbloquea la opción RÁPIDA y CONFORT con planes personalizados y gestión prioritaria.',
+              estimatedCost: 0,
+              actionType: 'locked'
+            }
+          ];
+        }
+        setApiPlan(finalPlan);
+        setPrefetchedData(finalPlan);
       }
     } catch (e) {
       console.error("Error IA (plan local ya visible):", e);
@@ -908,6 +1111,8 @@ export const AppProvider = ({ children }) => {
       setFlightInput('');  // Limpieza del campo de búsqueda
       setMyFlights([]);   // Limpieza de vuelos locales guardados
       setSearchError(null);
+      setSavedTime(0); // Reset savedTime on clearing logs
+      setRecoveredMoney(0); // Reset recoveredMoney on clearing logs
 
       // Limpieza atómica de AsyncStorage
       await AsyncStorage.multiRemove([
@@ -948,7 +1153,8 @@ export const AppProvider = ({ children }) => {
           body: JSON.stringify({
             text,
             history: safeHistory,
-            flightId: flightInput.trim() || undefined
+            flightId: flightInput.trim() || undefined,
+            travelProfile: travelProfile
           }),
           signal: controller.signal
         });
@@ -1121,14 +1327,22 @@ export const AppProvider = ({ children }) => {
         verified: true,
       };
 
-      setExtraDocs(prev => [...prev, newDoc]);
-      setIsExtracting(false);
+      setExtraDocs((prev: any) => [newDoc, ...prev]);
+      setHasNewDoc(true);
+      
+      // INCREMENTO DE AHORRO: Generar una reclamación recupera dinero real
+      // Usamos el monto de EU261 detectado
+      const amount = getEU261Amount(flightData);
+      setRecoveredMoney(prev => prev + parseFloat(amount.replace('€', '')));
+      setSavedTime(prev => prev + 1); // Generar la reclamación ahorra 1h de papeleo
+      
+      speak(`Excelente noticia. He generado tu reclamación oficial de ${amount} euros. El ahorro total en tu perfil ha sido actualizado. El documento legal ya está encriptado en tu bóveda.`);
       Alert.alert('✅ EXTRACCIÓN COMPLETADA', 'IA ha detectado y extraído 1 documento nuevo: Ticket de Parking (P1) detectado en tu cuenta de correo.');
     }, 4500);
   };
 
   const value = {
-    user, authEmail, setAuthEmail, authPassword, setAuthPassword, authMode, setAuthMode, authLoading,
+    user, authEmail, setAuthEmail, authName, setAuthName, authPassword, setAuthPassword, authMode, setAuthMode, authLoading,
     handleLogin, handleRegister, handleLogout,
     tab, setTab, showSOS, setShowSOS, showSOSMenu, setShowSOSMenu,
     selectedPlan, setSelectedPlan, viewDoc, setViewDoc, isScanning, setIsScanning, scanAnim, sosPulse,
@@ -1149,14 +1363,21 @@ export const AppProvider = ({ children }) => {
     userPhone, setUserPhone,
     isReplayingTutorial,
     setIsReplayingTutorial,
-    travelProfile,
-    setTravelProfile,
+    savedTime,
+    setSavedTime,
+    recoveredMoney,
+    setRecoveredMoney,
     selectedRescuePlan,
     setSelectedRescuePlan,
     hasSeenPlan,
     setHasSeenPlan,
     activeSearches,
-    removeActiveSearch
+    removeActiveSearch,
+    travelProfile,
+    setTravelProfile,
+    masterReset,
+    pendingVIPRedirect,
+    setPendingVIPRedirect
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

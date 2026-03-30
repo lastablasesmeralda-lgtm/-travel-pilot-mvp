@@ -5,6 +5,7 @@ import { useAppContext } from '../context/AppContext';
 
 import IntelScreen from '../screens/IntelScreen';
 import VuelosScreen from '../screens/RadarScreen';
+import VIPModalScreen from '../screens/VIPModalScreen';
 import DocsScreen from '../screens/VaultScreen';
 import BioScreen from '../screens/BioScreen';
 import { s } from '../styles';
@@ -41,6 +42,7 @@ export default function AppNavigator() {
                     let icon = '';
                     if (route.name === 'Intel') icon = '💠';
                     else if (route.name === 'Radar') icon = '✈️';
+                    else if (route.name === 'VIP') icon = '💎';
                     else if (route.name === 'Vault') icon = '💼';
                     else if (route.name === 'Bio') icon = '👥';
 
@@ -99,7 +101,8 @@ export default function AppNavigator() {
                             }}>
                                 {route.name === 'Intel' ? 'INICIO' :
                                     route.name === 'Radar' ? 'VUELOS' :
-                                        route.name === 'Vault' ? 'DOCS' : 'PERFIL'}
+                                        route.name === 'VIP' ? 'VIP' :
+                                            route.name === 'Vault' ? 'DOCS' : 'PERFIL'}
                             </Text>
                         </TouchableOpacity>
                     );
@@ -108,6 +111,7 @@ export default function AppNavigator() {
         >
             <Tab.Screen name="Intel" component={IntelScreen} />
             <Tab.Screen name="Radar" component={VuelosScreen} />
+            <Tab.Screen name="VIP" component={VIPModalScreen} />
             <Tab.Screen name="Vault" component={DocsScreen} />
             <Tab.Screen name="Bio" component={BioScreen} />
         </Tab.Navigator>

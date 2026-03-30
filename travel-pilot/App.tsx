@@ -19,7 +19,7 @@ import { getEU261Amount } from './src/utils/flightUtils';
 function RootComponent() {
   const {
     user, showChat, setShowSOSMenu, setShowChat, sosPulse, compensationEligible, speak, stopSpeak, isSpeaking,
-    hasSeenOnboarding, setHasSeenOnboarding, isReplayingTutorial, setIsReplayingTutorial, flightData,
+    handleLogout, hasSeenOnboarding, setHasSeenOnboarding, isReplayingTutorial, setIsReplayingTutorial, flightData,
     compBannerDismissed, setCompBannerDismissed, travelProfile, availableVoices, selectedVoice
   } = useAppContext();
 

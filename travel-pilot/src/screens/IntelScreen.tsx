@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Animated } from 'react-native';
 import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
+import { useNavigation } from '@react-navigation/native';
 import { getEU261Amount } from '../utils/flightUtils';
 
 // Frases rotativas premium para cuando no hay vuelo
@@ -15,10 +16,26 @@ const IDLE_PHRASES = [
 ];
 
 export default function IntelScreen() {
-    const { user, myTrips, saveTrip, removeTrip, myFlights, removeMyFlight, setFlightInput, setTab, weather, flightData, clearFlight, simulatePushNotification, tab, selectedVoice, showPlan, travelProfile, hasSeenPlan, selectedRescuePlan, speak, removeActiveSearch, availableVoices } = useAppContext();
+    const navigation = useNavigation<any>();
+    const { user, myTrips, saveTrip, removeTrip, myFlights, removeMyFlight, setFlightInput, weather, flightData, clearFlight, simulatePushNotification, tab, selectedVoice, showPlan, travelProfile, hasSeenPlan, selectedRescuePlan, speak, removeActiveSearch, availableVoices, handleLogout, setSavedTime } = useAppContext();
     const [newTripTitle, setNewTripTitle] = useState('');
     const [newTripDest, setNewTripDest] = useState('');
     const [showForm, setShowForm] = useState(false);
+
+    // Animación de Saludo
+    const greetingOpacity = useRef(new Animated.Value(1)).current;
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            Animated.timing(greetingOpacity, {
+                toValue: 0,
+                duration: 2000,
+                useNativeDriver: true,
+            }).start();
+        }, 5000); // 5 segundos visible
+
+        return () => clearTimeout(timer);
+    }, []);
 
     // Frase rotativa que cambia cada vez que se monta la pantalla
     const idlePhrase = useMemo(() => IDLE_PHRASES[Math.floor(Math.random() * IDLE_PHRASES.length)], []);
@@ -33,9 +50,68 @@ export default function IntelScreen() {
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20, paddingTop: 60 }}>
 
+            {/* SALUDO PERSONALIZADO ANIMADO */}
+            <Animated.View style={{ marginBottom: 20, opacity: greetingOpacity }}>
+                <Text style={{ color: '#B0B0B0', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5 }}>BIENVENIDO A BORDO</Text>
+                <Text style={{ color: '#FFF', fontSize: 32, fontWeight: '900', marginTop: 5 }}>Hola, {user?.displayName || 'Viajero'}</Text>
+            </Animated.View>
+
+            {/* TARJETA DE STATUS VIP (Solo si NO es VIP) */}
+            {travelProfile !== 'premium' && (
+                <TouchableOpacity 
+                    activeOpacity={0.9}
+                    onPress={() => navigation.navigate('VIP')} 
+                    style={{
+                        backgroundColor: '#111',
+                        borderRadius: 24,
+                        padding: 20,
+                        marginBottom: 30,
+                        borderWidth: 1,
+                        borderColor: '#D4AF37',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        overflow: 'hidden'
+                    }}
+                >
+                    {/* Efecto de brillo de fondo */}
+                    <View style={{ position: 'absolute', top: -50, right: -50, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(212, 175, 55, 0.05)' }} />
+                    
+                    <View style={{ flex: 1, paddingRight: 10 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                             <View style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginRight: 10, borderWidth: 0.5, borderColor: '#D4AF37' }}>
+                                <Text style={{ color: '#D4AF37', fontSize: 9, fontWeight: '900' }}>STATUS: ESTÁNDAR</Text>
+                             </View>
+                        </View>
+                        <Text style={{ color: '#E0E0E0', fontSize: 13, lineHeight: 18 }}>Activa el <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>Escudo Legal de 600€</Text> y la IA más proactiva para proteger tu viaje.</Text>
+                    </View>
+                    
+                    <View style={{ backgroundColor: '#D4AF37', width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', shadowColor: '#D4AF37', shadowOpacity: 0.5, shadowRadius: 10, elevation: 5 }}>
+                        <Text style={{ color: '#000', fontSize: 18, fontWeight: 'bold' }}>›</Text>
+                    </View>
+                </TouchableOpacity>
+            )}
+
+            {/* STATUS VIP ACTIVO (Solo si YA ES VIP) */}
+            {travelProfile === 'premium' && (
+                <View style={{ 
+                    backgroundColor: 'rgba(212, 175, 55, 0.05)', 
+                    borderRadius: 20, 
+                    padding: 15, 
+                    marginBottom: 30, 
+                    borderWidth: 1, 
+                    borderColor: 'rgba(212, 175, 55, 0.3)',
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                }}>
+                    <Text style={{ fontSize: 18, marginRight: 12 }}>🛡️</Text>
+                    <Text style={{ color: '#D4AF37', fontSize: 13, fontWeight: 'bold' }}>Status: Bajo Protección Legal VIP</Text>
+                </View>
+            )}
+
             {/* GLOBAL BETA BANNER */}
-            <View style={{ backgroundColor: '#222', paddingVertical: 10, paddingHorizontal: 15, borderRadius: 12, marginBottom: 24, borderLeftWidth: 4, borderLeftColor: '#D4AF37', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: '#D4AF37', fontSize: 10, fontWeight: '900', letterSpacing: 1 }}>🛡️ ENTORNO DE PRUEBAS BETA ACTIVO</Text>
+            <View style={{ backgroundColor: '#0D0D0D', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 10, marginBottom: 24, borderLeftWidth: 3, borderLeftColor: '#333', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ color: '#444', fontSize: 9, fontWeight: '900', letterSpacing: 1 }}>🛡️ ENTORNO VERIFICADO · ACCESO BETA</Text>
             </View>
 
             {/* ——— MIS VIAJES ——— */}
@@ -205,6 +281,7 @@ Todo parece estar en orden para tu viaje. Si detectamos cualquier riesgo para tu
                                                 const role = availableVoices.find(v => v.identifier === selectedVoice)?.humanName || "Tu asistente";
                                                 speak(`Soy ${role}. Sigo trabajando en tu plan para ${selectedRescuePlan}. La conexión está abierta y las gestiones avanzan.`);
                                             }
+                                            if (!hasSeenPlan) setSavedTime((prev: number) => prev + 1.5);
                                             showPlan();
                                         }}
                                         style={{ 
@@ -272,9 +349,28 @@ Todo parece estar en orden para tu viaje. Si detectamos cualquier riesgo para tu
                     <Text style={{ color: '#888', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 }}>TEST: FORZAR ALERTA PUSH</Text>
                 </TouchableOpacity>
 
+                <TouchableOpacity
+                    onPress={() => {
+                        Alert.alert("CERRAR SESIÓN", "¿Estás seguro de que quieres salir de la cabina?", [
+                            { text: "CANCELAR", style: 'cancel' },
+                            { text: "SÍ, SALIR", style: 'destructive', onPress: () => handleLogout() }
+                        ]);
+                    }}
+                    style={{
+                        backgroundColor: 'rgba(255, 59, 48, 0.1)',
+                        padding: 20,
+                        borderRadius: 20,
+                        borderWidth: 1,
+                        borderColor: '#FF3B30',
+                        alignItems: 'center',
+                        marginTop: 40,
+                        marginBottom: 10
+                    }}
+                >
+                    <Text style={{ color: '#FF3B30', fontWeight: 'bold', fontSize: 13, letterSpacing: 1 }}>CERRAR SESIÓN DE USUARIO</Text>
+                </TouchableOpacity>
+
             </View>
-
-
 
             <View style={{ height: 160 }} />
         </ScrollView>

@@ -11,7 +11,7 @@ const SLIDES = [
         id: '1',
         image: require('../../assets/onboarding1.jpg'), // Intel/Inicio
         title: 'ESTO NO ES UNA APP DE VIAJES',
-        subtitle: 'Las apps normales te informan de un problema. Travel-Pilot lo resuelve por ti.\n\nEs la primera app del mundo que actúa cuando algo va mal.',
+        subtitle: 'Las apps normales te informan de un problema. Travel-Pilot te da las herramientas para resolverlo en segundos.\n\nEs la primera app del mundo que detecta y gestiona lo que falla en tu viaje.',
         accent: '#9333EA', // Púrpura (Intel)
     },
     {
@@ -25,7 +25,7 @@ const SLIDES = [
         id: '3',
         image: require('../../assets/onboarding3.jpg'), // Vault/Docs
         title: '¿RETRASO? NOSOTROS ACTUAMOS',
-        subtitle: 'Mi IA gestiona alternativas, avisa a tu hotel y lanza reclamación legal de forma autónoma. Un clic y respiro.',
+        subtitle: 'Si tu vuelo se retrasa, la IA:\n• Coordina con tu hotel para proteger tu reserva.\n• Encuentra tus mejores alternativas.\n• Prepara tu reclamación de hasta 600€.\nTodo listo. Tú decides en segundos.',
         accent: '#EF4444', // Rojo (Vault)
     },
     {
@@ -35,6 +35,13 @@ const SLIDES = [
         subtitle: 'Tres modos inteligentes:\n\n🔵 OPCIÓN EQUILIBRADA — Máximo balance.\n🔴 OPCIÓN RÁPIDA — Llegar lo antes posible.\n🟢 OPCIÓN ECONÓMICA — Ahorro total.\n\nTú decides la prioridad y mi IA hace el resto.',
         accent: '#22C55E', // Verde (Bio)
     },
+    {
+        id: '5',
+        image: require('../../assets/onboarding5.png'), // VIP
+        title: 'UNIVERSO VIP EXCLUSIVE',
+        subtitle: 'Cuando tu vuelo falla, la IA actúa por ti.\n\n• Reclamaciones EU261 automáticas hasta 600€.\n• Planes de contingencia personalizados a tu perfil.\n• Asistente IA proactivo: te avisamos antes de que lo sepa la aerolínea.\n• Voz premium y acceso anticipado a nuevas funciones.\n\nTodo gestionado. Tú solo decides.',
+        accent: '#D4AF37', // Dorado (VIP)
+    },
 ];
 
 interface OnboardingScreenProps {
@@ -43,9 +50,31 @@ interface OnboardingScreenProps {
 
 export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState<boolean | null>(null);
     const flatListRef = useRef<FlatList>(null);
     const scrollX = useRef(new Animated.Value(0)).current;
     const fadeAnim = useRef(new Animated.Value(1)).current;
+
+    useEffect(() => {
+        const checkDisclaimer = async () => {
+            try {
+                const accepted = await AsyncStorage.getItem('disclaimerOnboardingAccepted');
+                setIsDisclaimerAccepted(accepted === 'true');
+            } catch (e) {
+                setIsDisclaimerAccepted(false);
+            }
+        };
+        checkDisclaimer();
+    }, []);
+
+    const handleAcceptDisclaimer = async () => {
+        try {
+            await AsyncStorage.setItem('disclaimerOnboardingAccepted', 'true');
+            setIsDisclaimerAccepted(true);
+        } catch (e) {
+            setIsDisclaimerAccepted(true); // Fallback suave
+        }
+    };
 
     const handleNext = () => {
         if (currentIndex < SLIDES.length - 1) {
@@ -119,6 +148,72 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
         </View>
     );
 
+    if (isDisclaimerAccepted === null) return null;
+
+    if (!isDisclaimerAccepted) {
+        return (
+            <View style={{ flex: 1, backgroundColor: '#000', paddingHorizontal: 25, justifyContent: 'center', alignItems: 'center' }}>
+                <View style={{ width: '100%', alignItems: 'center' }}>
+                    {/* Icono Disclaimer */}
+                    <View style={{
+                        height: 200,
+                        width: '100%',
+                        borderRadius: 40,
+                        backgroundColor: 'rgba(255,255,255,0.02)',
+                        borderWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.08)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginBottom: 30,
+                    }}>
+                        <Text style={{ fontSize: 80 }}>🛡️</Text>
+                    </View>
+
+                    <Text style={{
+                        color: '#FFF',
+                        fontSize: 32,
+                        fontWeight: '900',
+                        textAlign: 'center',
+                        marginBottom: 15,
+                        letterSpacing: -1
+                    }}>
+                        Antes de empezar
+                    </Text>
+
+                    <Text style={{
+                        color: '#B0B0B0',
+                        fontSize: 16,
+                        textAlign: 'center',
+                        lineHeight: 24,
+                        marginBottom: 40,
+                        paddingHorizontal: 15
+                    }}>
+                        Travel-Pilot usa inteligencia artificial para informarte y guiarte en tiempo real.{"\n\n"}
+                        Las gestiones automáticas como avisar al hotel o preparar reclamaciones siempre requieren tu confirmación final.{"\n\n"}
+                        Nunca actuamos sin que lo sepas. Tú siempre tienes el control.
+                    </Text>
+
+                    <TouchableOpacity
+                        onPress={handleAcceptDisclaimer}
+                        style={{
+                            backgroundColor: '#9333EA',
+                            width: '100%',
+                            paddingVertical: 20,
+                            borderRadius: 16,
+                            alignItems: 'center',
+                            shadowColor: '#9333EA',
+                            shadowOpacity: 0.4,
+                            shadowRadius: 15,
+                            elevation: 10
+                        }}
+                    >
+                        <Text style={{ color: '#FFF', fontSize: 17, fontWeight: '900', letterSpacing: 1 }}>ENTENDIDO</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    }
+
     const isLastSlide = currentIndex === SLIDES.length - 1;
 
     return (
@@ -190,6 +285,20 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
                         />
                     ))}
                 </View>
+
+                {/* Beta Badge */}
+                {isLastSlide && (
+                    <Text style={{ 
+                        color: '#888', 
+                        fontSize: 11, 
+                        marginBottom: 15, 
+                        textAlign: 'center',
+                        fontWeight: '500',
+                        letterSpacing: 0.5
+                    }}>
+                        Fase beta gratuita. Sin tarjeta requerida.
+                    </Text>
+                )}
 
                 {/* Button */}
                 <TouchableOpacity

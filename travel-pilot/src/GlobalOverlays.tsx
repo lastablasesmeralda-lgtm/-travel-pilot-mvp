@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Animated, Modal, TextInput, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Animated, Modal, TextInput, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform, Image, Linking } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { s } from './styles';
 import { useAppContext } from './context/AppContext';
@@ -12,8 +12,22 @@ const DOC_IMAGES: Record<string, any> = {
     'demo-boarding-premium': require('../assets/tarjeta_embarque_pura.jpg'),
     'demo-hotel-premium': require('../assets/reserva_hotel_pura.jpg'),
     'ticket-rapido': require('../assets/ticket_rapido_vip.jpg'),
+    'ticket-rapido-estandar': require('../assets/ticket_rapido_estandar.png'),
     'ticket-equilibrado': require('../assets/ticket_equilibrado_confort.jpg'),
     'ticket-economico': require('../assets/ticket_economico.jpg'),
+};
+
+// Diccionario de teléfonos de atención al cliente por aerolínea
+const AIRLINE_PHONES: Record<string, string> = {
+    'Iberia': '+34 901 111 500',
+    'Vueling': '+34 931 151 415',
+    'Ryanair': '+34 912 058 150',
+    'British Airways': '+44 344 493 0787',
+    'Turkish Airlines': '+34 911 640 777',
+    'Emirates': '+34 911 640 410',
+    'Travel-Pilot Air': '+34 900 000 000',
+    'Travel-Pilot Test': '+34 900 000 000',
+    'Simulated Airlines': '+34 900 000 000',
 };
 
 export default function GlobalOverlays() {
@@ -25,7 +39,7 @@ export default function GlobalOverlays() {
         clearMessages, availableVoices, selectedVoice, setSelectedVoice,
         isDictating, startDictation, stopDictation, userPhone, travelProfile,
         setExtraDocs, setFlightData, showPlan, flightData, setHasNewDoc,
-        setSelectedRescuePlan, selectedRescuePlan
+        setSelectedRescuePlan, selectedRescuePlan, setPendingVIPRedirect
     } = useAppContext();
 
     const [showVoiceMenu, setShowVoiceMenu] = React.useState(false);
@@ -69,10 +83,10 @@ export default function GlobalOverlays() {
                             {
                                 icon: '📞', title: 'LLAMAR AL HOTEL', sub: 'Notificar llegada tardía automáticamente', color: '#AF52DE', action: () => {
                                     setShowSOSMenu(false);
-                                    Alert.alert('AVISO AL HOTEL', 'Travel-Pilot contactará al hotel para avisar de tu llegada tardía y asegurar tu habitación.', [
+                                    Alert.alert('AVISO AL HOTEL', 'Travel-Pilot intentará contactar al hotel para avisarles de tu llegada tardía. Te recomendamos confirmar con ellos directamente.', [
                                         {
                                             text: 'AVISAR AHORA', onPress: async () => {
-                                                speak('Iniciando contacto con el alojamiento. Tu habitación será asegurada.');
+                                                speak('Iniciando intento de contacto con el alojamiento. Por favor, verifica con ellos más tarde.');
                                                 try {
                                                     const controller = new AbortController();
                                                     const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 segundos de margen
@@ -89,7 +103,7 @@ export default function GlobalOverlays() {
                                                         signal: controller.signal
                                                     });
                                                     if (res.ok) {
-                                                        Alert.alert('ÉXITO', 'El hotel ha recibido el aviso y ha confirmado tu reserva.');
+                                                        Alert.alert('AVISO ENVIADO', 'Hemos intentado contactar con tu hotel. Para mayor seguridad, confírmalo tú mismo llamando directamente a recepción.');
                                                     } else {
                                                         const data = await res.json();
                                                         Alert.alert('AVISO', data.error || 'No se pudo contactar con el hotel.');
@@ -103,8 +117,43 @@ export default function GlobalOverlays() {
                                     ]);
                                 }
                             },
-                            { icon: '✈️', title: 'CONTACTAR AEROLÍNEA', sub: 'Línea directa de tu compañía aérea', color: '#007AFF', action: () => { setShowSOSMenu(false); speak('Conectando con el centro de atención al cliente de tu aerolínea.'); Alert.alert('AEROLÍNEA', 'Contactando con el servicio de atención al cliente...'); } },
-                            { icon: '🏥', title: 'EMERGENCIA MÉDICA', sub: 'Localizar hospitales y farmacias cercanas', color: '#FF3B30', action: () => { setShowSOSMenu(false); speak('Localizando servicios médicos cercanos.'); Alert.alert('EMERGENCIA', 'Buscando servicios médicos...'); } },
+                            { icon: '✈️', title: 'CONTACTAR AEROLÍNEA', sub: 'Línea directa de tu compañía aérea', color: '#007AFF', action: () => {
+                                setShowSOSMenu(false);
+                                if (!flightData?.airline) {
+                                    Alert.alert('SIN VUELO ACTIVO', 'Primero busca un vuelo en VUELOS para poder contactar con tu aerolínea.');
+                                    return;
+                                }
+                                const airlineName = flightData.airline;
+                                const phone = AIRLINE_PHONES[airlineName] || '+34 901 111 500';
+                                speak(`Voy a preparar la llamada a ${airlineName}. El número aparecerá en tu marcador.`);
+                                Alert.alert(
+                                    'CONTACTAR AEROLÍNEA',
+                                    `Vamos a abrir el marcador con el número de ${airlineName}:\n\n📞 ${phone}\n\nLa llamada corre a tu cargo.`,
+                                    [
+                                        { text: 'CANCELAR', style: 'cancel' },
+                                        { text: 'LLAMAR AHORA', onPress: () => Linking.openURL(`tel:${phone.replace(/\s/g, '')}`) }
+                                    ]
+                                );
+                            } },
+                            { icon: '🏥', title: 'EMERGENCIA MÉDICA', sub: 'Llamar a servicios de emergencia', color: '#FF3B30', action: () => {
+                                setShowSOSMenu(false);
+                                speak('En caso de emergencia médica, llama al 112 inmediatamente. Funciona en toda Europa.');
+                                Alert.alert(
+                                    '🚨 EMERGENCIA MÉDICA',
+                                    'En caso de emergencia médica real, pulsa LLAMAR AL 112 para contactar con los servicios de emergencia.\n\nSi estás fuera de España, el 112 funciona en toda la Unión Europea. Para otros países, pulsa VER NÚMEROS POR PAÍS.\n\nTravel-Pilot no sustituye a los servicios de emergencia oficiales. En caso de peligro real, llama siempre al 112 o número local.',
+                                    [
+                                        { text: 'CANCELAR', style: 'cancel' },
+                                        { text: 'VER NÚMEROS POR PAÍS', onPress: () => {
+                                            Alert.alert(
+                                                '🌍 EMERGENCIAS POR PAÍS',
+                                                '🇪🇸 España → 112\n🇫🇷 Francia → 15\n🇬🇧 Reino Unido → 999\n🇺🇸 EE.UU. → 911\n🇩🇪 Alemania → 112\n🇮🇹 Italia → 118\n🇹🇷 Turquía → 112\n🇦🇪 Emiratos → 998\n🇵🇱 Polonia → 112\n🌍 Resto del mundo → 112\n\nTravel-Pilot no sustituye a los servicios de emergencia oficiales.',
+                                                [{ text: 'ENTENDIDO' }]
+                                            );
+                                        }},
+                                        { text: '🚨 LLAMAR AL 112', style: 'destructive', onPress: () => Linking.openURL('tel:112') }
+                                    ]
+                                );
+                            } },
                             { icon: '🛡️', title: 'ASISTENCIA LEGAL', sub: 'Reclamar indemnización por retraso', color: '#27C93F', action: () => { setShowSOSMenu(false); setLegalShieldActive(true); setCompensationEligible(true); setTab('Vault'); speak('Asistencia legal activada.'); } },
                             { icon: '💬', title: 'HABLAR CON ASISTENTE', sub: 'Asistente de viaje en tiempo real', color: '#AF52DE', action: () => { setShowSOSMenu(false); setShowChat(true); } },
                         ].map((item, i) => (
@@ -166,11 +215,16 @@ export default function GlobalOverlays() {
                                         // 1. Determinar La mejor opción según el perfil
                                         let bestOptionIdx = 0;
                                         if (travelProfile === 'premium') {
-                                            bestOptionIdx = options.findIndex((o: any) => o.type?.includes('RÁPID') || o.type?.includes('RAPID'));
-                                        } else if (travelProfile === 'budget') {
-                                            bestOptionIdx = options.findIndex((o: any) => o.type?.includes('ECONÓMIC') || o.type?.includes('BARAT'));
+                                            if (travelProfile === 'fast') {
+                                                bestOptionIdx = options.findIndex((o: any) => o.type?.includes('RÁPID') || o.type?.includes('RAPID'));
+                                            } else if (travelProfile === 'budget') {
+                                                bestOptionIdx = options.findIndex((o: any) => o.type?.includes('ECONÓMIC') || o.type?.includes('BARAT'));
+                                            } else {
+                                                bestOptionIdx = options.findIndex((o: any) => !o.type?.includes('RÁPID') && !o.type?.includes('ECONÓMIC'));
+                                            }
                                         } else {
-                                            bestOptionIdx = options.findIndex((o: any) => !o.type?.includes('RÁPID') && !o.type?.includes('ECONÓMIC'));
+                                            // FREE: Siempre la primera es la mejor (ECONÓMICA según AppContext)
+                                            bestOptionIdx = 0;
                                         }
                                         
                                         if (bestOptionIdx === -1) bestOptionIdx = 0;
@@ -182,7 +236,7 @@ export default function GlobalOverlays() {
                                             let bgColor = isMain ? '#1a1a1a' : '#0D0D0D';
                                             let borderColor = '#007AFF';
                                             let icon = '✨';
-                                            let typeLabel = 'OPCIÓN EQUILIBRADA';
+                                            let typeLabel = 'OPCIÓN CONFORT';
                                             
                                             if (opt.type?.includes('RÁPID') || opt.type?.includes('RAPID')) {
                                                 borderColor = '#FF3B30';
@@ -192,6 +246,10 @@ export default function GlobalOverlays() {
                                                 borderColor = '#34C759';
                                                 icon = '💰';
                                                 typeLabel = 'OPCIÓN ECONÓMICA';
+                                            } else if (opt.type === 'VIP_LOCKED') {
+                                                borderColor = '#D4AF37';
+                                                icon = '🔒';
+                                                typeLabel = 'DESBLOQUEAR VIP';
                                             }
 
                                             return (
@@ -210,10 +268,17 @@ export default function GlobalOverlays() {
                                                         shadowOpacity: isMain ? 0.3 : 0,
                                                         shadowRadius: 10
                                                     }}
-                                                    onPress={() => {
-                                                        const optType = opt.type?.includes('RÁPID') || opt.type?.includes('RAPID') ? 'VIP' : 
-                                                                       opt.type?.includes('ECONÓMIC') || opt.type?.includes('BARAT') ? 'ECONÓMICO' : 'EQUILIBRADO';
-                                                        const msg = `Confirmado. Iniciando protocolo ${optType} para la opción: ${opt.title}.`;
+                                                onPress={() => {
+                                                    if (opt.actionType === 'locked') {
+                                                        speak('Estas opciones están reservadas para usuarios VIP. Desbloquéalas ahora con un solo clic.');
+                                                        setShowSOS(false);
+                                                        setPendingVIPRedirect(true);
+                                                        return;
+                                                    }
+                                                    const isRápido = opt.type?.includes('RÁPID') || opt.type?.includes('RAPID');
+                                                    const isEco = opt.type?.includes('ECONÓMIC') || opt.type?.includes('BARAT');
+                                                    const optType = (isRápido && travelProfile === 'premium') ? 'VIP' : isRápido ? 'RÁPIDO' : isEco ? 'ECONÓMICO' : 'EQUILIBRADO';
+                                                    const msg = `Confirmado. Iniciando protocolo ${optType} para la opción: ${opt.title}.`;
                                                         speak(msg);
                                                         setSelectedRescuePlan(opt.title); // Capturamos la elección
                                                         setSelectedPlan(opt);
@@ -224,7 +289,7 @@ export default function GlobalOverlays() {
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                                                         <Text style={{ fontSize: isMain ? 22 : 18, marginRight: 8 }}>{icon}</Text>
                                                         <View>
-                                                            {isMain && <Text style={{ color: borderColor, fontSize: 10, fontWeight: '900', letterSpacing: 1, marginBottom: 2 }}>PROPUESTA PERSONALIZADA ({travelProfile === 'premium' ? 'VIP' : travelProfile === 'budget' ? 'ECONÓMICA' : 'EQUILIBRADA'})</Text>}
+                                                            {isMain && <Text style={{ color: borderColor, fontSize: 10, fontWeight: '900', letterSpacing: 1, marginBottom: 2 }}>PROPUESTA PERSONALIZADA ({travelProfile === 'premium' ? 'VIP' : travelProfile === 'fast' ? 'RÁPIDA' : travelProfile === 'budget' ? 'ECONÓMICA' : 'CONFORT'})</Text>}
                                                             <Text style={{ color: isMain ? '#FFF' : borderColor, fontSize: isMain ? 15 : 12, fontWeight: '900' }}>{typeLabel}</Text>
                                                         </View>
                                                     </View>
@@ -233,11 +298,15 @@ export default function GlobalOverlays() {
                                                     
                                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 15 }}>
                                                         <View style={{ backgroundColor: borderColor + (isMain ? '30' : '15'), paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
-                                                            <Text style={{ color: borderColor, fontSize: isMain ? 15 : 13, fontWeight: '900' }}>{opt.estimatedCost} €</Text>
+                                                            <Text style={{ color: borderColor, fontSize: isMain ? 15 : 13, fontWeight: '900' }}>
+                                                                {opt.type?.includes('ECONÓM') ? '+' : (opt.estimatedCost > 0 ? '-' : '')} {opt.estimatedCost} €
+                                                            </Text>
                                                         </View>
                                                         {isMain && (
                                                             <View style={{ backgroundColor: borderColor, paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20 }}>
-                                                                <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 12 }}>EJECUTAR SEGÚN PERFIL</Text>
+                                                                <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 12 }}>
+                                                                    {opt.actionType === 'locked' ? 'ACTUALIZAR A VIP' : 'EJECUTAR SEGÚN PERFIL'}
+                                                                </Text>
                                                             </View>
                                                         )}
                                                     </View>
@@ -250,14 +319,14 @@ export default function GlobalOverlays() {
                                                 <View style={{ backgroundColor: 'rgba(175, 82, 222, 0.05)', padding: 15, borderRadius: 12, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(175, 82, 222, 0.2)' }}>
                                                     <Text style={{ color: '#AF52DE', fontSize: 10, fontWeight: '900', letterSpacing: 1.5, marginBottom: 6 }}>🧠 ANÁLISIS DE INTELIGENCIA</Text>
                                                     <Text style={{ color: '#FFF', fontSize: 13, lineHeight: 20 }}>
-                                                        He analizado {flightData?.departure?.delay} min de retraso. Según tu prioridad <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>{travelProfile === 'premium' ? 'VIP' : travelProfile === 'budget' ? 'Económica' : 'Equilibrada'}</Text>, esta es mi mejor recomendación. 
+                                                        He analizado {flightData?.departure?.delay} min de retraso. Según tu prioridad <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>{travelProfile === 'premium' ? 'VIP' : travelProfile === 'fast' ? 'Rápida' : travelProfile === 'budget' ? 'Económica' : 'CONFORT'}</Text>, esta es mi mejor recomendación. 
                                                         Pulsa para ejecutarla o revisa otras estrategias si prefieres cambiar de criterio.
                                                     </Text>
                                                 </View>
                                                 
                                                 {renderOption(bestOpt, true)}
  
-                                                {!showAllOptions && otherOpts.length > 0 && (
+                                                {!showAllOptions && otherOpts.length > 0 && travelProfile === 'premium' && (
                                                     <TouchableOpacity 
                                                         onPress={() => setShowAllOptions(true)} 
                                                         style={{ padding: 15, alignItems: 'center', marginTop: 10, borderWidth: 1, borderColor: '#333', borderRadius: 12, borderStyle: 'dotted' }}
@@ -266,9 +335,9 @@ export default function GlobalOverlays() {
                                                     </TouchableOpacity>
                                                 )}
  
-                                                {showAllOptions && (
+                                                {(showAllOptions || (travelProfile !== 'premium' && otherOpts.length > 0)) && (
                                                     <View style={{ marginTop: 20 }}>
-                                                        <Text style={{ color: '#666', fontSize: 11, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' }}>VÍAS ALTERNATIVAS DISPONIBLES</Text>
+                                                        {travelProfile === 'premium' && <Text style={{ color: '#666', fontSize: 11, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' }}>VÍAS ALTERNATIVAS DISPONIBLES</Text>}
                                                         {otherOpts.map((opt: any) => renderOption(opt, false))}
                                                     </View>
                                                 )}
@@ -289,8 +358,9 @@ export default function GlobalOverlays() {
                     <SafeAreaView style={[s.mc, { width: '90%', height: '80%', padding: 0, overflow: 'hidden' }]}>
                         <View style={{ backgroundColor: '#222', padding: 10, flexDirection: 'row', alignItems: 'center' }}>
                             {(() => {
-                                const modeLabel = selectedPlan?.type?.includes('RÁPID') || selectedPlan?.type?.includes('RAPID') ? 'VIP' : 
-                                                 selectedPlan?.type?.includes('ECONÓMIC') || selectedPlan?.type?.includes('BARAT') ? 'ECONÓMICO' : 'EQUILIBRADO';
+                                const isRápido = selectedPlan?.type?.includes('RÁPID') || selectedPlan?.type?.includes('RAPID');
+                                const isEco = selectedPlan?.type?.includes('ECONÓMIC') || selectedPlan?.type?.includes('BARAT');
+                                const modeLabel = (isRápido && travelProfile === 'premium') ? 'VIP' : isRápido ? 'RÁPIDO' : isEco ? 'ECONÓMICO' : 'EQUILIBRADO';
                                 return (
                                     <View style={{ flex: 1, backgroundColor: '#333', borderRadius: 4, padding: 4 }}>
                                         <Text style={{ color: '#AAA', fontSize: 11, textAlign: 'center', fontWeight: 'bold', letterSpacing: 1 }}>
@@ -306,16 +376,17 @@ export default function GlobalOverlays() {
                                 {browserLogs.length < 8 ? (
                                     <>
                                         <ActivityIndicator color="#27C93F" size="large" />
-                                        <Text style={{ color: '#27C93F', marginTop: 15, fontWeight: 'bold' }}>REALIZANDO GESTIONES POR TI...</Text>
+                                        <Text style={{ color: '#27C93F', marginTop: 15, fontWeight: 'bold' }}>CONSTRUYENDO TU PLAN DE RESCATE...</Text>
                                     </>
                                 ) : (
                                     <View style={{ alignItems: 'center' }}>
                                         <Text style={{ fontSize: 40 }}>✅</Text>
-                                          <Text style={{ color: '#27C93F', marginTop: 15, fontWeight: 'bold', fontSize: 16 }}>MISIÓN COMPLETADA</Text>
-                                          <Text style={{ color: '#4CD964', marginTop: 5, fontSize: 12, textAlign: 'center' }}>
-                                              {selectedPlan?.type?.includes('ECONÓMIC') ? 'Tu reclamación ha sido iniciada y se ha solicitado asistencia de espera en terminal.' : 
-                                               selectedPlan?.type?.includes('CONFORT') || selectedPlan?.actionType === 'hotel' ? 'Tu alojamiento seguro ha sido reservado con éxito.' : 
-                                               'Nuevo itinerario emitido y plazas aseguradas en vuelo directo.'}
+                                          <Text style={{ color: '#27C93F', marginTop: 15, fontWeight: 'bold', fontSize: 16 }}>ESTRATEGIA COMPLETADA</Text>
+                                          <Text style={{ color: '#4CD964', marginTop: 5, fontSize: 13, textAlign: 'center', fontWeight: '500' }}>
+                                              {travelProfile === 'premium' ? 'Protocolo VIP ejecutado. Tu expediente legal y tus alternativas están listos. Tú decides el siguiente paso.' :
+                                               selectedPlan?.type?.includes('ECONÓMIC') ? 'Tu documentación legal está lista. Firma el expediente para enviarlo a la aerolínea.' : 
+                                               selectedPlan?.type?.includes('CONFORT') || selectedPlan?.actionType === 'hotel' ? 'He encontrado opciones de alojamiento cercanas. Revisa la guía y confirma tú mismo la reserva.' : 
+                                               'He analizado las rutas alternativas disponibles. Elige la que mejor se adapte a tu situación.'}
                                           </Text>
                                     </View>
                                 )}
@@ -325,20 +396,23 @@ export default function GlobalOverlays() {
                             setShowBrowser(false); 
                             stopSpeak(); 
                             if (selectedPlan) {
-                                 const isVip = selectedPlan.type?.includes('RÁPID') || selectedPlan.type?.includes('RAPID');
+                                 const isVip = (selectedPlan.type?.includes('RÁPID') || selectedPlan.type?.includes('RAPID')) && travelProfile === 'premium';
+                                 const isRápido = (selectedPlan.type?.includes('RÁPID') || selectedPlan.type?.includes('RAPID')) && travelProfile !== 'premium';
                                  const isEco = selectedPlan.type?.includes('ECONÓMIC');
-                                 const isHotel = selectedPlan.actionType === 'hotel' || selectedPlan.type?.includes('EQUILIBRADO') || selectedPlan.type?.includes('CONFORT');
+                                 const isHotel = selectedPlan.actionType === 'hotel' || selectedPlan.type?.includes('CONFORT');
                                  
-                                 const imgRescate = isVip ? require('../assets/ticket_rapido_vip.jpg') : 
+                                 const imgRescate = isHotel ? require('../assets/reserva_hotel_pura.jpg') :
+                                                   isVip ? require('../assets/ticket_rapido_vip.jpg') : 
+                                                   isRápido ? require('../assets/ticket_rapido_estandar.png') :
                                                    isEco ? require('../assets/ticket_economico.jpg') : 
                                                    require('../assets/ticket_equilibrado_confort.jpg');
 
-                                 speak(`Rescate completado con éxito. He sincronizado tu nuevo ${isHotel ? 'bono de hotel' : 'billete'} ${isVip ? 'VIP' : isEco ? 'Económico' : 'Equilibrado'} en la bóveda de documentos. Buen viaje.`);
+                                 speak(`Misión completada. He preparado tu propuesta de ${isHotel ? 'alojamiento' : 'transporte alternativo'} en la bóveda de documentos para que la utilices. Buen viaje.`);
                                  
                                  const newTicket = {
                                      id: `rescue_${Date.now()}`,
-                                     t: isHotel ? `BONO HOTEL IA (PLAN ${isEco ? 'ECONÓMICO' : isVip ? 'VIP' : 'EQUILIBRADO'})` : `BILLETE RESCATE IA (${isEco ? 'ECONÓMICO' : isVip ? 'RÁPIDO' : 'EQUILIBRADO'})`,
-                                     s: isHotel ? `Alojamiento · ${selectedPlan.title}` : `Vuelo Alternativo · ${selectedPlan.title}`,
+                                     t: isHotel ? `PROPUESTA ALOJAMIENTO IA (PLAN ${isEco ? 'ECONÓMICO' : isVip ? 'VIP' : isRápido ? 'RÁPIDO' : 'EQUILIBRADO'})` : `PROPUESTA RESCATE IA (${isEco ? 'ECONÓMICO' : isVip ? 'VIP' : isRápido ? 'RÁPIDO' : 'EQUILIBRADO'})`,
+                                     s: isHotel ? `Alojamiento · ${selectedPlan.title}` : `Propuesta Vuelo · ${selectedPlan.title}`,
                                      i: imgRescate,
                                      source: 'TRAVEL-PILOT IA',
                                      icon: isHotel ? '🛌' : '🎟️',

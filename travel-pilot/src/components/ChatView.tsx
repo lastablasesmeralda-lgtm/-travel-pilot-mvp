@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Animated, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, TextInput } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, Animated, ScrollView, Platform, ActivityIndicator, TextInput, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppContext } from '../context/AppContext';
 import { s } from '../styles';
@@ -12,17 +12,34 @@ export default function ChatView() {
     } = useAppContext();
 
     const [showVoiceMenu, setShowVoiceMenu] = React.useState(false);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+    // Escuchar eventos reales del teclado
+    useEffect(() => {
+        const showSub = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+            (e) => {
+                setKeyboardHeight(e.endCoordinates.height);
+                setTimeout(() => {
+                    scrollViewRef.current?.scrollToEnd({ animated: true });
+                }, 100);
+            }
+        );
+        const hideSub = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+            () => setKeyboardHeight(0)
+        );
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
 
     if (!showChat) return null;
 
     return (
-        <KeyboardAvoidingView 
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-            style={{ flex: 1, backgroundColor: '#0A0A0A' }}
-            enabled={true}
-            keyboardVerticalOffset={0}
-        >
-            <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'top']}>
+        <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
+            <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
                 <View style={s.chatHead}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 19 }}>🧠 ASISTENTE IA</Text>
@@ -57,7 +74,7 @@ export default function ChatView() {
                         </View>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                             {availableVoices
-                                .slice(0, 4) // SOLO 4 VOCES
+                                .slice(0, 4)
                                 .map((v: any, index: number) => {
                                     const label = v.humanName || `Asistente ${index + 1}`;
                                     const isPremium = v.isPremium || false;
@@ -107,19 +124,26 @@ export default function ChatView() {
                     )}
                 </ScrollView>
 
-                <View style={s.chatInputWrap}>
+                <View style={{ paddingHorizontal: 20, paddingBottom: 6 }}>
+                    <Text style={{ fontSize: 10, color: '#888', textAlign: 'center', fontWeight: '500' }}>
+                         ⓘ El asistente puede cometer errores.{"\n"}Verifica siempre las decisiones importantes.
+                    </Text>
+                </View>
+
+                <View style={[s.chatInputWrap, { marginBottom: keyboardHeight > 0 ? keyboardHeight - (Platform.OS === 'ios' ? 34 : 0) : 20 }]}>
                     <TextInput 
                         style={s.chatInput} 
                         placeholder={"Escribe o pulsa 🎙️ en tu teclado para dictar"} 
                         placeholderTextColor="#666" 
                         value={inputText} 
-                        onChangeText={setInputText} 
+                        onChangeText={setInputText}
+                        onFocus={() => setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 350)}
                     />
                     <TouchableOpacity style={s.chatBtn} onPress={handleSendMessage}>
                         <Text style={{ color: '#FFF' }}>➤</Text>
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
-        </KeyboardAvoidingView>
+        </View>
     );
 }

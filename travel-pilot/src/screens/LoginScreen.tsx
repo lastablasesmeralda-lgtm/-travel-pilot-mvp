@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useRef, useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Image, Alert, ScrollView, Platform, Keyboard } from 'react-native';
 import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
 
@@ -12,16 +12,52 @@ export default function LoginScreen() {
 
     const [showPassword, setShowPassword] = useState(false);
     const [focusedField, setFocusedField] = useState<string | null>(null);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const scrollRef = useRef<ScrollView>(null);
+
+    // Escuchar eventos reales del teclado del sistema operativo
+    useEffect(() => {
+        const showSub = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+            (e) => {
+                setKeyboardHeight(e.endCoordinates.height);
+                // Scroll hasta abajo tras un breve delay para que el layout se ajuste
+                setTimeout(() => {
+                    scrollRef.current?.scrollToEnd({ animated: true });
+                }, 100);
+            }
+        );
+        const hideSub = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+            () => {
+                setKeyboardHeight(0);
+            }
+        );
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
+
+    const handleFocus = (field: string) => {
+        setFocusedField(field);
+        // Doble scroll: inmediato + tras el teclado
+        setTimeout(() => {
+            scrollRef.current?.scrollToEnd({ animated: true });
+        }, 400);
+    };
 
     return (
-        <KeyboardAvoidingView 
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={{ flex: 1, backgroundColor: '#0A0A0A' }}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-        >
+        <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
             <ScrollView 
-                contentContainerStyle={{ flexGrow: 1, padding: 12, paddingBottom: 150 }}
+                ref={scrollRef}
+                contentContainerStyle={{ 
+                    flexGrow: 1, 
+                    padding: 12, 
+                    paddingBottom: keyboardHeight > 0 ? keyboardHeight + 80 : 150 
+                }}
                 keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
             >
             {!user ? (
                 <View style={{ padding: 16, backgroundColor: '#111', borderRadius: 16, marginBottom: 12, marginTop: 40, borderWidth: 1, borderColor: '#222' }}>
@@ -80,7 +116,7 @@ export default function LoginScreen() {
                         onChangeText={setAuthEmail}
                         autoCapitalize="none"
                         keyboardType="email-address"
-                        onFocus={() => setFocusedField('email')}
+                        onFocus={() => handleFocus('email')}
                         onBlur={() => setFocusedField(null)}
                         style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 16, paddingVertical: 14, borderRadius: 12, marginTop: 8, borderWidth: 1, borderColor: focusedField === 'email' ? '#AF52DE' : '#222', fontSize: 14 }}
                     />
@@ -92,7 +128,7 @@ export default function LoginScreen() {
                                 placeholderTextColor="#444"
                                 value={authName}
                                 onChangeText={setAuthName}
-                                onFocus={() => setFocusedField('name')}
+                                onFocus={() => handleFocus('name')}
                                 onBlur={() => setFocusedField(null)}
                                 style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 16, paddingVertical: 14, borderRadius: 12, marginTop: 12, borderWidth: 1, borderColor: focusedField === 'name' ? '#AF52DE' : '#222', fontSize: 14 }}
                             />
@@ -102,7 +138,7 @@ export default function LoginScreen() {
                                 value={userPhone}
                                 onChangeText={setUserPhone}
                                 keyboardType="phone-pad"
-                                onFocus={() => setFocusedField('phone')}
+                                onFocus={() => handleFocus('phone')}
                                 onBlur={() => setFocusedField(null)}
                                 style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 16, paddingVertical: 14, borderRadius: 12, marginTop: 12, borderWidth: 1, borderColor: focusedField === 'phone' ? '#AF52DE' : '#222', fontSize: 14 }}
                             />
@@ -116,7 +152,7 @@ export default function LoginScreen() {
                             value={authPassword}
                             onChangeText={setAuthPassword}
                             secureTextEntry={!showPassword}
-                            onFocus={() => setFocusedField('password')}
+                            onFocus={() => handleFocus('password')}
                             onBlur={() => setFocusedField(null)}
                             style={{ backgroundColor: '#000', color: 'white', paddingHorizontal: 16, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: focusedField === 'password' ? '#AF52DE' : '#222', fontSize: 14 }}
                         />
@@ -129,15 +165,31 @@ export default function LoginScreen() {
                         </TouchableOpacity>
                     </View>
 
-                    <View style={{ flexDirection: 'row', marginTop: 28 }}>
+                    {authMode === 'register' && (
+                        <View style={{ marginTop: 20, backgroundColor: '#000', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#222', maxHeight: 150 }}>
+                            <Text style={{ color: '#AF52DE', fontSize: 10, fontWeight: 'bold', marginBottom: 6 }}>TÉRMINOS DE SERVICIO (LEER ANTES DE REGISTRAR)</Text>
+                            <ScrollView nestedScrollEnabled showsVerticalScrollIndicator>
+                                <Text style={{ color: '#E0E0E0', fontSize: 11, lineHeight: 16 }}>
+                                    1. Travel-Pilot es una herramienta de información y monitorización, no un servicio de gestoría aérea.{"\n\n"}
+                                    2. La información proporcionada por el asistente IA puede contener errores. No nos hacemos responsables de decisiones tomadas basadas en dichas respuestas.{"\n\n"}
+                                    3. Los datos de vuelos mostrados pueden no reflejar en tiempo real el estado exacto del vuelo. Verifica siempre con la aerolínea oficial.{"\n\n"}
+                                    4. Travel-Pilot no realiza reservas, cancelaciones ni ninguna gestión en nombre del usuario.{"\n\n"}
+                                    5. Los documentos almacenados en DOCS son responsabilidad del usuario. Travel-Pilot proporciona almacenamiento cifrado pero no verifica la validez legal de los documentos.{"\n\n"}
+                                    6. La compensación EU261 calculada por el sistema es orientativa. El importe final lo determina la aerolínea o la autoridad aeronáutica competente.
+                                </Text>
+                            </ScrollView>
+                            <Text style={{ color: '#888', fontSize: 9, marginTop: 8, fontStyle: 'italic' }}>* Al pulsar "CONFIRMAR REGISTRO" aceptas estas condiciones de uso.</Text>
+                        </View>
+                    )}
+
+                    <View style={{ marginTop: 28 }}>
                         <TouchableOpacity
                             onPress={authMode === 'login' ? handleLogin : handleRegister}
                             style={{ 
                                 backgroundColor: authMode === 'login' ? '#007AFF' : '#AF52DE', 
-                                paddingVertical: 14, 
-                                paddingHorizontal: 28, 
+                                paddingVertical: 16, 
                                 borderRadius: 12, 
-                                marginRight: 12, 
+                                alignItems: 'center',
                                 opacity: authLoading ? 0.6 : 1, 
                                 shadowColor: authMode === 'login' ? '#007AFF' : '#AF52DE', 
                                 shadowOffset: { width: 0, height: 4 }, 
@@ -154,14 +206,13 @@ export default function LoginScreen() {
 
                         <TouchableOpacity
                             onPress={() => setAuthMode((prev: string) => (prev === 'login' ? 'register' : 'login'))}
-                            style={{ backgroundColor: '#1A1A1A', paddingVertical: 14, paddingHorizontal: 20, borderRadius: 12, borderWidth: 1, borderColor: '#333' }}
+                            style={{ backgroundColor: '#1A1A1A', paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: '#333', marginTop: 12, alignItems: 'center' }}
                         >
-                            <Text style={{ color: '#E0E0E0', fontSize: 12, fontWeight: '700' }}>
-                                {authMode === 'login' ? 'CREAR CUENTA' : 'VOLVER A LOGIN'}
+                            <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 12 }}>
+                                {authMode === 'login' ? 'CREAR UNA CUENTA NUEVA' : '← VOLVER AL INICIO DE SESIÓN'}
                             </Text>
                         </TouchableOpacity>
                     </View>
-
 
                 </View>
             ) : (
@@ -173,7 +224,7 @@ export default function LoginScreen() {
                     </TouchableOpacity>
                 </View>
             )}
-        </ScrollView>
-    </KeyboardAvoidingView>
+            </ScrollView>
+        </View>
     );
 }

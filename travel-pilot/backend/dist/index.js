@@ -163,13 +163,13 @@ setInterval(globalMonitor, 30 * 60 * 1000);
 // ENDPOINT 1: MONITOR DE VUELO — ahora instantáneo con caché
 // ============================================================
 fastify.post('/api/monitorFlight', async (request, reply) => {
-    const { flightId } = request.body;
+    const { flightId, travelProfile } = request.body;
     if (!flightId) {
         return reply.status(400).send({ error: 'flightId is required' });
     }
     try {
-        console.log(`[Backend] Manual monitoring requested for: ${flightId}`);
-        const contingencyPlan = await (0, agent_1.handleFlightMonitoring)(flightId);
+        console.log(`[Backend] Manual monitoring requested for: ${flightId} (Profile: ${travelProfile || 'balanced'})`);
+        const contingencyPlan = await (0, agent_1.handleFlightMonitoring)(flightId, travelProfile || 'balanced');
         // Evitar duplicados si ya se generó un plan recientemente (hace < 1 min)
         const { data: recent } = await supabase_1.supabase
             .from('agent_logs')
@@ -217,170 +217,22 @@ fastify.get('/api/flightInfo', async (request, reply) => {
     if (!flight) {
         return reply.status(400).send({ error: 'flight query param is required' });
     }
-    const AVIATION_KEY = process.env.AVIATIONSTACK_API_KEY;
-    if (!AVIATION_KEY) {
-        return reply.status(500).send({ error: 'AviationStack API key not configured' });
-    }
     try {
-        console.log(`[FlightInfo] Buscando vuelo: ${flight}`);
-        // ✅ RADAR DE PRUEBAS — Sustituye al bloque TP404 antiguo
-        const MOCK_FLIGHTS = {
-            'TP404': {
-                flightNumber: 'TP404', airline: 'Travel-Pilot Air', status: 'delayed', isSimulation: true,
-                departure: {
-                    airport: 'Madrid Barajas', iata: 'MAD', terminal: 'T4', gate: 'K82',
-                    scheduled: new Date().toISOString(),
-                    estimated: new Date(Date.now() + 210 * 60 * 1000).toISOString(), delay: 210
-                },
-                arrival: {
-                    airport: 'London Heathrow', iata: 'LHR', terminal: 'T5', gate: 'C32',
-                    scheduled: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-                    estimated: new Date(Date.now() + (2 * 60 + 210) * 60 * 1000).toISOString(), delay: 210
-                }
-            },
-            'IB0123': {
-                flightNumber: 'IB0123', airline: 'Iberia Vanguard', status: 'delayed', isSimulation: true,
-                departure: {
-                    airport: 'Madrid Barajas', iata: 'MAD', terminal: 'T4S', gate: 'M22',
-                    scheduled: new Date().toISOString(),
-                    estimated: new Date(Date.now() + 190 * 60 * 1000).toISOString(), delay: 190
-                },
-                arrival: {
-                    airport: 'New York JFK', iata: 'JFK', terminal: 'T8', gate: 'B12',
-                    scheduled: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-                    estimated: new Date(Date.now() + (8 * 60 + 190) * 60 * 1000).toISOString(), delay: 190
-                }
-            },
-            'IB3166': {
-                flightNumber: 'IB3166', airline: 'Iberia', status: 'delayed', isSimulation: true,
-                departure: {
-                    airport: 'Madrid Barajas', iata: 'MAD', terminal: 'T4S', gate: 'H22',
-                    scheduled: new Date().toISOString(),
-                    estimated: new Date(Date.now() + 195 * 60 * 1000).toISOString(), delay: 195
-                },
-                arrival: {
-                    airport: 'Paris Charles de Gaulle', iata: 'CDG', terminal: 'T2F', gate: 'B14',
-                    scheduled: new Date(Date.now() + 2.5 * 60 * 60 * 1000).toISOString(),
-                    estimated: new Date(Date.now() + (2.5 * 60 + 195) * 60 * 1000).toISOString(), delay: 195
-                }
-            },
-            'VY1234': {
-                flightNumber: 'VY1234', airline: 'Vueling', status: 'scheduled', isSimulation: true,
-                departure: {
-                    airport: 'Barcelona El Prat', iata: 'BCN', terminal: 'T1', gate: 'D45',
-                    scheduled: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
-                    estimated: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(), delay: 0
-                },
-                arrival: {
-                    airport: 'Roma Fiumicino', iata: 'FCO', terminal: 'T3', gate: 'C12',
-                    scheduled: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
-                    estimated: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(), delay: 0
-                }
-            },
-            'BA0117': {
-                flightNumber: 'BA0117', airline: 'British Airways', status: 'active', isSimulation: true,
-                departure: {
-                    airport: 'London Heathrow', iata: 'LHR', terminal: 'T5', gate: 'C32',
-                    scheduled: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-                    estimated: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), delay: 0
-                },
-                arrival: {
-                    airport: 'Nueva York JFK', iata: 'JFK', terminal: 'T7', gate: 'A22',
-                    scheduled: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
-                    estimated: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(), delay: 0
-                }
-            },
-            'TP999': {
-                flightNumber: 'TP999', airline: 'Travel-Pilot Test', status: 'delayed', isSimulation: true,
-                departure: {
-                    airport: 'Madrid Barajas', iata: 'MAD', terminal: 'T4', gate: 'B12',
-                    scheduled: new Date().toISOString(),
-                    estimated: new Date(Date.now() + 210 * 60 * 1000).toISOString(), delay: 210
-                },
-                arrival: {
-                    airport: 'Berlin Brandenburg', iata: 'BER', terminal: 'T1', gate: 'B18',
-                    scheduled: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-                    estimated: new Date(Date.now() + (2 * 60 + 210) * 60 * 1000).toISOString(), delay: 210
-                }
-            },
-            'TK1860': {
-                flightNumber: 'TK1860', airline: 'Turkish Airlines', status: 'delayed',
-                departure: {
-                    airport: 'Madrid Barajas', iata: 'MAD', terminal: 'T1', gate: 'C10',
-                    scheduled: new Date().toISOString(),
-                    estimated: new Date(Date.now() + 190 * 60 * 1000).toISOString(), delay: 190
-                },
-                arrival: {
-                    airport: 'Istanbul Airport', iata: 'IST', terminal: 'I', gate: 'G05',
-                    scheduled: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
-                    estimated: new Date(Date.now() + (4 * 60 + 190) * 60 * 1000).toISOString(), delay: 190
-                }
-            },
-            'EK142': {
-                flightNumber: 'EK142', airline: 'Emirates', status: 'delayed',
-                departure: {
-                    airport: 'Madrid Barajas', iata: 'MAD', terminal: 'T4S', gate: 'S15',
-                    scheduled: new Date().toISOString(),
-                    estimated: new Date(Date.now() + 210 * 60 * 1000).toISOString(), delay: 210
-                },
-                arrival: {
-                    airport: 'Dubai Intl', iata: 'DXB', terminal: '3', gate: 'B01',
-                    scheduled: new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString(),
-                    estimated: new Date(Date.now() + (7 * 60 + 210) * 60 * 1000).toISOString(), delay: 210
-                }
-            },
-            'IB3150': {
-                flightNumber: 'IB3150', airline: 'Iberia', status: 'delayed',
-                departure: {
-                    airport: 'Madrid Barajas', iata: 'MAD', terminal: 'T4', gate: 'K12',
-                    scheduled: new Date().toISOString(),
-                    estimated: new Date(Date.now() + 195 * 60 * 1000).toISOString(), delay: 195
-                },
-                arrival: {
-                    airport: 'Warsaw Chopin', iata: 'WAW', terminal: '1', gate: 'A15',
-                    scheduled: new Date(Date.now() + 3.5 * 60 * 60 * 1000).toISOString(),
-                    estimated: new Date(Date.now() + (3.5 * 60 + 195) * 60 * 1000).toISOString(), delay: 195
-                }
-            }
-        };
-        const mockFlight = MOCK_FLIGHTS[flight.toUpperCase()];
-        if (mockFlight) {
-            console.log(`[FlightInfo] 🧪 Radar de pruebas: ${flight}`);
-            // Log eliminado para evitar saturación del historial en cada búsqueda
-            return reply.send({ ...mockFlight, isSimulation: true });
+        const AVIATION_KEY = process.env.AVIATIONSTACK_API_KEY;
+        const code = flight.toUpperCase();
+        // LOS CÓDIGOS DE TEST AHORA SE GESTIONAN CENTRALIZADAMENTE EN agent.ts
+        const testCodes = ['TP999', 'TP404', 'IB3166', 'TP777', 'TP555', 'TP111', 'IB0123', 'TK1860', 'EK142', 'IB3150'];
+        if (testCodes.includes(code)) {
+            console.log(`[FlightInfo] 🧪 Radar de pruebas (Consistente): ${code}`);
+            const data = await (0, agent_1.checkFlightStatus)(code);
+            return reply.send({ ...data, isSimulation: true });
         }
-        // La API de AviationStack ya no funciona o fue deprecada.
-        // En su lugar, generamos un vuelo simulado para que la app "funcione" con cualquier búsqueda.
-        console.log(`[FlightInfo] ⚠️ Vuelo no encontrado en radar estático, generando simulación dinámica: ${flight}`);
-        const isDelayed = Math.random() > 0.5;
-        const randomDelay = isDelayed ? Math.floor(Math.random() * 180) + 30 : 0; // Entre 30 y 210 mins de retraso
-        const genericFlight = {
-            flightNumber: flight.toUpperCase(),
-            airline: 'Simulated Airlines',
-            status: isDelayed ? 'delayed' : 'scheduled',
-            departure: {
-                airport: 'Aeropuerto Origen',
-                iata: 'ORG',
-                terminal: 'T1',
-                gate: 'A' + Math.floor(Math.random() * 20 + 1),
-                scheduled: new Date().toISOString(),
-                estimated: new Date(Date.now() + randomDelay * 60 * 1000).toISOString(),
-                delay: randomDelay,
-            },
-            arrival: {
-                airport: 'Aeropuerto Destino',
-                iata: 'DST',
-                terminal: 'T2',
-                gate: 'B' + Math.floor(Math.random() * 20 + 1),
-                scheduled: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-                estimated: new Date(Date.now() + (2 * 60 + randomDelay) * 60 * 1000).toISOString(),
-                delay: randomDelay,
-            },
-            live: null,
-            isSimulation: true,
-        };
-        console.log(`[FlightInfo] ✅ Simulación para ${genericFlight.flightNumber}: ${genericFlight.status} (delay: ${randomDelay}min)`);
-        return reply.send(genericFlight);
+        // Llamamos directamente al agente central de vuelos, que intentará buscar en AviationStack
+        // o generará el gran fallback interno si la API falla.
+        console.log(`[FlightInfo] 📡 Solicitando datos reales para vuelo: ${code}`);
+        const flightData = await (0, agent_1.checkFlightStatus)(code);
+        console.log(`[FlightInfo] ✅ Datos enviados para ${flightData.flightNumber}: ${flightData.status}`);
+        return reply.send(flightData);
     }
     catch (error) {
         console.error('[FlightInfo] ❌ Error:', error);
@@ -404,7 +256,7 @@ function getChatModel() {
     return chatModel;
 }
 fastify.post('/api/chat', async (request, reply) => {
-    const { text, history, flightId } = request.body;
+    const { text, history, flightId, travelProfile } = request.body;
     if (!text)
         return reply.status(400).send({ error: 'text is required' });
     let retryCount = 0;
@@ -437,12 +289,35 @@ fastify.post('/api/chat', async (request, reply) => {
                 }
             }
             catch (e) { }
+            let roleInstructions = "";
+            if (travelProfile === 'premium') {
+                roleInstructions = `ESTATUS DEL USUARIO: VIP / PREMIUM
+            Eres un Jefe de Crisis. Toma el mando inmediatamente. Sé proactivo, ejecutivo y extremadamente útil, pero HONESTO.
+            Usa frases como: 'He analizado tu riesgo', 'He preparado tu defensa', 'Aquí tienes tu plan estratégico'.
+            Ofrece soluciones ANTES de que las pidan. Si hay derecho a algo, ofrécele el documento legal activamente.
+            NUNCA digas que has reservado o comprado nada real, usa "he generado tu propuesta" o "tienes el plan legal preparado".
+            Ejemplo de respuesta: 'He detectado el retraso y analizado tu riesgo. Tu compensación es de 400€. Aquí tienes vuelos alternativos calculados. ¿Quieres que genere el PDF de reclamación ahora?'`;
+            }
+            else {
+                roleInstructions = `ESTATUS DEL USUARIO: GRATIS / ESTÁNDAR
+            Eres un panel informativo humano. No des consejos proactivos. Si preguntan, informa. Sé seco y profesional.
+            SOLO informas y orientas basándote en la ley, sin ofrecer herramientas avanzadas.
+            NUNCA digas que has hecho una acción externa.
+            Ejemplo de respuesta: 'Tu vuelo lleva 195 min de retraso. Tienes derecho a 400€ según EU261. Te recomiendo ir al mostrador de la aerolínea.'`;
+            }
             const systemPrompt = `Eres tu asistente personal de viajes, un humano muy directo y eficaz.
             Hoy es ${dateStr}. La hora actual en España es ${timeStr}.${wContext}
             Tu misión: Resolver problemas con calma, inteligencia y, sobre todo, BREVEDAD.
+
+            ${roleInstructions}
+
+            REGLA CRÍTICA PARA AMBOS:
+            - NO puedes afirmar que has realizado acciones externas como reservar vuelos, llamar al hotel o contactar con aerolíneas.
+            - SOLO interactúas con la Bóveda de Documentos, generando herramientas legales o planes para el usuario.
+
             - Si te preguntan la hora, responde con ${timeStr}.
             - Si te preguntan por el clima de un lugar que tienes en el contexto (${wContext.replace(/\n/g, ' ')}), dalo.
-            - Si te preguntan por el clima de otro lugar, di que "estás consultándolo" pero que hoy en Madrid hace lo que ponga en tu contexto.
+            - Si te preguntan por el clima de otro lugar, di que "estás consultándolo" pero que hoy hace lo que ponga en tu contexto.
             - Sé extremadamente conciso. No des explicaciones largas.
             - Responde SIEMPRE en español y en texto plano (sin negritas ni markdown).`;
             let flightContextStr = "";
@@ -997,6 +872,65 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         const sDep = sanitizeText(departureAirport);
         const sArr = sanitizeText(arrivalAirport);
         const sEmail = sanitizeText(userEmail);
+        const sStatus = request.body.status || 'delayed';
+        // LÓGICA DINÁMICA DE TÍTULO Y CUERPO (Reglas Beta 555)
+        const currentHour = new Date().getHours();
+        const isNight = currentHour >= 22 || currentHour < 6;
+        const delay = delayMinutes || 0;
+        let pdfTitle = 'RECLAMACIÓN EU261 / 2004';
+        let bodyLines = [];
+        if (sStatus === 'cancelled') {
+            pdfTitle = 'RECLAMACIÓN EU261 — CANCELACIÓN DE VUELO';
+            bodyLines = [
+                `Por la presente exijo, al amparo del Art. 5 y Art. 8 del Reglamento CE 261/2004,`,
+                `la eleccion entre:`,
+                `a) Reembolso integro del billete en 7 dias.`,
+                `b) Transporte alternativo al destino final en las condiciones mas rapidas posibles.`,
+                `Asi mismo exijo asistencia inmediata conforme al Art. 9 durante la espera.`
+            ];
+        }
+        else if (sStatus === 'overbooked' || sStatus === 'denied_boarding') {
+            pdfTitle = 'RECLAMACIÓN EU261 — DENEGACION DE EMBARQUE';
+            bodyLines = [
+                `Por la presente exijo compensacion inmediata conforme al Art. 4 y Art. 7 del`,
+                `Reglamento CE 261/2004 por denegacion involuntaria de embarque, asi como`,
+                `asistencia completa del Art. 9: alojamiento, transporte, manutencion`,
+                `y comunicacion.`
+            ];
+        }
+        else {
+            // CASO RETRASO (Basado en Reglas 1, 2 y 3)
+            if (delay < 180) {
+                pdfTitle = 'SOLICITUD DE ASISTENCIA INMEDIATA';
+            }
+            else {
+                pdfTitle = 'RECLAMACION EU261 - COMPENSACION + ASISTENCIA';
+            }
+            bodyLines.push(`Por la presente SOLICITO formalmente a la aerolinea ${sAirline} la asistencia`);
+            bodyLines.push(`y compensacion proporcional a la incidencia en el vuelo ${sFlight} (${sDep} -> ${sArr}).`);
+            bodyLines.push(``);
+            if (delay >= 120) {
+                bodyLines.push(`Asi mismo, exijo el derecho a asistencia inmediata (Art. 9) que incluye`);
+                bodyLines.push(`manutencion y comunicacion (comida, bebida y dos llamadas telefonicas`);
+                bodyLines.push(`o emails) durante el tiempo de espera.`);
+                bodyLines.push(``);
+            }
+            if (delay >= 180) {
+                bodyLines.push(`Dado que el retraso supera las 3 horas, exijo compensacion economica de entre`);
+                bodyLines.push(`250 EUR y 600 EUR segun distancia del vuelo, conforme al Art. 7.`);
+                bodyLines.push(``);
+            }
+            if (delay >= 180 && isNight) {
+                bodyLines.push(`Dado que el retraso implica pernocta, exijo alojamiento en hotel y transporte`);
+                bodyLines.push(`entre aeropuerto y hotel (Art. 9.1.b), con efecto inmediato esta misma noche.`);
+                bodyLines.push(``);
+            }
+        }
+        // Sobrescribir título en cabecera
+        page.drawRectangle({ x: 0, y: height - 100, width, height: 100, color: DARK });
+        page.drawText('TRAVEL-PILOT', { x: 40, y: height - 45, size: 22, font: fontBold, color: GOLD });
+        page.drawText(pdfTitle, { x: 40, y: height - 65, size: 10, font: fontRegular, color: rgb(0.8, 0.8, 0.8) });
+        page.drawText(`Ref: TP-${Date.now().toString().slice(-6)}`, { x: 400, y: height - 55, size: 9, font: fontRegular, color: GOLD });
         // Sección: datos del pasajero
         let y = height - 150;
         page.drawText('DATOS DEL PASAJERO', { x: 40, y, size: 11, font: fontBold, color: DARK });
@@ -1012,14 +946,16 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         y -= 18;
         page.drawText(`Aerolinea:     ${sAirline}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
         y -= 18;
-        page.drawText(`Origen:        ${sDep}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
+        page.drawText(`Ruta:          ${sDep} -> ${sArr}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
         y -= 18;
-        page.drawText(`Destino:       ${sArr}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
+        page.drawText(`Estado:        ${sStatus.toUpperCase()}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
         y -= 18;
-        page.drawText(`Retraso:       ${delayMinutes || 0} minutos`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
-        y -= 18;
-        const getEU261AmountStr = (orig, dest, delay) => {
-            if (delay < 180)
+        if (sStatus === 'delayed') {
+            page.drawText(`Retraso:       ${delay} minutos`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
+            y -= 18;
+        }
+        const getEU261AmountStr = (orig, dest, delay, status) => {
+            if (status !== 'cancelled' && status !== 'overbooked' && status !== 'denied_boarding' && delay < 180)
                 return '0 EUR';
             const shortHaul = ['MAD', 'BCN', 'CDG', 'ORY', 'LHR', 'LGW', 'FRA', 'MUC', 'AMS', 'LIS', 'BIO', 'TFN', 'TFS', 'LPA'];
             if (shortHaul.includes(orig) && shortHaul.includes(dest))
@@ -1029,29 +965,22 @@ fastify.post('/api/generateClaim', async (request, reply) => {
                 return '600 EUR';
             return '400 EUR';
         };
-        const amount = getEU261AmountStr(departureAirport || '', arrivalAirport || '', delayMinutes || 0);
-        page.drawText(`Compensacion:  ${amount} (Reglamento EU261/2004)`, { x: 40, y, size: 10, font: fontBold, color: DARK });
-        // Cuerpo legal
+        const amount = getEU261AmountStr(departureAirport || '', arrivalAirport || '', delay, sStatus);
+        page.drawText(`Estimacion:    ${amount} (Ley 261/2004)`, { x: 40, y, size: 10, font: fontBold, color: DARK });
+        // Cuerpo legal dinámico
         y -= 50;
         page.drawText('FUNDAMENTO LEGAL Y SOLICITUD', { x: 40, y, size: 11, font: fontBold, color: DARK });
         page.drawLine({ start: { x: 40, y: y - 5 }, end: { x: 555, y: y - 5 }, thickness: 0.5, color: GOLD });
         y -= 25;
-        const body = [
-            `Por la presente, yo, el abajo firmante, con email ${sEmail}, SOLICITO`,
-            `formalmente a la aerolinea ${sAirline} el pago de la compensacion`,
-            `economica establecida en el Reglamento (CE) n. 261/2004 del Parlamento Europeo,`,
-            `por el retraso de ${delayMinutes || 0} minutos en el vuelo ${sFlight} (${sDep} -> ${sArr}).`,
-            ``,
-            `El reglamento establece que los pasajeros de vuelos con retraso superior a 3 horas`,
-            `tienen derecho a compensacion economica de entre 250 EUR y 600 EUR, segun la distancia.`,
-            ``,
-            `Exijo resolucion en el plazo de 14 dias habiles. En caso contrario, me reservo el`,
-            `derecho a acudir a la autoridad aeronautica competente (AESA en Espana).`,
-        ];
-        for (const line of body) {
+        for (const line of bodyLines) {
             page.drawText(line, { x: 40, y, size: 9.5, font: fontRegular, color: DARK });
-            y -= 16;
+            y -= 15;
         }
+        // Cierre legal
+        y -= 20;
+        page.drawText(`Exijo resolucion en el plazo de 14 dias habiles. Me reservo el derecho a acudir`, { x: 40, y, size: 9.5, font: fontRegular, color: DARK });
+        y -= 15;
+        page.drawText(`a la autoridad aeronautica competente (AESA) en caso de silencio o negativa.`, { x: 40, y, size: 9.5, font: fontRegular, color: DARK });
         // Firma
         y -= 30;
         page.drawText('FIRMA DEL PASAJERO', { x: 40, y, size: 11, font: fontBold, color: DARK });
@@ -1076,9 +1005,19 @@ fastify.post('/api/generateClaim', async (request, reply) => {
             y -= 20;
         }
         page.drawText(`${userEmail || 'Pasajero'}`, { x: 40, y, size: 9, font: fontRegular, color: GREY });
-        // Pie de página
-        page.drawRectangle({ x: 0, y: 0, width, height: 40, color: DARK });
-        page.drawText('Generado por Travel-Pilot AI · Documento con validez legal EU261/2004', { x: 40, y: 15, size: 7.5, font: fontRegular, color: rgb(0.5, 0.5, 0.5) });
+        // Pie de página extendido con Disclaimer Legal
+        page.drawRectangle({ x: 0, y: 0, width, height: 65, color: DARK });
+        page.drawText('Generado por Travel-Pilot AI · Documento con validez legal EU261/2004', { x: 40, y: 45, size: 7.5, font: fontBold, color: GOLD });
+        const disclaimerLines = [
+            "Este documento ha sido generado automáticamente por Travel-Pilot como herramienta de asistencia.",
+            "El usuario es responsable de verificar la exactitud de los datos antes de presentar esta reclamación.",
+            "Travel-Pilot no garantiza el resultado de la reclamación ni actúa como representante legal del pasajero."
+        ];
+        let footerY = 32;
+        for (const line of disclaimerLines) {
+            page.drawText(line, { x: 40, y: footerY, size: 6.5, font: fontRegular, color: rgb(0.6, 0.6, 0.6) });
+            footerY -= 9;
+        }
         const pdfBytes = await pdfDoc.save();
         const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
         console.log(`[Claim] ✅ PDF generado para ${userEmail} - Vuelo ${flightNumber}`);

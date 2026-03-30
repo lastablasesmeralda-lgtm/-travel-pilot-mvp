@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
+import { useNavigation } from '@react-navigation/native';
 
 export default function VuelosScreen() {
+    const navigation = useNavigation<any>();
     const {
         flightInput, setFlightInput, searchFlight, clearFlight, isSearching, searchError,
         flightData, formatTime, getStatusColor, getStatusLabel,
-        myFlights, saveMyFlight, removeMyFlight, activeSearches, removeActiveSearch
+        myFlights, saveMyFlight, removeMyFlight, activeSearches, removeActiveSearch,
+        pendingVIPRedirect, setPendingVIPRedirect
     } = useAppContext();
 
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
@@ -18,6 +21,14 @@ export default function VuelosScreen() {
             setLastUpdate(new Date());
         }
     }, [flightData?.flightNumber]);
+
+    // Redirigir al tab VIP cuando el usuario pulsa "VER VIP" en el Alert de límite
+    useEffect(() => {
+        if (pendingVIPRedirect) {
+            setPendingVIPRedirect(false);
+            navigation.navigate('VIP');
+        }
+    }, [pendingVIPRedirect]);
 
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20, paddingTop: 100 }}>
@@ -37,7 +48,7 @@ export default function VuelosScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                     <Text style={{ color: '#FF9500', fontWeight: '900', fontSize: 13, letterSpacing: 0.5 }}>ENTORNO DE PRUEBAS BETA</Text>
-                    <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 2 }}>Usa los códigos TP404, IB3166 o TP999 para testear.</Text>
+                    <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 2 }}>Prueba: IB3166 (Retraso), TP777 (Cancelado), TP555 (Largo Alcance), TP111 (Desvío) o TP404.</Text>
                 </View>
             </View>
 
