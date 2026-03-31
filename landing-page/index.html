@@ -177,21 +177,21 @@
 
                             <!-- Estado: Resuelto -->
                             <div id="plans-ui" class="plans-ui">
-                                <div class="plan-card-sim" onclick="selectPlan('ECO')">
+                                <div class="plan-card-sim" onclick="selectPlan('ECONOMICO')">
                                     <span class="plan-tag">OPCIÓN 01: ECONÓMICO</span>
                                     <h4>ECONÓMICO</h4>
                                     <div class="price">Prioridad: Ahorro</div>
                                     <div class="time">Mínimo gasto | Máxima compensación</div>
                                 </div>
-                                <div class="plan-card-sim" onclick="selectPlan('Equilibrado')">
+                                <div class="plan-card-sim" onclick="selectPlan('EQUILIBRADO')">
                                     <span class="plan-tag">OPCIÓN 02: EQUILIBRADO</span>
                                     <h4>EQUILIBRADO</h4>
                                     <div class="price">Prioridad: Rapidez / Precio</div>
                                     <div class="time">Optimización de tiempo y escala</div>
                                 </div>
-                                <div class="plan-card-sim vip" onclick="selectPlan('RÁPIDO')">
-                                    <span class="plan-tag">OPCIÓN 03: RÁPIDO</span>
-                                    <h4>RÁPIDO</h4>
+                                <div class="plan-card-sim vip" onclick="selectPlan('RAPIDO')">
+                                    <span class="plan-tag">OPCIÓN 03: VIP</span>
+                                    <h4>VIP</h4>
                                     <div class="price">Prioridad: Velocidad</div>
                                     <div class="time">Vuelo alternativo inmediato</div>
                                 </div>
@@ -400,9 +400,9 @@
             currentAudio.play().catch(e => console.log("Audio no cargado aún:", e));
 
             // Texto de apoyo visual (Sincronizado con audios reales)
-            if(plan === 'ECO') {
+            if(plan === 'ECONOMICO') {
                 iaText.innerText = "Entendido. Tu expediente de reclamación EU261 está listo para firmar. Sin formularios, sin llamadas. Un toque y el proceso legal empieza solo.";
-            } else if(plan === 'VIP' || plan === 'RÁPIDO') {
+            } else if(plan === 'RAPIDO') {
                 iaText.innerText = "Acción inmediata. He identificado la alternativa más rápida disponible para llegar hoy a tu destino. El plan está listo. ¿Lo ejecutamos?";
             } else {
                 iaText.innerText = "Perfecto. He analizado tu situación y tengo tres opciones preparadas. La más equilibrada entre tiempo y dinero ya está destacada. Dime si la activo.";
