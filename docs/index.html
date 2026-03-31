@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Travel-Pilot | Tu Copiloto Inteligente de Viaje</title>
     <meta name="description" content="Protección proactiva que vigila tus vuelos y resuelve crisis al instante mientras tú descansas.">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2.2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -18,6 +18,7 @@
     <header>
         <nav class="container">
             <div class="logo">
+                <img src="assets/logo_v3.png" alt="Logo" class="logo-icon-img">
                 <span class="logo-text">TRAVEL<span class="gradient-text">-PILOT</span></span>
             </div>
             <div class="status-indicator">
@@ -30,9 +31,15 @@
         <section class="hero">
             <div class="container hero-content">
                 <div class="hero-text">
-                    <span class="badge">SISTEMA DE ASISTENCIA INTELIGENTE // v1.5 [BETA]</span>
+                    <span class="badge">SISTEMA DE ASISTENCIA INTELIGENTE // v1.0 (BETA)</span>
                     <h1>TU VIAJE, SIEMPRE BAJO CONTROL</h1>
                     <p class="hero-subtitle">Tu asistente inteligente que vigila tus vuelos y cuida de tu tranquilidad, detectando retrasos y ejecutando soluciones en tiempo real.</p>
+
+                    <a href="#beta-form" class="hero-cta-btn">SOLICITAR MI ACCESO BETA →</a>
+
+                    <div class="social-proof">
+                        <span class="status-dot"></span> 247 VIAJEROS YA EN LISTA DE ESPERA
+                    </div>
 
                     <div class="hero-description">
                         <h3>Asistencia Inteligente</h3>
@@ -43,10 +50,33 @@
                         </ul>
                     </div>
 
+                    <div class="how-it-works">
+                        <h2 class="section-subtitle">CÓMO FUNCIONA</h2>
+                        <div class="steps-grid">
+                            <div class="step-card">
+                                <span class="step-num">01</span>
+                                <span class="step-icon">✈️</span>
+                                <h3>REGISTRA TU VUELO</h3>
+                                <p>Añade el número de tu vuelo en segundos. Travel-Pilot lo importa automáticamente desde tu email o lo introduces tú.</p>
+                            </div>
+                            <div class="step-card">
+                                <span class="step-num">02</span>
+                                <span class="step-icon">🛡️</span>
+                                <h3>NOSOTROS VIGILAMOS</h3>
+                                <p>Nuestra IA monitoriza tu vuelo 24/7. Detectamos retrasos, cambios de puerta y cancelaciones antes de que te afecten.</p>
+                            </div>
+                            <div class="step-card">
+                                <span class="step-num">03</span>
+                                <span class="step-icon">⚡</span>
+                                <h3>ACTUAMOS POR TI</h3>
+                                <p>Sin formularios. Sin esperas. Reservamos alternativas, reclamamos tu compensación y te mantenemos informado en tiempo real.</p>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="hero-status">
                         <h3>ACCESO EXCLUSIVO BETA</h3>
-                        <p>Estamos finalizando el entrenamiento de la primera red neuronal de asistencia dedicada a viajeros exigentes. Al unirte hoy a nuestra fase beta, obtendrás acceso prioritario a la protección inteligente de tus vuelos.</p>
+                        <p>Estamos finalizando el desarrollo del primer sistema de inteligencia artificial dedicado exclusivamente a la protección del viajero exigente. Al unirte hoy a nuestra fase beta, obtendrás acceso prioritario a la protección inteligente de tus vuelos.</p>
                     </div>
 
                     <div class="hero-actions">
@@ -59,7 +89,7 @@
                                         placeholder="TU_CORREO_ELECTRÓNICO...">
                                     <button onclick="registerBeta('hero-email')" class="terminal-btn">UNIRSE</button>
                                 </div>
-                                <div id="hero-email-status" class="terminal-status">ESTADO: LISTO PARA UNIRSE</div>
+                                <div id="hero-email-status" class="terminal-status">✔ PLAZAS DISPONIBLES — ACCESO GRATUITO DURANTE LA BETA</div>
                             </div>
                         </div>
                     </div>
@@ -147,23 +177,23 @@
 
                             <!-- Estado: Resuelto -->
                             <div id="plans-ui" class="plans-ui">
-                                <div class="plan-card-sim" onclick="selectPlan('ECO')">
-                                    <span class="plan-tag">Opción 01: ECONÓMICO</span>
-                                    <h4>Ahorro Máximo</h4>
-                                    <div class="price">0€</div>
-                                    <div class="time">Perfil Ahorro | Comp: Hasta 600€</div>
+                                <div class="plan-card-sim" onclick="selectPlan('ECONOMICO')">
+                                    <span class="plan-tag">OPCIÓN 01: ECONÓMICO</span>
+                                    <h4>ECONÓMICO</h4>
+                                    <div class="price">Prioridad: Ahorro</div>
+                                    <div class="time">Mínimo gasto | Máxima compensación</div>
                                 </div>
-                                <div class="plan-card-sim" onclick="selectPlan('Equilibrado')">
-                                    <span class="plan-tag">Opción 02: EQ</span>
-                                    <h4>Equilibrado</h4>
-                                    <div class="price">45€</div>
-                                    <div class="time">Espera: 1.5h | Vuelo Directo</div>
+                                <div class="plan-card-sim" onclick="selectPlan('EQUILIBRADO')">
+                                    <span class="plan-tag">OPCIÓN 02: EQUILIBRADO</span>
+                                    <h4>EQUILIBRADO</h4>
+                                    <div class="price">Prioridad: Rapidez / Precio</div>
+                                    <div class="time">Optimización de tiempo y escala</div>
                                 </div>
-                                <div class="plan-card-sim vip" onclick="selectPlan('VIP')">
-                                    <span class="plan-tag">Opción 03: VIP</span>
-                                    <h4>Prioridad Élite</h4>
-                                    <div class="price">120€</div>
-                                    <div class="time">Inmediato | Business Class</div>
+                                <div class="plan-card-sim vip" onclick="selectPlan('RAPIDO')">
+                                    <span class="plan-tag">OPCIÓN 03: VIP</span>
+                                    <h4>VIP</h4>
+                                    <div class="price">Prioridad: Velocidad</div>
+                                    <div class="time">Vuelo alternativo inmediato</div>
                                 </div>
                             </div>
 
@@ -214,7 +244,73 @@
                     </div>
                 </section>
 
-                <div class="form-footer">
+                <section id="pricing" class="pricing-section">
+                    <div class="container">
+                        <h2 class="section-title">ELIGE TU PLAN</h2>
+                        <p class="section-subtitle-pricing">Durante la Beta, todos los planes están disponibles de forma gratuita.</p>
+                        <div class="pricing-grid">
+                            <!-- BASIC -->
+                            <div class="pricing-card glass">
+                                <div class="pricing-header">
+                                    <h3>BÁSICO</h3>
+                                    <div class="price">GRATIS</div>
+                                </div>
+                                <div class="divider"></div>
+                                <ul class="pricing-features">
+                                    <li><span class="check">✔</span> Monitoreo de 1 vuelo activo</li>
+                                    <li><span class="check">✔</span> Alertas de retraso</li>
+                                    <li><span class="check">✔</span> Acceso a documentos</li>
+                                    <li class="restricted"><span class="cross">✘</span> Reclamación automática</li>
+                                    <li class="restricted"><span class="cross">✘</span> Reservas de emergencia</li>
+                                </ul>
+                                <div class="divider"></div>
+                                <a href="#beta-form" class="hero-cta-btn plan-btn">EMPEZAR GRATIS</a>
+                            </div>
+
+                            <!-- PRO -->
+                            <div class="pricing-card glass highlighted">
+                                <span class="popular-badge">⭐ MÁS POPULAR</span>
+                                <div class="pricing-header">
+                                    <h3>PRO</h3>
+                                    <div class="price">4,99€ / mes</div>
+                                    <div class="beta-notice">Beta: GRATIS</div>
+                                </div>
+                                <div class="divider"></div>
+                                <ul class="pricing-features">
+                                    <li><span class="check">✔</span> Vuelos ilimitados</li>
+                                    <li><span class="check">✔</span> Alertas en tiempo real</li>
+                                    <li><span class="check">✔</span> Acceso a documentos</li>
+                                    <li><span class="check">✔</span> Reclamación EU261 automática</li>
+                                    <li><span class="check">✔</span> Reservas de emergencia</li>
+                                    <li class="restricted"><span class="cross">✘</span> Asistente de voz</li>
+                                </ul>
+                                <div class="divider"></div>
+                                <a href="#beta-form" class="hero-cta-btn plan-btn">SOLICITAR ACCESO PRO</a>
+                            </div>
+
+                            <!-- ELITE -->
+                            <div class="pricing-card glass">
+                                <div class="pricing-header">
+                                    <h3>ELITE</h3>
+                                    <div class="price">9,99€ / mes</div>
+                                    <div class="beta-notice">Beta: GRATIS</div>
+                                </div>
+                                <div class="divider"></div>
+                                <ul class="pricing-features">
+                                    <li><span class="check">✔</span> Todo lo de PRO</li>
+                                    <li><span class="check">✔</span> Asistente de voz (Clara / Marco)</li>
+                                    <li><span class="check">✔</span> Prioridad en soporte 24/7</li>
+                                    <li><span class="check">✔</span> Compensaciones de hasta 600€</li>
+                                    <li><span class="check">✔</span> Agente de viaje dedicado</li>
+                                </ul>
+                                <div class="divider"></div>
+                                <a href="#beta-form" class="hero-cta-btn plan-btn">SOLICITAR ACCESO ELITE</a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="form-footer" id="beta-form">
                     <h3>Únete a la Beta Exclusiva</h3>
                     <p>Regístrese para recibir su invitación VIP y probar el sistema antes que nadie.</p>
                     <div class="terminal-portal" style="margin: 0 auto;">
@@ -227,15 +323,39 @@
                                     placeholder="SU_EMAIL_AQUÍ...">
                                 <button onclick="registerBeta('footer-email')" class="terminal-btn">SOLICITAR</button>
                             </div>
-                            <div id="footer-email-status" class="terminal-status">ESTADO: LISTO PARA UNIRSE</div>
+                            <div id="footer-email-status" class="terminal-status">✔ PLAZAS DISPONIBLES — ACCESO GRATUITO DURANTE LA BETA</div>
                         </div>
                     </div>
                 </div>
+                <section id="faq" class="faq-section">
+                    <div class="container">
+                        <h2 class="section-title">PREGUNTAS FRECUENTES</h2>
+                        <div class="faq-list">
+                            <div class="faq-item">
+                                <h3>¿Es gratuito durante la Beta?</h3>
+                                <p>Sí. Durante la fase Beta todos los planes son completamente gratuitos. Cuando lancemos oficialmente, los usuarios Beta mantendrán su plan sin coste durante 3 meses adicionales.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3>¿Funciona sin conexión a internet?</h3>
+                                <p>Tus documentos y el itinerario descargado están disponibles sin wifi. El monitoreo en tiempo real y las reclamaciones automáticas requieren conexión a internet.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3>¿Qué aerolíneas y países cubre?</h3>
+                                <p>Travel-Pilot cubre todos los vuelos comerciales a nivel mundial. La gestión automática de compensaciones está optimizada para vuelos bajo el Reglamento EU261/2004 (Europa) y el Convenio de Montreal (internacional).</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3>¿Cómo gestiona Travel-Pilot mis datos personales?</h3>
+                                <p>Tus documentos se cifran con AES-256 y nunca se comparten con terceros sin tu autorización. Cumplimos íntegramente con el RGPD europeo.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
     </main>
 
     <footer>
-        <div class="container">
-            <p>&copy; 2026 TRAVEL-PILOT ELITE // <span class="status-dot"></span> ACCESO BETA RESTRINGIDO</p>
+        <div class="container footer-content">
+            <p>&copy; 2026 TRAVEL-PILOT &nbsp;·&nbsp; <a href="#">Política de Privacidad</a> &nbsp;·&nbsp; <a href="#">Términos de Uso</a> &nbsp;·&nbsp; <a href="#">Contacto</a></p>
+            <p class="beta-disclaimer">ACCESO BETA RESTRINGIDO — SISTEMA DE ASISTENCIA INTELIGENTE v1.0</p>
         </div>
     </footer>
     <script>
@@ -271,21 +391,23 @@
             
             response.style.display = 'flex';
             iaName.innerText = `ASISTENTE ${currentAssistant.toUpperCase()}`;
-
-            // Mapear nombre de archivo
-            const planFile = plan.toLowerCase() === 'equilibrado' ? 'equil' : plan.toLowerCase();
             
-            // Audio Real
-            currentAudio = new Audio(`assets/${currentAssistant}_${planFile}.mp3`);
-            currentAudio.play().catch(e => console.log("Audio no cargado aún:", e));
+            // Audio Real (Ej: assets/clara-economico.mp3)
+            const audioSrc = `./assets/${currentAssistant.toUpperCase()}-${plan.toUpperCase()}.MP3`;
+            currentAudio = new Audio(audioSrc);
+            currentAudio.load();
+            currentAudio.play().catch(e => {
+                console.log("Audio falló, mostrando texto igualmente:", e);
+                iaText.innerText = iaText.innerText + " (Audio no disponible)";
+            });
 
             // Texto de apoyo visual (Sincronizado con audios reales)
-            if(plan === 'ECO') {
-                iaText.innerText = "Entendido. He procesado tu solicitud de ahorro máximo. He registrado tu reclamación legal y recibirás tu compensación sin gestiones adicionales. Te avisaré cuando falte una hora para tu nuevo embarque. Relájate y disfruta del tiempo extra.";
-            } else if(plan === 'VIP') {
-                iaText.innerText = "Acceso VIP confirmado. Tu nuevo vuelo en Clase Ejecutiva está listo en la puerta B12 y el acceso a la Sala VIP ha sido activado. He coordinado un transporte privado para que tu traslado entre terminales sea impecable. Tu viaje continúa sin interrupciones.";
+            if(plan === 'ECONOMICO') {
+                iaText.innerText = "Entendido. Tu expediente de reclamación EU261 está listo para firmar. Sin formularios, sin llamadas. Un toque y el proceso legal empieza solo.";
+            } else if(plan === 'RAPIDO') {
+                iaText.innerText = "Acción inmediata. He identificado la alternativa más rápida disponible para llegar hoy a tu destino. El plan está listo. ¿Lo ejecutamos?";
             } else {
-                iaText.innerText = "Perfecto. He reservado el vuelo directo más cercano disponible para ti. Tus nuevas tarjetas de embarque y el itinerario actualizado ya están descansando en tu Bóveda Digital segura. Estaré monitorizando tu conexión para que el resto del trayecto sea impecable.";
+                iaText.innerText = "Perfecto. He analizado tu situación y tengo tres opciones preparadas. La más equilibrada entre tiempo y dinero ya está destacada. Dime si la activo.";
             }
         }
 
@@ -298,12 +420,9 @@
 
         function playVoice(name) {
             // Detener cualquier sonido previo
-            const prevAss = currentAssistant;
-            const prevStop = document.getElementById(prevAss + '-stop');
-            if(prevStop) prevStop.style.display = 'none';
-            
             stopAudio();
             currentAssistant = name.toLowerCase();
+            
             const statusId = currentAssistant + '-status';
             const stopId = currentAssistant + '-stop';
             const originalText = name === 'Clara' ? 'Castellano / Inteligente' : 'Castellano / Profesional y Seguro';
@@ -314,8 +433,9 @@
             status.style.color = "#AF52DE";
             if(stopBtn) stopBtn.style.display = 'block';
 
-            currentAudio = new Audio(`assets/${currentAssistant}_intro.mp3`);
-            currentAudio.play().catch(e => console.log("Error al reproducir audio:", e));
+            currentAudio = new Audio(`./assets/${currentAssistant.toUpperCase()}_INTRO.MP3`);
+            currentAudio.load();
+            currentAudio.play().catch(e => console.log("Error al reproducir audio intro:", e));
 
             currentAudio.onended = () => { 
                 status.innerText = originalText;
