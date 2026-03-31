@@ -392,9 +392,14 @@
             response.style.display = 'flex';
             iaName.innerText = `ASISTENTE ${currentAssistant.toUpperCase()}`;
             
-            const audioSrc = `assets/${currentAssistant.toUpperCase()}-${plan.toUpperCase()}.MP3`;
+            // Audio Real (Ej: assets/clara-economico.mp3)
+            const audioSrc = `./assets/${currentAssistant.toUpperCase()}-${plan.toUpperCase()}.MP3`;
             currentAudio = new Audio(audioSrc);
-            currentAudio.play().catch(e => console.log("Audio no cargado aún:", e));
+            currentAudio.load();
+            currentAudio.play().catch(e => {
+                console.log("Audio falló, mostrando texto igualmente:", e);
+                iaText.innerText = iaText.innerText + " (Audio no disponible)";
+            });
 
             // Texto de apoyo visual (Sincronizado con audios reales)
             if(plan === 'ECONOMICO') {
@@ -428,8 +433,9 @@
             status.style.color = "#AF52DE";
             if(stopBtn) stopBtn.style.display = 'block';
 
-            currentAudio = new Audio(`assets/${currentAssistant.toUpperCase()}_INTRO.MP3`);
-            currentAudio.play().catch(e => console.log("Error al reproducir audio:", e));
+            currentAudio = new Audio(`./assets/${currentAssistant.toUpperCase()}_INTRO.MP3`);
+            currentAudio.load();
+            currentAudio.play().catch(e => console.log("Error al reproducir audio intro:", e));
 
             currentAudio.onended = () => { 
                 status.innerText = originalText;
