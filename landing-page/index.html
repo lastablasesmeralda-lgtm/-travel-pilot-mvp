@@ -392,13 +392,12 @@
             response.style.display = 'flex';
             iaName.innerText = `ASISTENTE ${currentAssistant.toUpperCase()}`;
             
-            // Audio Real (Ej: assets/clara-economico.mp3)
-            const audioSrc = `./assets/${currentAssistant.toUpperCase()}-${plan.toUpperCase()}.MP3`;
+            // Audio Real (Ej: assets/clara_economico.mp3)
+            const audioSrc = `./assets/${currentAssistant.toLowerCase()}_${plan.toLowerCase()}.mp3`;
             currentAudio = new Audio(audioSrc);
             currentAudio.load();
             currentAudio.play().catch(e => {
                 console.log("Audio falló, mostrando texto igualmente:", e);
-                iaText.innerText = iaText.innerText + " (Audio no disponible)";
             });
 
             // Texto de apoyo visual (Sincronizado con audios reales)
@@ -433,7 +432,7 @@
             status.style.color = "#AF52DE";
             if(stopBtn) stopBtn.style.display = 'block';
 
-            currentAudio = new Audio(`./assets/${currentAssistant.toUpperCase()}_INTRO.MP3`);
+            currentAudio = new Audio(`./assets/${currentAssistant.toLowerCase()}_intro.mp3`);
             currentAudio.load();
             currentAudio.play().catch(e => console.log("Error al reproducir audio intro:", e));
 
