@@ -1,42 +1,50 @@
 {
-  "expo": {
-    "name": "Travel-Pilot",
-    "slug": "travel-pilot",
-    "version": "1.0.3",
-    "orientation": "portrait",
-    "icon": "./assets/icon.jpg",
-    "userInterfaceStyle": "dark",
-    "splash": {
-      "image": "./assets/splash.jpg",
-      "resizeMode": "contain",
-      "backgroundColor": "#0A0A0A"
-    },
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.jpg",
-        "backgroundColor": "#0A0A0A"
-      },
-      "package": "com.lastablasesmeralda.travelpilot",
-      "permissions": ["RECORD_AUDIO"]
-    },
-    "extra": {
-      "eas": {
-        "projectId": "d63abcdb-7fed-46b7-8d1f-5d7a72d98550"
-      }
-    },
-    "plugins": [
-      "@react-native-voice/voice",
-      [
-        "expo-build-properties",
-        {
+    "expo": {
+          "name": "Travel-Pilot",
+          "slug": "travel-pilot",
+          "version": "1.0.3",
+          "orientation": "portrait",
+          "icon": "./assets/icon.jpg",
+          "userInterfaceStyle": "dark",
+          "splash": {
+                  "image": "./assets/splash.jpg",
+                  "resizeMode": "contain",
+                  "backgroundColor": "#0A0A0A"
+          },
+          "ios": {
+                  "supportsTablet": true
+          },
           "android": {
-            "enableJetifier": true
-          }
-        }
-      ]
-    ]
-  }
+                  "adaptiveIcon": {
+                            "foregroundImage": "./assets/adaptive-icon.jpg",
+                            "backgroundColor": "#0A0A0A"
+                  },
+                  "package": "com.lastablasesmeralda.travelpilot",
+                  "permissions": [
+                            "RECORD_AUDIO",
+                            "android.permission.RECORD_AUDIO"
+                  ]
+          },
+          "extra": {
+                  "eas": {
+                            "projectId": "3a250c2c-ac83-471d-970e-e4cf92d99dc2"
+                  }
+          },
+          "plugins": [
+                  "@react-native-voice/voice",
+                  [
+                            "expo-build-properties",
+                            {
+                                        "android": {
+                                                      "enableJetifier": true
+                                        }
+                            }
+                  ]
+          ],
+          "sdkVersion": "54.0.0",
+          "platforms": [
+                  "ios",
+                  "android"
+          ]
+    }
 }
