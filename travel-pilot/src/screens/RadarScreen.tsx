@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { s } from '../styles';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext, IS_BETA } from '../context/AppContext';
 import { useNavigation } from '@react-navigation/native';
 
 export default function VuelosScreen() {
@@ -10,7 +10,8 @@ export default function VuelosScreen() {
         flightInput, setFlightInput, searchFlight, clearFlight, isSearching, searchError,
         flightData, formatTime, getStatusColor, getStatusLabel,
         myFlights, saveMyFlight, removeMyFlight, activeSearches, removeActiveSearch,
-        pendingVIPRedirect, setPendingVIPRedirect
+        pendingVIPRedirect, setPendingVIPRedirect,
+        showCancellation, setShowCancellation
     } = useAppContext();
 
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
@@ -33,24 +34,26 @@ export default function VuelosScreen() {
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20, paddingTop: 100 }}>
             {/* ——— BANNER DE ENTORNO BETA ——— */}
-            <View style={{
-                backgroundColor: 'rgba(255, 149, 0, 0.1)',
-                borderRadius: 16,
-                padding: 15,
-                marginBottom: 20,
-                borderWidth: 1,
-                borderColor: 'rgba(255, 149, 0, 0.3)',
-                flexDirection: 'row',
-                alignItems: 'center'
-            }}>
-                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255, 149, 0, 0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
-                    <Text style={{ fontSize: 20 }}>🧪</Text>
+            {IS_BETA && (
+                <View style={{
+                    backgroundColor: 'rgba(255, 149, 0, 0.1)',
+                    borderRadius: 16,
+                    padding: 15,
+                    marginBottom: 20,
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 149, 0, 0.3)',
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                }}>
+                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255, 149, 0, 0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
+                        <Text style={{ fontSize: 20 }}>🧪</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#FF9500', fontWeight: '900', fontSize: 13, letterSpacing: 0.5 }}>ENTORNO DE PRUEBAS BETA</Text>
+                        <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 2 }}>Prueba: IB3166 (Retraso), TP777 (Cancelado), TP555 (Largo Alcance), TP111 (Desvío) o TP404.</Text>
+                    </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                    <Text style={{ color: '#FF9500', fontWeight: '900', fontSize: 13, letterSpacing: 0.5 }}>ENTORNO DE PRUEBAS BETA</Text>
-                    <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 2 }}>Prueba: IB3166 (Retraso), TP777 (Cancelado), TP555 (Largo Alcance), TP111 (Desvío) o TP404.</Text>
-                </View>
-            </View>
+            )}
 
             {/* ——— BUSCADOR ——— */}
             <View style={{ backgroundColor: '#111', borderRadius: 16, padding: 16, marginBottom: 16 }}>
@@ -84,6 +87,37 @@ export default function VuelosScreen() {
                 </View>
 
             </View>
+            
+            {/* ——— SOS RESCUE BANNER (STICKY ALERT) ——— */}
+            {flightData?.status?.includes('cancel') && !showCancellation && (
+                <TouchableOpacity
+                    onPress={() => setShowCancellation(true)}
+                    activeOpacity={0.9}
+                    style={{
+                        backgroundColor: '#FF3B30',
+                        borderRadius: 16,
+                        padding: 16,
+                        marginBottom: 16,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        shadowColor: '#FF3B30',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 8,
+                        elevation: 6
+                    }}>
+                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
+                        <Text style={{ fontSize: 22 }}>🚨</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 13, letterSpacing: 0.5 }}>PROTOCOLO DE RESCATE ACTIVO</Text>
+                        <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, marginTop: 2 }}>Pulsa para gestionar tu vuelo cancelado</Text>
+                    </View>
+                    <View style={{ backgroundColor: 'rgba(0,0,0,0.1)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 }}>
+                        <Text style={{ color: '#FFF', fontSize: 10, fontWeight: 'bold' }}>ABRIR</Text>
+                    </View>
+                </TouchableOpacity>
+            )}
 
             {/* ——— ERROR DE BÚSQUEDA ——— */}
             {searchError && (

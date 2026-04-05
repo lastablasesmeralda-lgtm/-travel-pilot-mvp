@@ -7,7 +7,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "build": "cd backend && npm install && npm run build",
-    "postinstall": "patch-package && jetifier"
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@expo/ngrok": "^4.1.3",

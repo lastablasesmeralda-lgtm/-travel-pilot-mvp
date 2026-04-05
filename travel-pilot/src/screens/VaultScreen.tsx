@@ -5,7 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { s } from '../styles';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext, IS_BETA } from '../context/AppContext';
 import { getEU261Amount } from '../utils/flightUtils';
 import { BACKEND_URL } from '../../config';
 
@@ -13,12 +13,19 @@ export default function VaultScreen() {
     const {
         legalShieldActive, setViewDoc, setIsScanning, claims, setClaims, removeClaim, flightData,
         compensationEligible, extraDocs, setExtraDocs, isExtracting, simulateGmailSync, user,
-        removeExtraDoc, setHasNewDoc, setRecoveredMoney
+        removeExtraDoc, setHasNewDoc, setRecoveredMoney, setShowChat,
+        showVIPAlternatives, setShowVIPAlternatives, pendingVIPScroll, setPendingVIPScroll
     } = useAppContext();
 
     React.useEffect(() => {
         setHasNewDoc(false);
-    }, []);
+        if (pendingVIPScroll) {
+            setTimeout(() => {
+                scrollViewRef.current?.scrollToEnd({ animated: true });
+                setPendingVIPScroll(false);
+            }, 500);
+        }
+    }, [pendingVIPScroll]);
 
     const [uploadingDoc, setUploadingDoc] = useState(false);
     const [generatingPdf, setGeneratingPdf] = useState(false);
@@ -30,6 +37,10 @@ export default function VaultScreen() {
     const [capturedSignature, setCapturedSignature] = useState<string | null>(null);
     const [pendingDoc, setPendingDoc] = useState<{ uri: string, type: string } | null>(null);
     const [currentClaimForSig, setCurrentClaimForSig] = useState<any>(null);
+    const [showActionModal, setShowActionModal] = useState(false);
+    const [currentActionDoc, setCurrentActionDoc] = useState<any>(null);
+
+    const scrollViewRef = useRef<ScrollView>(null);
 
     const uploadDocument = async () => {
         try {
@@ -41,7 +52,7 @@ export default function VaultScreen() {
 
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: false, 
+                allowsEditing: false,
                 quality: 0.7,
             });
 
@@ -51,15 +62,15 @@ export default function VaultScreen() {
                 setPendingDoc({ uri, type: fileType });
 
                 Alert.alert(
-                    "AÑADIR DOCUMENTO",
-                    "Pasaporte, Tarjeta de embarque, reservas de hotel, etc.\n\n¿Quieres guardar este documento en tu Bóveda Segura? Se encriptará con AES-256.",
+                    "SUBIR ARCHIVO",
+                    "Pasaporte, Tarjeta de embarque, reservas de hotel, etc.\n\n¿Quieres guardar este archivo en tu Bóveda Segura? Se encriptará con AES-256.",
                     [
                         { text: "CANCELAR", style: "cancel", onPress: () => setPendingDoc(null) },
-                        { 
-                            text: "SÍ, SUBIR AHORA", 
+                        {
+                            text: "SÍ, SUBIR AHORA",
                             onPress: () => {
                                 confirmAndUpload({ uri, type: fileType });
-                            } 
+                            }
                         }
                     ]
                 );
@@ -72,7 +83,7 @@ export default function VaultScreen() {
     const confirmAndUpload = async (forcedDoc?: { uri: string, type: string }) => {
         const docToUpload = forcedDoc || pendingDoc;
         if (!docToUpload) return;
-        
+
         try {
             setUploadingDoc(true);
             const formData = new FormData();
@@ -150,16 +161,16 @@ export default function VaultScreen() {
                 await FileSystem.writeAsStringAsync(fileUri, json.pdfBase64, { encoding });
                 setSignedClaimId(currentClaimForSig?.id);
                 setRecoveredMoney((prev: number) => prev + (parseInt(currentClaimForSig?.compensacion) || 250));
-                
+
                 // Limpiar la bóveda interna y el panel visual de la firma:
                 webViewRef.current?.injectJavaScript('clearCanvas();true;');
                 setShowSignature(false);
                 setHasSigned(false);
                 setCapturedSignature('');
                 setCurrentClaimForSig(null);
-                
+
                 Alert.alert(
-                    '✈️ DOCUMENTO GENERADO',
+                    '✈️ RESUMEN PREPARADO',
                     'Tu reclamación ha sido registrada. Ahora procedemos a enviarla a la aerolínea.',
                     [
                         {
@@ -167,8 +178,8 @@ export default function VaultScreen() {
                             onPress: async () => {
                                 const canShare = await Sharing.isAvailableAsync();
                                 if (canShare) {
-                                    await Sharing.shareAsync(fileUri, { 
-                                        mimeType: 'application/pdf', 
+                                    await Sharing.shareAsync(fileUri, {
+                                        mimeType: 'application/pdf',
                                         dialogTitle: `Enviar Reclamación`,
                                         UTI: 'com.adobe.pdf'
                                     });
@@ -206,7 +217,7 @@ export default function VaultScreen() {
 
     return (
         <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingTop: 100, paddingBottom: 160, flexGrow: 1 }}>
+            <ScrollView ref={scrollViewRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingTop: 100, paddingBottom: 160, flexGrow: 1 }}>
 
                 {/* ESCUDO LEGAL */}
                 {(legalShieldActive || compensationEligible) && (
@@ -271,7 +282,16 @@ export default function VaultScreen() {
                 {documents.map((d, i) => (
                     <View key={d.id || i} style={{ backgroundColor: '#111', borderRadius: 18, marginBottom: 12, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#1A1A1A', overflow: 'hidden' }}>
                         <TouchableOpacity
-                            onPress={() => { setViewDoc(d); setIsScanning(true); setTimeout(() => setIsScanning(false), 2500); }}
+                            onPress={() => {
+                                if (d.source === 'TRAVEL-PILOT IA') {
+                                    setCurrentActionDoc(d);
+                                    setShowActionModal(true);
+                                } else {
+                                    setViewDoc(d);
+                                    setIsScanning(true);
+                                    setTimeout(() => setIsScanning(false), 2500);
+                                }
+                            }}
                             activeOpacity={0.7}
                             style={{ flex: 1, flexDirection: 'row', alignItems: 'center', padding: 18 }}
                         >
@@ -281,7 +301,7 @@ export default function VaultScreen() {
                             <View style={{ flex: 1, marginLeft: 14 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '800' }}>{d.t || 'Documento'}</Text>
-                                    {d.isDemo && (
+                                    {IS_BETA && d.isDemo && (
                                         <View style={{ marginLeft: 8, backgroundColor: 'rgba(255, 149, 0, 0.1)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 0.5, borderColor: '#FF9500' }}>
                                             <Text style={{ color: '#FF9500', fontSize: 8, fontWeight: '900' }}>DEMO</Text>
                                         </View>
@@ -341,9 +361,9 @@ export default function VaultScreen() {
                                 <TouchableOpacity onPress={() => removeClaim(c.id)} style={{ padding: 10 }}><Text style={{ color: '#555', fontSize: 18 }}>✕</Text></TouchableOpacity>
                             </View>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                                <Text style={{ color: '#B0B0B0', fontSize: 11 }}>COMPENSACIÓN: <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{c.compensacion}€</Text></Text>
+                                <Text style={{ color: '#B0B0B0', fontSize: 11 }}>COMPENSACIÓN: <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{c.compensacion.toString().replace('€', '')}€</Text></Text>
                                 <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold' }}>
-                                    {signedClaimId === c.id ? 'DOCUMENTO FIRMADO ✅' : c.isDynamic ? 'FIRMAR AHORA ✍️' : 'MÁS INFO ›'}
+                                    {signedClaimId === c.id ? 'PROCEDIMIENTO REVISADO ✅' : c.isDynamic ? 'REVISAR AHORA ✍️' : 'MÁS INFO ›'}
                                 </Text>
                             </View>
                         </TouchableOpacity>
@@ -353,13 +373,113 @@ export default function VaultScreen() {
                 <View style={{ marginTop: 30, opacity: 0.7, alignItems: 'center' }}>
                     <Text style={{ color: '#B0B0B0', fontSize: 10 }}>PROTECCIÓN ENCRIPTADA · AES-256</Text>
                 </View>
+
+                {/* MODAL DE ACCIÓN IA */}
+                <Modal visible={showActionModal} transparent animationType="slide">
+                    <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', padding: 25 }}>
+                        <View style={{ backgroundColor: '#111', borderRadius: 24, padding: 25, borderWidth: 1, borderColor: '#333' }}>
+
+                            {/* Títulos por defecto para otros planes */}
+                            {!((currentActionDoc?.t?.includes('EQUILIBRADO') || currentActionDoc?.t?.includes('ALOJAMIENTO')) && !currentActionDoc?.t?.includes('ECONÓMICO') && !currentActionDoc?.t?.includes('VIP')) && (
+                                <>
+                                    <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '900', marginBottom: 5 }}>
+                                        {currentActionDoc?.t}
+                                    </Text>
+                                    <Text style={{ color: '#B0B0B0', fontSize: 12, marginBottom: 20 }}>
+                                        {currentActionDoc?.s}
+                                    </Text>
+                                </>
+                            )}
+
+                            {/* ECONÓMICO — Reclamación */}
+                            {currentActionDoc?.t?.includes('ECONÓMICO') && (
+                                <View>
+                                    <Text style={{ color: '#4CD964', fontSize: 14, lineHeight: 22, marginBottom: 20 }}>
+                                        ✅ Tu expediente legal está listo para firmar.{'\n'}
+                                        Ve a la sección RECLAMACIONES EU261 de esta pantalla y pulsa FIRMAR AHORA para enviarlo a la aerolínea.{'\n\n'}
+                                        ⚖️ Tienes derecho a compensación legal sin rellenar ningún formulario adicional.
+                                    </Text>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowActionModal(false);
+                                            setTimeout(() => {
+                                                scrollViewRef?.current?.scrollToEnd({ animated: true });
+                                            }, 300);
+                                        }}
+                                        style={{ backgroundColor: '#4CD964', padding: 16, borderRadius: 12, alignItems: 'center' }}>
+                                        <Text style={{ color: '#000', fontWeight: 'bold' }}>IR A RECLAMACIONES</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity onPress={() => setShowActionModal(false)} style={{ marginTop: 15, alignItems: 'center' }}>
+                                        <Text style={{ color: '#FF3B30', fontSize: 13, fontWeight: 'bold' }}>CERRAR</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {/* EQUILIBRADO — Hotel */}
+                            {(currentActionDoc?.t?.includes('EQUILIBRADO') || currentActionDoc?.t?.includes('ALOJAMIENTO')) && !currentActionDoc?.t?.includes('ECONÓMICO') && !currentActionDoc?.t?.includes('VIP') && (
+                                <View>
+                                    <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '900', marginBottom: 5 }}>
+                                        Propuesta de estancia
+                                    </Text>
+                                    <Text style={{ color: '#B0B0B0', fontSize: 12, marginBottom: 20 }}>
+                                        Plan equilibrado · Alojamiento y descanso
+                                    </Text>
+                                    <Text style={{ color: '#4CD964', fontSize: 14, lineHeight: 22, marginBottom: 20 }}>
+                                        Te orientamos con una solución de alojamiento cercana al aeropuerto para reducir el impacto de la incidencia y facilitar tu descanso. Antes de desplazarte, confirma directamente la disponibilidad con el hotel. La reclamación EU261 continúa activa en paralelo.
+                                    </Text>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowActionModal(false);
+                                            setTimeout(() => {
+                                                Alert.alert(
+                                                    "Siguiente paso",
+                                                    "✅ Tienes derecho a alojamiento gratuito por ley.\n\n1. Busca hoteles cercanos al aeropuerto en Google Maps\n2. Llama directamente para confirmar disponibilidad\n3. Pide factura — la aerolínea debe reembolsártela\n4. Tu reclamación EU261 está activa en paralelo\n\n⚖️ Guarda todos los tickets y facturas del hotel."
+                                                );
+                                            }, 300);
+                                        }}
+                                        style={{ backgroundColor: '#007AFF', padding: 16, borderRadius: 12, alignItems: 'center', marginBottom: 10 }}>
+                                        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Revisar propuesta</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity onPress={() => setShowActionModal(false)} style={{ marginTop: 10, alignItems: 'center', padding: 10 }}>
+                                        <Text style={{ color: '#FF3B30', fontSize: 13, fontWeight: 'bold' }}>Cerrar</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {/* VIP */}
+                            {currentActionDoc?.t?.includes('VIP') && (
+                                <View>
+                                    <Text style={{ color: '#D4AF37', fontSize: 14, lineHeight: 22, marginBottom: 20 }}>
+                                        ✅ Hemos analizado tu situación y preparado todo lo que necesitas para resolver esta incidencia.{'\n\n'}
+                                        📞 Tu asistente personal está disponible en cualquier momento si necesitas apoyo directo.{'\n\n'}
+                                        ⚖️ Tu reclamación legal ya está redactada y lista.
+                                    </Text>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowActionModal(false);
+                                            setShowVIPAlternatives(true);
+                                        }}
+                                        style={{ backgroundColor: '#D4AF37', padding: 16, borderRadius: 12, alignItems: 'center' }}>
+                                        <Text style={{ color: '#000', fontWeight: 'bold' }}>VER MIS OPCIONES</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity onPress={() => setShowActionModal(false)} style={{ marginTop: 15, alignItems: 'center' }}>
+                                        <Text style={{ color: '#FF3B30', fontSize: 13, fontWeight: 'bold' }}>CERRAR</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
+                    </View>
+                </Modal>
             </ScrollView>
 
             {/* MODAL FIRMA */}
             <Modal visible={showSignature} animationType="slide" transparent={true}>
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', padding: 25 }}>
                     <View style={{ backgroundColor: '#111', borderRadius: 24, padding: 25, borderWidth: 1, borderColor: '#333' }}>
-                         <View style={{ alignItems: 'center', marginBottom: 20 }}>
+                        <View style={{ alignItems: 'center', marginBottom: 20 }}>
                             <Text style={{ fontSize: 40 }}>🖊️</Text>
                             <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '900', marginTop: 10 }}>AUTORIZACIÓN LEGAL</Text>
                         </View>
@@ -382,7 +502,8 @@ export default function VaultScreen() {
                                         setHasSigned(false);
                                     }
                                 }}
-                                source={{ html: `
+                                source={{
+                                    html: `
                                     <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><style>*{margin:0;padding:0;touch-action:none;}body{background:#EFEFEF;overflow:hidden;}canvas{display:block;width:100%;height:100%;}.ph{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#999;font-size:22px;font-weight:bold;opacity:0.3;pointer-events:none;}</style></head>
                                     <body><div class="ph" id="ph">Firma aquí</div><canvas id="c"></canvas>
                                     <script>var c=document.getElementById('c'),ctx=c.getContext('2d'),ph=document.getElementById('ph'),drawing=false,pts=[];function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}resize();window.onresize=resize;ctx.strokeStyle='#1A1A5E';ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';
@@ -444,6 +565,8 @@ export default function VaultScreen() {
                     </ScrollView>
                 </View>
             </Modal>
+
+
         </View>
     );
 }

@@ -15,7 +15,7 @@ export default function BioScreen() {
     } = useAppContext();
     const [showGuide, setShowGuide] = useState(false);
     const [showVip, setShowVip] = useState(false);
-    
+
     // Estados locales para el formulario de perfil
     const [fullName, setFullName] = useState(user?.displayName || '');
     const [idNumber, setIdNumber] = useState('');
@@ -52,8 +52,8 @@ export default function BioScreen() {
                 </View>
 
                 {/* ——— ESTADO DE CONEXIÓN ——— */}
-                <View style={{ 
-                    flexDirection: 'row', 
+                <View style={{
+                    flexDirection: 'row',
                     marginTop: 20,
                     backgroundColor: '#0D0D0D',
                     borderRadius: 16,
@@ -62,8 +62,8 @@ export default function BioScreen() {
                     borderColor: '#222',
                     alignItems: 'center'
                 }}>
-                    <View style={{ 
-                        width: 10, height: 10, borderRadius: 5, 
+                    <View style={{
+                        width: 10, height: 10, borderRadius: 5,
                         backgroundColor: '#4CD964', marginRight: 12,
                         shadowColor: '#4CD964', shadowOpacity: 0.5, shadowRadius: 5
                     }} />
@@ -91,7 +91,7 @@ export default function BioScreen() {
                 <View style={[s.statsCard, { flexDirection: 'column' }]}>
                     <View style={{ width: '100%', marginBottom: 15 }}>
                         <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold', marginBottom: 5 }}>DNI / PASAPORTE</Text>
-                        <TextInput 
+                        <TextInput
                             style={{ backgroundColor: '#1A1A1A', color: '#FFF', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#333' }}
                             placeholder="Número de identidad"
                             placeholderTextColor="#444"
@@ -101,7 +101,7 @@ export default function BioScreen() {
                     </View>
                     <View style={{ width: '100%', marginBottom: 15 }}>
                         <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold', marginBottom: 5 }}>TELÉFONO DE ASISTENCIA</Text>
-                        <TextInput 
+                        <TextInput
                             style={{ backgroundColor: '#1A1A1A', color: '#FFF', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#333' }}
                             placeholder="+34 600 000 000"
                             placeholderTextColor="#444"
@@ -110,7 +110,7 @@ export default function BioScreen() {
                             onChangeText={setUserPhone}
                         />
                     </View>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         onPress={() => Alert.alert('Éxito', 'Información actualizada y encriptada.')}
                         style={{ backgroundColor: '#4CD964', borderRadius: 12, paddingVertical: 12, alignItems: 'center' }}
                     >
@@ -124,58 +124,17 @@ export default function BioScreen() {
                     <Text style={{ color: '#B0B0B0', fontSize: 11, marginBottom: 15, lineHeight: 16 }}>
                         La IA utilizará este perfil para tomar decisiones automáticas en caso de imprevistos graves.
                     </Text>
-                    
+
                     <View style={{ gap: 10 }}>
-                        <TouchableOpacity 
-                            onPress={() => {
-                                if (travelProfile !== 'premium') {
-                                    Alert.alert("MODO EXCLUSIVO", "El Modo Rápido es exclusivo VIP. Actívalo para priorizar velocidad sin límite de coste.");
-                                } else {
-                                    setTravelProfile('fast');
-                                }
-                            }}
-                            style={{ 
-                                backgroundColor: travelProfile === 'fast' ? 'rgba(255, 59, 48, 0.1)' : '#1A1A1A', 
-                                borderWidth: 1, 
-                                borderColor: travelProfile === 'fast' ? '#FF3B30' : '#333', 
-                                borderRadius: 12, 
-                                padding: 15 
-                            }}
-                        >
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                                <Text style={{ fontSize: 18, marginRight: 8 }}>⚡</Text>
-                                <Text style={{ color: travelProfile === 'fast' ? '#FF3B30' : '#FFF', fontSize: 14, fontWeight: 'bold' }}>
-                                    MODO RÁPIDO {travelProfile !== 'premium' && <Text style={{ color: '#D4AF37', fontSize: 10 }}> 🔒 VIP</Text>}
-                                </Text>
-                            </View>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>Prioriza llegar a destino lo antes posible, sin importar el coste.</Text>
-                        </TouchableOpacity>
 
-                        <TouchableOpacity 
-                            onPress={() => setTravelProfile('balanced')}
-                            style={{ 
-                                backgroundColor: travelProfile === 'balanced' ? 'rgba(0, 122, 255, 0.1)' : '#1A1A1A', 
-                                borderWidth: 1, 
-                                borderColor: travelProfile === 'balanced' ? '#007AFF' : '#333', 
-                                borderRadius: 12, 
-                                padding: 15 
-                            }}
-                        >
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                                <Text style={{ fontSize: 18, marginRight: 8 }}>⚖️</Text>
-                                <Text style={{ color: travelProfile === 'balanced' ? '#007AFF' : '#FFF', fontSize: 14, fontWeight: 'bold' }}>MODO EQUILIBRADO</Text>
-                            </View>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>Busca el mejor cruce entre coste y tiempo de espera. Recomendado.</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             onPress={() => setTravelProfile('budget')}
-                            style={{ 
-                                backgroundColor: travelProfile === 'budget' ? 'rgba(52, 199, 89, 0.1)' : '#1A1A1A', 
-                                borderWidth: 1, 
-                                borderColor: travelProfile === 'budget' ? '#34C759' : '#333', 
-                                borderRadius: 12, 
-                                padding: 15 
+                            style={{
+                                backgroundColor: travelProfile === 'budget' ? 'rgba(52, 199, 89, 0.1)' : '#1A1A1A',
+                                borderWidth: 1,
+                                borderColor: travelProfile === 'budget' ? '#34C759' : '#333',
+                                borderRadius: 12,
+                                padding: 15
                             }}
                         >
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
@@ -188,13 +147,13 @@ export default function BioScreen() {
 
                     {/* SECCIÓN ESPECIAL: ESCUDO LEGAL VIP (Servicio Premium) */}
                     <View style={{ marginTop: 25, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#222' }}>
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             onPress={() => setShowVip(true)}
-                            style={{ 
-                                backgroundColor: travelProfile === 'premium' ? 'rgba(212, 175, 55, 0.1)' : '#1A1A1A', 
-                                borderWidth: travelProfile === 'premium' ? 2 : 1, 
-                                borderColor: travelProfile === 'premium' ? '#D4AF37' : '#333', 
-                                borderRadius: 16, 
+                            style={{
+                                backgroundColor: travelProfile === 'premium' ? 'rgba(212, 175, 55, 0.1)' : '#1A1A1A',
+                                borderWidth: travelProfile === 'premium' ? 2 : 1,
+                                borderColor: travelProfile === 'premium' ? '#D4AF37' : '#333',
+                                borderRadius: 16,
                                 padding: 20,
                                 shadowColor: travelProfile === 'premium' ? '#D4AF37' : 'transparent',
                                 shadowOpacity: travelProfile === 'premium' ? 0.3 : 0,
@@ -216,8 +175,8 @@ export default function BioScreen() {
                                 {travelProfile === 'premium' ? 'Protección Total Activada' : 'Desbloquea la Asistencia de Élite'}
                             </Text>
                             <Text style={{ color: '#B0B0B0', fontSize: 11, lineHeight: 16 }}>
-                                {travelProfile === 'premium' 
-                                    ? 'Estás cubierto contra retrasos, cancelaciones y pérdidas de equipaje con prioridad absoluta.' 
+                                {travelProfile === 'premium'
+                                    ? 'Estás cubierto contra retrasos, cancelaciones y pérdidas de equipaje con prioridad absoluta.'
                                     : 'Accede al sistema de reclamaciones automáticas, salas VIP y asistencia humana 24/7.'}
                             </Text>
                             <Text style={{ color: '#D4AF37', fontSize: 12, fontWeight: 'bold', marginTop: 12 }}>
@@ -283,8 +242,8 @@ export default function BioScreen() {
                 <TouchableOpacity
                     onPress={() => {
                         Alert.alert(
-                            "🔄 RESET MAESTRO (MODO BETA)", 
-                            "Esto borrará todos tus ahorros, vuelos y documentos para empezar de cero.\n\n¿Estás seguro?", 
+                            "🔄 RESET MAESTRO (MODO BETA)",
+                            "Esto borrará todos tus ahorros, vuelos y documentos para empezar de cero.\n\n¿Estás seguro?",
                             [
                                 { text: "CANCELAR", style: 'cancel' },
                                 { text: "SÍ, RESETEAR TODO", style: 'destructive', onPress: () => masterReset() }
@@ -335,7 +294,7 @@ export default function BioScreen() {
                             <Text style={{ color: '#FFF', fontWeight: 'bold' }}>✕</Text>
                         </TouchableOpacity>
                     </View>
-                    
+
                     <ScrollView contentContainerStyle={{ padding: 25, paddingBottom: 50 }}>
                         <Text style={{ color: '#D4AF37', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 10 }}>TU EXPERIENCIA PREMIUM ✨</Text>
                         <Text style={{ color: '#B0B0B0', fontSize: 14, lineHeight: 20, marginBottom: 30 }}>
@@ -346,7 +305,7 @@ export default function BioScreen() {
                             { id: '1', t: 'Organizador de Viajes', d: 'Crea tu ruta en la pestaña VIAJE. Nuestra IA analiza el clima y horarios en tiempo real para que siempre sepas qué esperar en tu destino.', icon: '🏢' },
                             { id: '2', t: 'Rastreador de Vuelos', d: 'Guarda tu número en VUELOS. Activamos una vigilancia constante que te avisará de cualquier cambio, retraso o cancelación al instante.', icon: '📡' },
                             { id: '3', t: 'Avisos Inteligentes', d: 'Sin ruidos innecesarios. Solo te notificamos si hay un riesgo real. La vibración táctica te avisará discretamente en tu bolsillo.', icon: '🚨' },
-                            { id: '4', t: 'Gestión de Reembolsos', d: 'Si el retraso supera las 3h, preparamos tu documentación legal al momento para recuperar hasta 600€. Un toque y nosotros gestionamos el trámite.', icon: '🛡️' },
+                            { id: '4', t: 'Gestión de Reembolsos', d: 'Si el retraso supera las 3h, organizamos la información necesaria para que puedas reclamar hasta 600€. Te guiamos en cada paso del trámite.', icon: '🛡️' },
                             { id: '5', t: 'Ayuda en Emergencias', d: 'Si algo sale mal, la IA puede coordinar avisos automáticos a hoteles para informar de tu retraso y proteger tus reservas de alojamiento.', icon: '🆘' },
                             { id: '6', t: 'Soluciones de Ruta', d: 'Ante un imprevisto, te damos 3 opciones claras: la más rápida para llegar, la más económica o la más cómoda con hotel. Tú tienes el control.', icon: '⚡' },
                             { id: '7', t: 'Asistente en Segundo Plano', d: 'Deja que la IA haga el trabajo pesado de buscar vuelos y plazas disponibles mientras tú descansas o te mueves por el aeropuerto.', icon: '🤖' },
@@ -363,7 +322,7 @@ export default function BioScreen() {
                             </View>
                         ))}
 
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             onPress={() => setShowGuide(false)}
                             style={{ backgroundColor: '#AF52DE', padding: 18, borderRadius: 15, marginTop: 20, alignItems: 'center' }}
                         >
@@ -374,13 +333,13 @@ export default function BioScreen() {
             </Modal>
 
             <Modal visible={showVip} animationType="slide" transparent>
-                <VIPModalScreen 
-                    onClose={() => setShowVip(false)} 
+                <VIPModalScreen
+                    onClose={() => setShowVip(false)}
                     onActivate={() => {
                         setTravelProfile('premium');
                         setShowVip(false);
                         Alert.alert('💎 STATUS ACTIVADO', 'Bienvenido al Universo VIP.');
-                    }} 
+                    }}
                 />
             </Modal>
         </ScrollView>

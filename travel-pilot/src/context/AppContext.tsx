@@ -13,6 +13,7 @@ import { Audio } from 'expo-av';
 import { getEU261Amount } from '../utils/flightUtils';
 
 type AppContextType = any;
+export const IS_BETA = true; // Cambiar a true para betas/testing
 export const AppContext = createContext<AppContextType>(null);
 
 export const AppProvider = ({ children }) => {
@@ -41,6 +42,7 @@ export const AppProvider = ({ children }) => {
   const [showBrowser, setShowBrowser] = useState(false);
   const [browserLogs, setBrowserLogs] = useState<any[]>([]);
   const [legalShieldActive, setLegalShieldActive] = useState(false);
+  const [showCancellation, setShowCancellation] = useState(false);
   const [claims, setClaims] = useState<any[]>([
     {
       id: 'C-VLG8321',
@@ -69,6 +71,7 @@ export const AppProvider = ({ children }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [apiPlan, setApiPlan] = useState<any>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [compBannerDismissed, setCompBannerDismissed] = useState(false);
   const [expoPushToken, setExpoPushToken] = useState('');
   const [availableVoices, setAvailableVoices] = useState<any[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
@@ -126,8 +129,11 @@ export const AppProvider = ({ children }) => {
   const [hasSeenPlan, setHasSeenPlan] = useState(false);
   const [selectedRescuePlan, setSelectedRescuePlan] = useState<string | null>(null);
   const [isReplayingTutorial, setIsReplayingTutorial] = useState(false);
-  const [travelProfile, setTravelProfile] = useState<'budget' | 'balanced' | 'fast' | 'premium'>('balanced');
+  const [travelProfile, setTravelProfile] = useState<'budget' | 'balanced' | 'fast' | 'premium'>('budget');
   const [pendingVIPRedirect, setPendingVIPRedirect] = useState(false);
+  const [chatOrigin, setChatOrigin] = useState<'global' | 'vip' | null>(null);
+  const [pendingVIPScroll, setPendingVIPScroll] = useState(false);
+  const [showVIPAlternatives, setShowVIPAlternatives] = useState(false);
   
   // Limpieza inicial para Beta (si no hay ahorros guardados, forzar 0)
   const [savedTime, setSavedTime] = useState(0);
@@ -148,7 +154,7 @@ export const AppProvider = ({ children }) => {
       setFlightData(null);
       setFlightInput('');
       setMessages([{ id: '1', text: 'TRAVEL-PILOT REINICIADO. Modo Beta activado. ¿En qué puedo ayudarte?', isUser: false }]);
-      setTravelProfile('balanced');
+      setTravelProfile('budget');
       setUserPhone('');
       setDismissedClaims([]);
       setHasSeenPlan(false);
@@ -258,6 +264,9 @@ export const AppProvider = ({ children }) => {
 
         const rMoney = await AsyncStorage.getItem('recoveredMoney');
         if (rMoney) setRecoveredMoney(parseFloat(rMoney));
+
+        const savedOrigin = await AsyncStorage.getItem('chatOrigin');
+        if (savedOrigin) setChatOrigin(savedOrigin as 'global' | 'vip');
       } catch (error) {
         console.error("Error loading from AsyncStorage:", error);
         setFlightData(null);
@@ -343,7 +352,37 @@ export const AppProvider = ({ children }) => {
     if (isStorageReady) {
       AsyncStorage.setItem('travelProfile', travelProfile);
     }
-  }, [travelProfile, isStorageReady]);
+  } , [travelProfile, isStorageReady]);
+
+  useEffect(() => {
+    if (isStorageReady) {
+      if (chatOrigin) {
+        AsyncStorage.setItem('chatOrigin', chatOrigin);
+      } else {
+        AsyncStorage.removeItem('chatOrigin');
+      }
+    }
+  }, [chatOrigin, isStorageReady]);
+
+  // ============================================================
+  // MONITORIZACIÓN PROACTIVA (APLAZADA A PRODUCCIÓN)
+  // ============================================================
+    // NOTA: El polling cada 5 min consume rápidamente las 100 llamadas/mes de AviationStack.
+    // Actualmente deshabilitado según petición del usuario.
+    // Para la versión final (Android/iOS) se usará el sistema de Webhooks (Push) de AeroDataBox.
+    const lastKnownDelay = useRef<number>(0);
+
+    useEffect(() => {
+        if (!flightData?.flightNumber) {
+            lastKnownDelay.current = 0;
+            return;
+        }
+
+        lastKnownDelay.current = flightData.departure?.delay || 0;
+
+        // Aquí iba el setInterval para el polling. Eliminado para no consumir cuotas.
+        
+    }, [flightData?.flightNumber, flightData?.departure?.delay]);
 
   // EFECTOS INICIALES
   useEffect(() => {
@@ -479,61 +518,70 @@ export const AppProvider = ({ children }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // SIMULACIÓN DE LOGS DEL NAVEGADOR ASISTENTE (DINÁMICA)
+  // SIMULACIÓN DE LOGS DEL NAVEGADOR ASISTENTE (EN TIEMPO REAL CON MOTOR SSE)
   useEffect(() => {
-    let interval: any;
+    let xhr: XMLHttpRequest | null = null;
+
     if (showBrowser && selectedPlan) {
-      const airline = flightData?.airline || "la aerolínea";
+      setBrowserLogs([]);
+      
       const destCity = flightData?.arrival?.airport || "tu destino";
-      const routeStr = (flightData && flightData.departure?.iata && flightData.arrival?.iata) ? `${flightData.departure.iata} → ${flightData.arrival.iata}` : "tu ruta";
+      const pType = selectedPlan?.type || "General";
+      
+      // Intentar extraer el nombre del hotel del razonamiento o título si es posible
+      const hotelMatch = selectedPlan?.title?.match(/en\s([A-Za-z\s]+)/i);
+      const hName = hotelMatch ? hotelMatch[1] : "Alojamiento Óptimo";
 
-      const sequence = [
-        "> Iniciando conexión segura con Travel-Core...",
-        "> 🔓 Conexión cifrada establecida con servidor central...",
-        `> 🌐 Entrando en portal de contingencias de ${airline}...`,
-        `> 🔍 Buscando la mejor ruta para el tramo ${routeStr}...`
-      ];
+      const fId = flightData?.flightNumber || "";
+      const depCity = flightData?.departure?.iata || flightData?.departure?.airport || "";
+      const arrCity = flightData?.arrival?.iata || flightData?.arrival?.airport || "";
+      const url = `${BACKEND_URL}/api/executePlan?flightId=${encodeURIComponent(fId)}&planType=${encodeURIComponent(pType)}&destination=${encodeURIComponent(destCity)}&hotelName=${encodeURIComponent(hName)}&depCity=${encodeURIComponent(depCity)}&arrCity=${encodeURIComponent(arrCity)}`;
+      
+      xhr = new XMLHttpRequest();
+      xhr.open('GET', url);
+      xhr.setRequestHeader('Accept', 'text/event-stream');
+      xhr.setRequestHeader('ngrok-skip-browser-warning', 'true');
+      
+      setBrowserLogs(['[Sistema] Abriendo canal seguro con Motor de Ejecución...']);
 
-      if (travelProfile === 'premium') {
-        sequence.push(`> 💎 Acceso VIP verificado. Protocolo élite activado...`);
-        sequence.push("> 🧠 Analizando tu situación en tiempo real...");
-        sequence.push("> ⚖️ Calculando compensación legal aplicable...");
-        sequence.push("> 🔍 Buscando las 3 mejores alternativas para ti...");
-        sequence.push("> 📝 Preparando expediente EU261 listo para firmar...");
-        sequence.push("> ✅ Informe táctico completo generado.");
-      } else if (selectedPlan.actionType === 'hotel' || selectedPlan.type?.includes('CONFORT')) {
-        sequence.push(`> 🏨 Buscando hoteles disponibles cerca de ${destCity}...`);
-        sequence.push("> 🛌 Analizando opciones de precio y disponibilidad...");
-        sequence.push("> ✉️ Preparando guía de alojamiento para tu Bóveda...");
-      } else if (selectedPlan.type?.includes('ECONÓMIC')) {
-        sequence.push(`> ⚖️ Calculando tu compensación EU261 con ${airline}...`);
-        sequence.push("> 📝 Preparando documentación legal de reclamación...");
-        sequence.push("> ✅ Generando expediente listo para firmar...");
-      } else {
-        sequence.push(`> ✨ Buscando vuelos alternativos disponibles hoy...`);
-        sequence.push(`> 📋 Analizando opciones más rápidas hacia tu destino...`);
-        sequence.push("> ✅ Preparando comparativa de rutas alternativas...");
-      }
-
-      sequence.push("> ✅ Operación completada con éxito. Actualizando tu App.");
-
-      let step = 0;
-      setBrowserLogs([sequence[0]]);
-      step = 1;
-
-      interval = setInterval(() => {
-        if (step < sequence.length) {
-          setBrowserLogs(prev => [...prev, sequence[step]]);
-          step++;
-        } else {
-          clearInterval(interval);
+      let seenBytes = 0;
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 3 || xhr.readyState === 4) {
+          // Extraer la parte nueva de la respuesta
+          const newData = xhr.responseText.substring(seenBytes);
+          seenBytes = xhr.responseText.length;
+          
+          const lines = newData.split('\n');
+          for (let line of lines) {
+             if (line.startsWith('data: ')) {
+                try {
+                    const parsed = JSON.parse(line.substring(6).trim());
+                    if (parsed.log) {
+                         setBrowserLogs(prev => [...prev, parsed.log]);
+                    }
+                    if (parsed.done && xhr) {
+                        xhr.abort();
+                    }
+                } catch(e) {} // Ignorar fragmentos incompletos
+             }
+          }
         }
-      }, 1200);
+      };
+
+      xhr.onerror = () => {
+         setBrowserLogs(prev => [...prev, '❌ [Error] Falló la conexión con el Motor.']);
+      };
+      
+      xhr.send();
+      
     } else if (!showBrowser) {
       setBrowserLogs([]);
     }
-    return () => clearInterval(interval);
-  }, [showBrowser, selectedPlan, travelProfile, flightData]);
+
+    return () => {
+        if (xhr) xhr.abort();
+    };
+  }, [showBrowser, selectedPlan, flightData]);
 
   useEffect(() => {
     const sub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -567,7 +615,7 @@ export const AppProvider = ({ children }) => {
         setMyTrips([]);
         setUserPhone(''); 
         setHasSeenOnboarding(false); // Reset para que el próximo vea el Onboarding
-        setTravelProfile('balanced');
+        setTravelProfile('budget');
         setSavedTime(0);
         setRecoveredMoney(0);
         setSelectedRescuePlan(null);
@@ -710,8 +758,9 @@ export const AppProvider = ({ children }) => {
     }
 
     try {
+      const projectId = Constants.expoConfig?.extra?.eas?.projectId || '71acd23d-946c-4b17-8637-2e7eae12016f';
       const token = (await Notifications.getExpoPushTokenAsync({
-        projectId: Constants.expoConfig?.extra?.eas?.projectId || 'd63abcdb-7fed-46b7-8d1f-5d7a72d98550',
+        projectId: projectId,
       })).data;
       setExpoPushToken(token);
 
@@ -723,9 +772,10 @@ export const AppProvider = ({ children }) => {
           token,
           deviceName: `${Device.brand} ${Device.modelName}`
         })
-      });
+      }).catch(e => console.log('Silencioso: error red token push'));
     } catch (e) {
-      console.log("No se pudo obtener el token push remoto, pero las alertas locales funcionarán:", e);
+      // SILENCIADO INTENCIONALMENTE: En Expo Go o sin configuración EAS, esto suele fallar y asusta al usuario.
+      console.log("Silencioso: No se pudo obtener el token push remoto, pero las locales funcionarán.");
     }
   };
 
@@ -866,7 +916,14 @@ export const AppProvider = ({ children }) => {
     if (prefetchedData || isPrefetching) return;
     setIsPrefetching(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/monitorFlight`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ flightId: flightInput.trim() || 'TP404' }) });
+      const response = await fetch(`${BACKEND_URL}/api/monitorFlight`, { 
+        method: 'POST', 
+        headers: { 
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        }, 
+        body: JSON.stringify({ flightId: flightInput.trim() || 'TP404' }) 
+      });
       const data = await response.json();
       if (data.contingencyPlan) setPrefetchedData(data.contingencyPlan);
     } catch (e) { } finally { setIsPrefetching(false); }
@@ -896,11 +953,16 @@ export const AppProvider = ({ children }) => {
     setIsSearching(true); setSearchError(null); setFlightData(null); setPrefetchedData(null);
     setCompensationEligible(false);
     setSelectedRescuePlan(null);
+    setCompBannerDismissed(false);
     setDismissedClaims(prev => prev.filter(f => f !== code.toUpperCase()));
 
     try {
       // 2) BUSCAR EL VUELO
-      const response = await fetch(`${BACKEND_URL}/api/flightInfo?flight=${code}`);
+      const response = await fetch(`${BACKEND_URL}/api/flightInfo?flight=${code}`, {
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
       if (!response.ok) {
         const err = await response.json();
         setSearchError(err.error || 'Vuelo no encontrado');
@@ -944,42 +1006,34 @@ export const AppProvider = ({ children }) => {
 
       // 5) UNA SOLA VOZ — el resumen completo de la situación adaptado al perfil
       const delay = data.departure?.delay || data.delayMinutes || 0;
-      let finalSpeech = "";
+      let finalSpeech = ''
 
-      if (data.status === 'landed' && delay >= 180) {
-        const amt = getEU261Amount(data).replace('€', ' euros');
-        finalSpeech = `¡Vuelo aterrizado con retraso de ${delay} minutos! He generado tu reclamación de ${amt} euros instantáneamente. El documento de firma te espera en la bóveda.`;
-      } else if (data.status === 'cancelled') {
-        const amt = getEU261Amount(data).replace('€', ' euros');
+      if (data.status === 'cancelled') {
         if (travelProfile === 'premium') {
-            finalSpeech = `Alerta roja, vuelo cancelado. Ya he activado tu protocolo VIP y el expediente por ${amt}. Priorizando rutas alternativas en clase superior.`;
-        } else if (travelProfile === 'budget') {
-            finalSpeech = `Tu vuelo ha sido cancelado. He generado tu reembolso de ${amt} en la bóveda. Buscando la conexión más barata disponible.`;
+          finalSpeech = 'Lamento comunicarte que tu vuelo ha sido cancelado. No te preocupes por nada: ya he tomado el control de la situación. He bloqueado la mejor ruta alternativa para ti antes de que se agoten las plazas y tu reembolso está totalmente garantizado. Tienes todas tus opciones de reubicación y confort en pantalla. ¿Por cuál de ellas quieres que empecemos?'
         } else {
-            finalSpeech = `Tu vuelo se ha cancelado. Reembolso de ${amt} preparado. Buscando la mejor combinación de hotel o vuelo alternativo.`;
+          finalSpeech = 'Siento decirte que tu vuelo ha sido cancelado. He preparado ya toda la documentación legal para que solicites el reembolso íntegro de tu billete y tu compensación por ley. Revisa los detalles en pantalla; tienes mi ayuda para recuperar tu dinero paso a paso.'
         }
-      } else if (delay >= 180) {
-        const amt = getEU261Amount(data).replace('€', ' euros');
+
+      } else if (delay > 180) {
         if (travelProfile === 'premium') {
-            finalSpeech = `Retraso severo detectado. Tu confort es mi prioridad. He preparado la reclamación de ${amt} y estoy buscando acceso a sala VIP u hotel de máxima categoría.`;
-        } else if (travelProfile === 'budget') {
-            finalSpeech = `Retraso de tres horas. Expediente de ${amt} completado. Esto cubrirá tus gastos. Buscando alternativas de bajo coste.`;
+          finalSpeech = 'Retraso crítico confirmado, pero descuida: ya estoy gestionando tu compensación. Mientras lo resuelvo, he habilitado tu acceso a la Sala Premium para que tu espera sea lo más placentera posible. Relájate, te informaré de cada paso.'
         } else {
-            finalSpeech = `Retraso crítico de tres horas. Documentos para reclamar ${amt} listos. Analizando opciones de asistencia y reemplazo de vuelo.`;
+          finalSpeech = 'Retraso importante detectado en tu vuelo. Según la normativa, tienes derecho a una indemnización garantizada. He preparado tu reclamación oficial para que puedas enviarla sin complicaciones. Revisa la pantalla.'
         }
-      } else if (delay >= 60) {
+
+      } else if (delay > 60) {
         if (travelProfile === 'premium') {
-            finalSpeech = `Atención. Tu vuelo se retrasa ${delay} minutos. Activo modo VIP para asegurar tu comodidad inmediata.`;
-        } else if (travelProfile === 'budget') {
-            finalSpeech = `Aviso. Retraso de ${delay} minutos. Evaluando opciones económicas para no descuadrar tu presupuesto.`;
+          finalSpeech = 'He detectado un ligero retraso. Si superamos las 2 horas, he preparado el acceso a tu sala Premium y tendrás cobertura de manutención incluida. Sigue cómodo, te aviso.'
         } else {
-            finalSpeech = `Retraso de ${delay} minutos detectado. Tienes derecho a asistencia. Calculando soluciones equilibradas para ti.`;
+          finalSpeech = 'Retraso leve detectado. Si la espera supera las 2 horas en rutas cortas, tienes derecho a vales de comida y bebida. Solicítalos directamente en el mostrador de la aerolínea. Mantendré el vuelo vigilado.'
         }
       }
 
-      if (finalSpeech !== "") {
-          speak(finalSpeech, selectedVoice);
+      if (!finalSpeech) {
+        finalSpeech = 'He detectado una incidencia en tu vuelo. Abre el chat con tu asistente para que analice tu situación específica.'
       }
+      if (finalSpeech) speak(finalSpeech, selectedVoice)
 
       // 6) LA VENTANA DE CRISIS LA ABRE GlobalOverlays automáticamente
       //    (ya tiene el auto-trigger que se resetea con cada nuevo vuelo)
@@ -1055,7 +1109,10 @@ export const AppProvider = ({ children }) => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/monitorFlight`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({ 
           flightId: flightInput.trim() || 'TP404',
           travelProfile: travelProfile 
@@ -1091,7 +1148,9 @@ export const AppProvider = ({ children }) => {
 
   const fetchAgentLogs = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/logs`);
+      const response = await fetch(`${BACKEND_URL}/api/logs`, {
+        headers: { 'ngrok-skip-browser-warning': 'true' }
+      });
       const data = await response.json();
       if (Array.isArray(data)) setAgentLogs(data);
     } catch (e) {
@@ -1101,7 +1160,10 @@ export const AppProvider = ({ children }) => {
 
   const clearAgentLogs = async () => {
     try {
-      await fetch(`${BACKEND_URL}/api/logs`, { method: 'DELETE' });
+      await fetch(`${BACKEND_URL}/api/logs`, { 
+        method: 'DELETE',
+        headers: { 'ngrok-skip-browser-warning': 'true' }
+      });
       setAgentLogs([]);
       setApiPlan(null);
       setHasSeenPlan(false);
@@ -1128,8 +1190,8 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const handleSendMessage = () => {
-    const text = inputText.trim(); if (!text) return;
+  const handleSendMessage = (directText?: string | any) => {
+    const text = (typeof directText === 'string' ? directText : inputText).trim(); if (!text) return;
     const newMessage = { id: Date.now().toString(), text, isUser: true };
     const history = [...messages, newMessage];
     setMessages(history);
@@ -1138,39 +1200,59 @@ export const AppProvider = ({ children }) => {
     (async () => {
       setIsTyping(true);
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s for Gemini
 
-      // Saneamiento estructural (Gemini da error 400 si el historial no empieza por 'human')
+      // Saneamiento estructural
       let safeHistory = history.slice(-10);
       while (safeHistory.length > 0 && !safeHistory[0].isUser) {
         safeHistory.shift();
       }
 
       try {
+        const activeFlight = flightData?.flightNumber || flightInput.trim() || undefined;
+        console.log(`[Chat] Enviando a backend: ${text} | Vuelo: ${activeFlight}`);
+
         const response = await fetch(`${BACKEND_URL}/api/chat`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
+          },
           body: JSON.stringify({
             text,
             history: safeHistory,
-            flightId: flightInput.trim() || undefined,
-            travelProfile: travelProfile
+            flightId: activeFlight,
+            travelProfile: travelProfile,
+            flightContext: flightData ? {
+              flightNumber: flightData.flightNumber,
+              airline: flightData.airline,
+              status: flightData.status,
+              departureAirport: flightData.departure?.airport,
+              arrivalAirport: flightData.arrival?.airport,
+              delayMinutes: flightData.departure?.delay || 0,
+            } : undefined,
           }),
           signal: controller.signal
         });
+        
         clearTimeout(timeoutId);
         const data = await response.json();
-        const aiText = data.text || "Lo siento, mi conexiónN ha fallado.";
-        setMessages(prev => [...prev, { id: Date.now().toString(), text: aiText, isUser: false }]);
-        speak(aiText);
+        
+        if (data.text) {
+            setMessages(prev => [...prev, { id: Date.now().toString(), text: data.text, isUser: false }]);
+            speak(data.text);
+        } else {
+            throw new Error("Respuesta vacía del servidor.");
+        }
       } catch (error: any) {
         clearTimeout(timeoutId);
-        console.error("[Frontend] Chat Error Details:", error);
-        let errorMsg = "Vaya, parece que mi conexión se ha cortado un segundo. ¿Puedes repetirme eso?";
-        if (error.name === 'AbortError') errorMsg = "Estoy tardando un poco más de lo normal en pensar. Por favor, vuelve a intentarlo ahora.";
+        console.error("[Frontend] Chat Error:", error);
+        let errorMsg = "¿Me lo puedes repetir? Tengo un problema de conexión temporal.";
+        if (error.name === 'AbortError') errorMsg = "Sigo pensando tu respuesta, pero mi conexión ha tardado demasiado. Prueba de nuevo.";
         setMessages(prev => [...prev, { id: Date.now().toString(), text: errorMsg, isUser: false }]);
-        speak("Perdona, he perdido la conexión un momento.");
-      } finally { setIsTyping(false); }
+      } finally { 
+        setIsTyping(false); 
+      }
     })();
   };
 
@@ -1179,7 +1261,10 @@ export const AppProvider = ({ children }) => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/myFlights`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({ userEmail: user.email, flightNumber, alias })
       });
       const data = await response.json();
@@ -1194,7 +1279,11 @@ export const AppProvider = ({ children }) => {
 
   const loadMyFlights = async (email: string) => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/myFlights?email=${email}`);
+      const response = await fetch(`${BACKEND_URL}/api/myFlights?email=${email}`, {
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
       if (!response.ok) throw new Error("Network response not ok");
       const data = await response.json();
       if (Array.isArray(data)) {
@@ -1210,7 +1299,10 @@ export const AppProvider = ({ children }) => {
 
   const removeMyFlight = async (id: string) => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/myFlights?id=${id}`, { method: 'DELETE' });
+      const response = await fetch(`${BACKEND_URL}/api/myFlights?id=${id}`, { 
+        method: 'DELETE',
+        headers: { 'ngrok-skip-browser-warning': 'true' }
+      });
       const data = await response.json();
       if (data.success && user?.email) loadMyFlights(user.email);
     } catch (e) {
@@ -1220,7 +1312,9 @@ export const AppProvider = ({ children }) => {
 
   const loadMyTrips = async (email: string) => {
     try {
-      const resp = await fetch(`${BACKEND_URL}/api/trips?email=${email}`);
+      const resp = await fetch(`${BACKEND_URL}/api/trips?email=${email}`, {
+        headers: { 'ngrok-skip-browser-warning': 'true' }
+      });
       if (!resp.ok) throw new Error("Network response not ok");
       const data = await resp.json();
       if (Array.isArray(data)) {
@@ -1239,7 +1333,10 @@ export const AppProvider = ({ children }) => {
     try {
       const resp = await fetch(`${BACKEND_URL}/api/trips`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({ userEmail: user.email, title, destination, startDate, endDate })
       });
       const data = await resp.json();
@@ -1259,7 +1356,10 @@ export const AppProvider = ({ children }) => {
 
   const removeTrip = async (id: string) => {
     try {
-      await fetch(`${BACKEND_URL}/api/trips?id=${id}`, { method: 'DELETE' });
+      await fetch(`${BACKEND_URL}/api/trips?id=${id}`, { 
+        method: 'DELETE',
+        headers: { 'ngrok-skip-browser-warning': 'true' }
+      });
       if (user?.email) loadMyTrips(user.email);
     } catch (e) {
       console.error("Error eliminando viaje:", e);
@@ -1269,13 +1369,32 @@ export const AppProvider = ({ children }) => {
   const fetchWeather = async (location: string) => {
     try {
       const sanitized = location.toLowerCase().includes('bora bora') ? 'Bora Bora, French Polynesia' : location;
-      const resp = await fetch(`${BACKEND_URL}/api/weather?location=${encodeURIComponent(sanitized)}`);
+      const resp = await fetch(`${BACKEND_URL}/api/weather?location=${encodeURIComponent(sanitized)}`, {
+        headers: { 'ngrok-skip-browser-warning': 'true' }
+      });
+      if (!resp.ok) throw new Error("Backend weather failed");
       const data = await resp.json();
       if (data.temp) {
         setWeatherMap(prev => ({ ...prev, [location.toLowerCase()]: data }));
       }
     } catch (e) {
       console.error(`Error cargando clima para ${location}:`, e);
+      // Fallback local instantáneo si el backend falla
+      const fallbacks: any = {
+        'madrid': { temp: '18', condition: 'Despejado', icon: '☀️' },
+        'barcelona': { temp: '19', condition: 'Soleado', icon: '☀️' },
+        'londres': { temp: '12', condition: 'Lluvia', icon: '🌧️' },
+        'london': { temp: '12', condition: 'Lluvia', icon: '🌧️' },
+        'paris': { temp: '14', condition: 'Nublado', icon: '☁️' },
+        'parís': { temp: '14', condition: 'Nublado', icon: '☁️' },
+        'tokio': { temp: '16', condition: 'Parcialmente Nublado', icon: '⛅' },
+        'tokyo': { temp: '16', condition: 'Parcialmente Nublado', icon: '⛅' },
+        'bora bora': { temp: '28', condition: 'Tormenta tropical', icon: '⛈️' }
+      };
+      const query = location.toLowerCase();
+      if (fallbacks[query]) {
+        setWeatherMap(prev => ({ ...prev, [query]: fallbacks[query] }));
+      }
     }
   };
 
@@ -1336,7 +1455,7 @@ export const AppProvider = ({ children }) => {
       setRecoveredMoney(prev => prev + parseFloat(amount.replace('€', '')));
       setSavedTime(prev => prev + 1); // Generar la reclamación ahorra 1h de papeleo
       
-      speak(`Excelente noticia. He generado tu reclamación oficial de ${amount} euros. El ahorro total en tu perfil ha sido actualizado. El documento legal ya está encriptado en tu bóveda.`);
+      speak(`Excelente noticia. He organizado toda la información para tu reclamación oficial de ${amount} euros. El ahorro total en tu perfil ha sido actualizado y puedes consultar los pasos a seguir en tu Bóveda.`);
       Alert.alert('✅ EXTRACCIÓN COMPLETADA', 'IA ha detectado y extraído 1 documento nuevo: Ticket de Parking (P1) detectado en tu cuenta de correo.');
     }, 4500);
   };
@@ -1377,7 +1496,17 @@ export const AppProvider = ({ children }) => {
     setTravelProfile,
     masterReset,
     pendingVIPRedirect,
-    setPendingVIPRedirect
+    setPendingVIPRedirect,
+    compBannerDismissed,
+    setCompBannerDismissed,
+    chatOrigin,
+    setChatOrigin,
+    showVIPAlternatives,
+    setShowVIPAlternatives,
+    pendingVIPScroll,
+    setPendingVIPScroll,
+    showCancellation,
+    setShowCancellation
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

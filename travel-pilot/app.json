@@ -1,13 +1,13 @@
 {
   "expo": {
     "name": "Travel-Pilot",
-    "slug": "travel-pilot-v2",
+    "slug": "travel-pilot",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon_v3.png",
+    "icon": "./assets/LOGO/LOGO.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/icon_v3.png",
+      "image": "./assets/LOGO/LOGO.png",
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
@@ -19,31 +19,14 @@
       "permissions": [
         "INTERNET"
       ],
-      "softwareKeyboardLayoutMode": "resize",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/icon_v3.png",
-        "backgroundColor": "#000000"
-      }
+      "softwareKeyboardLayoutMode": "resize"
     },
     "extra": {
       "eas": {
-        "projectId": "71acd23d-946c-4b17-8637-2e7eae12016f"
+        "projectId": "3a250c2c-ac83-471d-970e-e4cf92d99dc2"
       }
     },
-    "plugins": [
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "enableJetifier": true,
-            "gradleCommand": "assembleRelease",
-            "extraParams": {
-              "org.gradle.jvmargs": "-Xmx3g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
-            }
-          }
-        }
-      ]
-    ],
-    "owner": "richardgm2026"
+    "plugins": [],
+    "owner": "travelpilot"
   }
 }

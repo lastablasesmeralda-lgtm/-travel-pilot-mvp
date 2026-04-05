@@ -3,7 +3,7 @@ import { View, StatusBar, TouchableOpacity, Text, Animated, Alert, LogBox } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // SILENCIAR TODOS LOS ERRORES DE DESARROLLO (ESTILO PRODUCCIÓN)
-LogBox.ignoreAllLogs(true);
+// LogBox.ignoreAllLogs(true);
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 
@@ -50,7 +50,9 @@ function RootComponent() {
             <>
               <NavigationContainer theme={DarkTheme}>
                 <AppNavigator />
+                <GlobalOverlays />
               </NavigationContainer>
+
 
               {/* ——— PANEL DE MANDO SUPERIOR (FIJO) ——— */}
               <View style={s.topPanel}>
@@ -72,12 +74,46 @@ function RootComponent() {
               <TouchableOpacity style={s.sosChat} onPress={() => setShowChat(true)}>
                 <Text style={{ color: '#AF52DE', fontWeight: 'bold', fontSize: 24 }}>💬</Text>
               </TouchableOpacity>
+
+              {/* BARRA DE COMPENSACIÓN ELEGIBLE (ABSOLUTA SUPERIOR) */}
+              {compensationEligible && !compBannerDismissed && (
+                <TouchableOpacity
+                  onPress={() => setCompBannerDismissed(true)}
+                  activeOpacity={0.9}
+                  style={{
+                    position: 'absolute',
+                    top: 85,
+                    left: 15,
+                    right: 15,
+                    backgroundColor: '#FF9500',
+                    paddingVertical: 10,
+                    paddingHorizontal: 15,
+                    borderRadius: 12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    zIndex: 200,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: 0.4,
+                    shadowRadius: 8,
+                    elevation: 15,
+                    borderWidth: 1,
+                    borderColor: 'rgba(0,0,0,0.1)'
+                  }}
+                >
+                  <Text style={{ color: '#000', fontWeight: '900', fontSize: 11, letterSpacing: 0.5, flex: 1 }}>
+                    ⚖️ COMPENSACIÓN ELEGIBLE: {getEU261Amount(flightData)} DETECTADOS
+                  </Text>
+                  <View style={{ backgroundColor: 'rgba(0,0,0,0.1)', width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 12 }}>✕</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
             </>
           )}
-          <GlobalOverlays />
         </View>
       )}
-      <GlobalOverlays />
     </SafeAreaView>
   );
 }

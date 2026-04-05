@@ -40,8 +40,8 @@ function evaluateImpact(ctx) {
     const shortHaul = ['MAD', 'BCN', 'CDG', 'ORY', 'LHR', 'LGW', 'FRA', 'MUC', 'AMS', 'LIS', 'BIO', 'TFN', 'TFS', 'LPA', 'BRU', 'ZRH'];
     const longHaul = ['JFK', 'EWR', 'LAX', 'MIA', 'SFO', 'GRU', 'MEX', 'BOG', 'DAR', 'SYD', 'NRT', 'HND', 'HAV', 'EZE', 'PEK', 'DXB'];
     let distanceComp = 400; // Por defecto medio alcance
-    const dep = ctx.departure_airport || 'N/A';
-    const arr = ctx.arrival_airport || 'N/A';
+    const dep = ctx.departure?.iata || ctx.departure_airport || 'N/A';
+    const arr = ctx.arrival?.iata || ctx.arrival_airport || 'N/A';
     if (shortHaul.includes(dep) && shortHaul.includes(arr)) {
         distanceComp = 250;
     }
@@ -152,8 +152,8 @@ async function checkFlightStatus(flightId) {
             status: 'delayed',
             delayMinutes,
             airline: 'Iberia Express',
-            departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString() },
-            arrival: { iata: 'CDG', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString() },
+            departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString(), terminal: 'T4S', gate: 'H22' },
+            arrival: { iata: 'CDG', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), terminal: '2F', gate: 'F12' },
             hotel_booking: {
                 name: 'Pullman Paris Tour Eiffel', check_in_limit: '23:30',
                 check_in_limit_iso: new Date(now.toDateString() + ' 23:30').toISOString(),
@@ -387,35 +387,35 @@ async function handleFlightMonitoring(flightId, travelProfile = 'balanced') {
             options: [
                 {
                     type: 'RÁPIDO',
-                    title: isVip ? 'PROTOCOLO JET/PRIORITY' : isFast ? 'REUBICACIÓN RELÁMPAGO' : 'CAMBIO DE VUELO',
+                    title: isVip ? 'VUELO ALTERNATIVO PRIORITARIO' : isFast ? 'REUBICACIÓN RELÁMPAGO' : 'CAMBIO DE VUELO',
                     description: isVip
-                        ? `He bloqueado tu plaza VIP en el próximo vuelo. Un asistente te espera en la puerta para el trasbordo.`
+                        ? `He analizado las alternativas disponibles para llegar hoy a tu destino. Dirígete al mostrador de la aerolínea con tu expediente para solicitar el cambio. La reubicación es gratuita por ley.`
                         : isFast
-                            ? `He localizado el vuelo más rápido para tu destino. Procesando cambio de billete de inmediato.`
+                            ? `He localizado el vuelo más rápido para tu destino. Dirígete al mostrador para solicitar el cambio de billete.`
                             : `Vuelo alternativo localizado. Tienes derecho a reubicación gratuita por el retraso de ${context.delayMinutes} min.`,
-                    estimatedCost: isVip ? 800 : isFast ? 450 : 0,
+                    estimatedCost: isVip ? 0 : isFast ? 0 : 0,
                     actionType: 'flight_change'
                 },
                 {
                     type: 'ECONÓMICO',
                     title: isVip ? 'RECLAMACIÓN ELITE +' + amount + '€' : 'RECLAMACIÓN OFICIAL ' + amount + '€',
                     description: isVip
-                        ? `Tu indemnización legal de ${amount}€ ya está en trámite prioritario. He activado tu acceso a sala VIP mientras esperas.`
+                        ? `Tu posible indemnización legal de ${amount}€ ya está priorizada para revisión. Mientras esperas, tienes acceso a asistencia premium.`
                         : isBudget
-                            ? `Máximo ahorro garantizado. He preparado tu reclamación de ${amount}€ para que la cobres íntegra.`
-                            : `Documentación legal lista para reclamar tus ${amount}€ por el retraso legal EU261.`,
+                            ? `Máximo ahorro garantizado. He preparado tu reclamación de ${amount}€ para que puedas revisarla y firmarla.`
+                            : `Documentación legal lista para revisar y reclamar tus ${amount}€ por el retraso legal EU261.`,
                     estimatedCost: amount,
                     actionType: 'transport'
                 },
                 {
                     type: 'CONFORT',
-                    title: isVip ? 'ESTANCIA LUXURY GARANTIZADA' : isBalanced ? 'ESTANCIA CON CONFORT' : 'ALOJAMIENTO ASISTIDO',
+                    title: isVip ? 'ALOJAMIENTO CERCANO LOCALIZADO' : isBalanced ? 'ESTANCIA CON CONFORT' : 'ALOJAMIENTO ASISTIDO',
                     description: isVip
-                        ? `Habitación reservada en hotel 5 estrellas cercano. Traslado privado activado para ti.`
+                        ? `He localizado opciones de alojamiento cercanas al aeropuerto. Confirma tú mismo la reserva llamando al hotel. También puedo orientarte sobre los pasos de tu posible reclamación EU261.`
                         : isBalanced
-                            ? `Reserva de hotel gestionada para asegurar tu descanso durante la incidencia.`
-                            : `Te gestionamos el alojamiento gratuito que te corresponde por ley por el retraso de ${context.delayMinutes} min.`,
-                    estimatedCost: isVip ? 400 : 150,
+                            ? `He localizado alojamiento cercano al aeropuerto para que descanses. Confirma tú mismo la disponibilidad.`
+                            : `Opciones de alojamiento identificadas cerca del aeropuerto. Puedes solicitar a la aerolínea el alojamiento que te corresponda según la incidencia.`,
+                    estimatedCost: isVip ? 0 : 0,
                     actionType: 'hotel'
                 }
             ],

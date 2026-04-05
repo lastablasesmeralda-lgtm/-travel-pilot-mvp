@@ -31,9 +31,9 @@ const SLIDES = [
     {
         id: '4',
         image: require('../../assets/onboarding4.jpg'), // Bio/Perfil
-        title: 'TÚ SOLO ELIGES',
-        subtitle: 'Tres modos inteligentes:\n\n🔵 OPCIÓN EQUILIBRADA — Máximo balance.\n🔴 OPCIÓN RÁPIDA — Llegar lo antes posible.\n🟢 OPCIÓN ECONÓMICA — Ahorro total.\n\nTú decides la prioridad y mi IA hace el resto.',
-        accent: '#22C55E', // Verde (Bio)
+        title: 'EL ESQUEMA DE RESCATE',
+        subtitle: 'Mi IA detectará cualquier incidencia y actuará basándose en tu prioridad predefinida:\n\n💎 PRIORIDAD CONFORT — Reubicación de élite y acceso a salas VIP.\n💰 PRIORIDAD REEMBOLSO — Máxima indemnización económica por ley.\n\nTodo gestionado. Tú solo decides.',
+        accent: '#D4AF37', // Dorado de status
     },
     {
         id: '5',

@@ -54,11 +54,15 @@ export interface FlightContext {
         iata: string;
         delay: number;
         scheduled: string;
+        terminal?: string;
+        gate?: string;
     };
     arrival?: {
         iata: string;
         scheduled: string;
         estimated: string;
+        terminal?: string;
+        gate?: string;
     };
     original_arrival?: string;
     estimated_arrival_iso?: string;
@@ -71,7 +75,7 @@ export interface FlightContext {
 // ============================================================
 // FUNCIONES DE ANÁLISIS
 // ============================================================
-export function evaluateImpact(ctx: FlightContext) {
+export function evaluateImpact(ctx: FlightContext, travelProfile: string = 'balanced') {
     let severity = 'LOW';
     let potentialLoss = 0;
     let compensationEligible = false;
@@ -85,9 +89,9 @@ export function evaluateImpact(ctx: FlightContext) {
     const longHaul = ['JFK', 'EWR', 'LAX', 'MIA', 'SFO', 'GRU', 'MEX', 'BOG', 'DAR', 'SYD', 'NRT', 'HND', 'HAV', 'EZE', 'PEK', 'DXB'];
 
     let distanceComp = 400; // Por defecto medio alcance
-    const dep = ctx.departure_airport || 'N/A';
-    const arr = ctx.arrival_airport || 'N/A';
-    
+    const dep = ctx.departure?.iata || ctx.departure_airport || 'N/A';
+    const arr = ctx.arrival?.iata || ctx.arrival_airport || 'N/A';
+
     if (shortHaul.includes(dep) && shortHaul.includes(arr)) {
         distanceComp = 250;
     } else if (longHaul.includes(dep) || longHaul.includes(arr)) {
@@ -97,7 +101,7 @@ export function evaluateImpact(ctx: FlightContext) {
     if (ctx.status === 'cancelled') {
         severity = 'CRITICAL';
         compensationEligible = true;
-        compensationAmount = distanceComp; 
+        compensationAmount = distanceComp;
     } else if (ctx.delayMinutes >= 180) {
         severity = 'CRITICAL';
         compensationEligible = true;
@@ -108,18 +112,34 @@ export function evaluateImpact(ctx: FlightContext) {
         compensationAmount = 0;
     }
 
-    if (ctx.hotel_booking && !ctx.hotel_booking.is_refundable) {
-        potentialLoss += ctx.hotel_booking.cost_per_night;
-        hotelAlert = `Habitación no reembolsable en ${ctx.hotel_booking.name}`;
-        hotelRisk = true;
-    }
+    const estArrival = new Date(ctx.estimated_arrival_iso || ctx.arrival?.estimated || new Date().toISOString());
+    const hours = estArrival.getHours();
+    const minutes = estArrival.getMinutes().toString().padStart(2, '0');
     
-    const estArrival = ctx.estimated_arrival_iso || new Date().toISOString();
+    // Nombres reales de Salas VIP en los principales hubs
+    const vipLounges: Record<string, string> = {
+        'MAD': 'Sala VIP Neptuno', 'BCN': 'Sala VIP Pau Casals', 'LHR': 'Galleries Lounge', 
+        'CDG': 'Salon Air France / Extime', 'JFK': 'Centurion Lounge', 'FRA': 'Lufthansa Senator Lounge',
+        'AMS': 'KLM Crown Lounge', 'LIS': 'ANA Lounge'
+    };
+    const loungeName = vipLounges[dep] || 'Sala VIP asociada';
+
+    if (ctx.status === 'cancelled') {
+         hotelAlert = `Vuelo cancelado. Te corresponde noche de hotel gestionada por la aerolínea en ${dep}. Dirígete al mostrador.`;
+         hotelRisk = true;
+    } else if (travelProfile === 'premium' && ctx.delayMinutes >= 120) {
+         hotelAlert = `Sugerencia Elite: Retraso severo temporal. Mientras estamos preparando tu nueva ruta, te recordamos que tienes acceso garantizado a la ${loungeName} en ${dep}. Dirígete allí para esperar con total confort.`;
+    } else if (hours >= 23 || hours <= 5) {
+         hotelAlert = `Llegada de madrugada a ${arr} (${hours}:${minutes}). El transporte público estará limitado, considera reservar un traslado con antelación.`;
+    } else if (ctx.delayMinutes > 120) {
+         hotelAlert = `Retraso severo. Tienes derecho a vales de comida y bebida en el aeropuerto de ${dep} mientras esperas.`;
+    } else {
+         hotelAlert = `Vuelo vigilado. Llegada estimada a ${arr} a las ${hours}:${minutes}. Sigue las pantallas del aeropuerto para tu embarque.`;
+    }
 
     if (ctx.connecting_flight) {
         const boardingCloses = new Date(ctx.connecting_flight.boarding_closes_iso);
-        const estimatedArrival = new Date(estArrival);
-        const transferTime = (boardingCloses.getTime() - estimatedArrival.getTime()) / 60000;
+        const transferTime = (boardingCloses.getTime() - estArrival.getTime()) / 60000;
         if (transferTime < ctx.connecting_flight.min_transfer_minutes) {
             connectionRisk = true;
         }
@@ -127,8 +147,7 @@ export function evaluateImpact(ctx: FlightContext) {
 
     if (ctx.ground_transport) {
         const lastDeparture = new Date(ctx.ground_transport.last_departure_iso);
-        const estimatedArrival = new Date(estArrival);
-        if (estimatedArrival > lastDeparture) {
+        if (estArrival > lastDeparture) {
             groundTransportRisk = true;
         }
     }
@@ -158,16 +177,16 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
     // 🏆 SUITE DE PRUEBAS MAESTRA (DETERMINISTA)
     if (code === 'TP999') {
         const originalArrival = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-        const delayMinutes = 240; 
+        const delayMinutes = 240;
         const estimatedArrival = new Date(originalArrival.getTime() + delayMinutes * 60 * 1000);
         return {
-            flightId, 
-            flightNumber: 'TP999', 
-            status: 'delayed', 
+            flightId,
+            flightNumber: 'TP999',
+            status: 'delayed',
             delayMinutes,
             airline: 'Lufthansa',
-            departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString() },
-            arrival: { iata: 'BER', scheduled: originalArrival.toISOString(), estimated: estimatedArrival.toISOString() },
+            departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString(), terminal: 'T4', gate: 'K72' },
+            arrival: { iata: 'BER', scheduled: originalArrival.toISOString(), estimated: estimatedArrival.toISOString(), terminal: 'T1', gate: 'B15' },
             hotel_booking: {
                 name: 'Hotel Adlon Kempinski Berlin', check_in_limit: '23:30',
                 check_in_limit_iso: new Date(now.toDateString() + ' 23:30').toISOString(),
@@ -179,15 +198,15 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
 
     if (code === 'TP555') {
         const originalArrival = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-        const delayMinutes = 300; 
+        const delayMinutes = 300;
         return {
-            flightId, 
-            flightNumber: 'TP555', 
-            status: 'delayed', 
+            flightId,
+            flightNumber: 'TP555',
+            status: 'delayed',
             delayMinutes,
             airline: 'Iberia',
-            departure: { iata: 'JFK', delay: delayMinutes, scheduled: now.toISOString() },
-            arrival: { iata: 'MAD', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString() },
+            departure: { iata: 'JFK', delay: delayMinutes, scheduled: now.toISOString(), terminal: 'T4', gate: 'B23' },
+            arrival: { iata: 'MAD', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), terminal: 'T4S', gate: 'S10' },
             hotel_booking: {
                 name: 'Hotel Palace Madrid', check_in_limit: '23:59',
                 check_in_limit_iso: new Date(now.toDateString() + ' 23:59').toISOString(),
@@ -199,15 +218,15 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
 
     if (code === 'IB3166') {
         const originalArrival = new Date(now.getTime() + 4 * 60 * 60 * 1000);
-        const delayMinutes = 220; 
+        const delayMinutes = 220;
         return {
-            flightId, 
-            flightNumber: 'IB3166', 
-            status: 'delayed', 
+            flightId,
+            flightNumber: 'IB3166',
+            status: 'delayed',
             delayMinutes,
             airline: 'Iberia Express',
-            departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString() },
-            arrival: { iata: 'CDG', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString() },
+            departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString(), terminal: 'T4S', gate: 'H22' },
+            arrival: { iata: 'CDG', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), terminal: '2F', gate: 'F12' },
             hotel_booking: {
                 name: 'Pullman Paris Tour Eiffel', check_in_limit: '23:30',
                 check_in_limit_iso: new Date(now.toDateString() + ' 23:30').toISOString(),
@@ -220,13 +239,13 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
     if (code === 'TP777') {
         const originalArrival = new Date(now.getTime() + 1 * 60 * 60 * 1000);
         return {
-            flightId, 
-            flightNumber: 'TP777', 
-            status: 'cancelled', 
+            flightId,
+            flightNumber: 'TP777',
+            status: 'cancelled',
             delayMinutes: 0,
             airline: 'Vueling',
-            departure: { iata: 'BCN', delay: 0, scheduled: now.toISOString() },
-            arrival: { iata: 'MAD', scheduled: originalArrival.toISOString(), estimated: originalArrival.toISOString() },
+            departure: { iata: 'BCN', delay: 0, scheduled: now.toISOString(), terminal: 'T1', gate: 'A12' },
+            arrival: { iata: 'MAD', scheduled: originalArrival.toISOString(), estimated: originalArrival.toISOString(), terminal: 'T4', gate: 'J10' },
             hotel_booking: {
                 name: 'Hotel Wellington', check_in_limit: '22:00',
                 check_in_limit_iso: new Date(now.toDateString() + ' 22:00').toISOString(),
@@ -240,13 +259,13 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         const originalArrival = new Date(now.getTime() + 10 * 60 * 60 * 1000);
         const delayMinutes = 180;
         return {
-            flightId, 
-            flightNumber: 'TP111', 
-            status: 'delayed', 
+            flightId,
+            flightNumber: 'TP111',
+            status: 'delayed',
             delayMinutes,
             airline: 'Air Europa',
-            departure: { iata: 'MEX', delay: delayMinutes, scheduled: now.toISOString() },
-            arrival: { iata: 'MAD', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString() },
+            departure: { iata: 'MEX', delay: delayMinutes, scheduled: now.toISOString(), terminal: 'T1', gate: '12' },
+            arrival: { iata: 'MAD', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), terminal: 'T4S', gate: 'S01' },
             hotel_booking: {
                 name: 'Rosewood Villa Magna', check_in_limit: '23:59',
                 check_in_limit_iso: new Date(now.toDateString() + ' 23:59').toISOString(),
@@ -260,13 +279,13 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         const originalArrival = new Date(now.getTime() + 2 * 60 * 60 * 1000);
         const delayMinutes = 210;
         return {
-            flightId, 
-            flightNumber: 'TP404', 
-            status: 'delayed', 
+            flightId,
+            flightNumber: 'TP404',
+            status: 'delayed',
             delayMinutes,
             airline: 'British Airways',
-            departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString() },
-            arrival: { iata: 'LHR', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString() },
+            departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString(), terminal: 'T4', gate: 'K12' },
+            arrival: { iata: 'LHR', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), terminal: 'T5', gate: 'A10' },
             hotel_booking: {
                 name: 'The Ritz London', check_in_limit: '23:00',
                 check_in_limit_iso: new Date(now.toDateString() + ' 23:00').toISOString(),
@@ -360,12 +379,16 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
                 departure: {
                     iata: flight.departure?.iata || 'N/A',
                     delay: depDelay,
-                    scheduled: flight.departure?.scheduled || now.toISOString()
+                    scheduled: flight.departure?.scheduled || now.toISOString(),
+                    terminal: flight.departure?.terminal || '—',
+                    gate: flight.departure?.gate || '—'
                 },
                 arrival: {
                     iata: flight.arrival?.iata || 'N/A',
                     scheduled: flight.arrival?.scheduled || now.toISOString(),
-                    estimated: estimatedArrival.toISOString()
+                    estimated: estimatedArrival.toISOString(),
+                    terminal: flight.arrival?.terminal || '—',
+                    gate: flight.arrival?.gate || '—'
                 },
                 hotel_booking: hotelBooking,
                 connecting_flight: null,
@@ -415,11 +438,11 @@ export async function handleFlightMonitoring(flightId: string, travelProfile: st
     console.log(`[Agent] 🕵️ Deep Impact Analysis -> |${code}| (Profile: ${travelProfile})`);
 
     const context = await checkFlightStatus(flightId);
-    const impact = evaluateImpact(context);
+    const impact = evaluateImpact(context, travelProfile);
 
     // 🛡️ QUOTA SHIELD: Buscar si ya existe un plan para este vuelo y este retraso hoy
     const isTestCode = ['TP999', 'TP404', 'IB3166', 'TP777', 'TP555', 'TP111'].includes(code);
-    
+
     if (!isTestCode) {
         try {
             const { data: cached } = await supabase
@@ -433,9 +456,9 @@ export async function handleFlightMonitoring(flightId: string, travelProfile: st
                 const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
                 const hit = cached.find(log => {
                     const p = JSON.parse(log.payload || '{}');
-                    return p.flightId === code && 
-                           p.delayMinutes === context.delayMinutes && 
-                           log.created_at > sixHoursAgo;
+                    return p.flightId === code &&
+                        p.delayMinutes === context.delayMinutes &&
+                        log.created_at > sixHoursAgo;
                 });
 
                 if (hit) {
@@ -452,7 +475,7 @@ export async function handleFlightMonitoring(flightId: string, travelProfile: st
     const testCodes = ['TP999', 'TP404', 'IB3166', 'TP777', 'TP555', 'TP111', 'IB0123', 'TK1860', 'EK142', 'IB3150'];
     if (testCodes.includes(code)) {
         console.log(`[Agent] ⚡ Fast-Path DETERMINISTA activado para |${code}|`);
-        
+
         const isVip = travelProfile === 'premium';
         const isFast = travelProfile === 'fast';
         const isBudget = travelProfile === 'budget';
@@ -462,38 +485,38 @@ export async function handleFlightMonitoring(flightId: string, travelProfile: st
 
         return {
             options: [
-                { 
-                    type: 'RÁPIDO', 
-                    title: isVip ? 'PROTOCOLO JET/PRIORITY' : isFast ? 'REUBICACIÓN RELÁMPAGO' : 'CAMBIO DE VUELO', 
-                    description: isVip 
-                        ? `He bloqueado tu plaza VIP en el próximo vuelo. Un asistente te espera en la puerta para el trasbordo.` 
-                        : isFast 
-                        ? `He localizado el vuelo más rápido para tu destino. Procesando cambio de billete de inmediato.`
-                        : `Vuelo alternativo localizado. Tienes derecho a reubicación gratuita por el retraso de ${context.delayMinutes} min.`, 
-                    estimatedCost: isVip ? 800 : isFast ? 450 : 0, 
-                    actionType: 'flight_change' 
+                {
+                    type: 'RÁPIDO',
+                    title: isVip ? 'VUELO ALTERNATIVO PRIORITARIO' : isFast ? 'REUBICACIÓN RELÁMPAGO' : 'CAMBIO DE VUELO',
+                    description: isVip
+                        ? `He analizado las alternativas disponibles para llegar hoy a tu destino. Dirígete al mostrador de la aerolínea con tu expediente para solicitar el cambio. La reubicación es gratuita por ley.`
+                        : isFast
+                            ? `He localizado el vuelo más rápido para tu destino. Dirígete al mostrador para solicitar el cambio de billete.`
+                            : `Vuelo alternativo localizado. Tienes derecho a reubicación gratuita por el retraso de ${context.delayMinutes} min.`,
+                    estimatedCost: isVip ? 0 : isFast ? 0 : 0,
+                    actionType: 'flight_change'
                 },
-                { 
-                    type: 'ECONÓMICO', 
-                    title: isVip ? 'RECLAMACIÓN ELITE +' + amount + '€' : 'RECLAMACIÓN OFICIAL ' + amount + '€', 
-                    description: isVip 
-                        ? `Tu indemnización legal de ${amount}€ ya está en trámite prioritario. He activado tu acceso a sala VIP mientras esperas.` 
+                {
+                    type: 'ECONÓMICO',
+                    title: isVip ? 'RECLAMACIÓN ELITE' : 'RECLAMACIÓN OFICIAL',
+                    description: isVip
+                        ? `Tu posible reclamación legal ya está priorizada para revisión. Mientras esperas, tienes acceso a asistencia premium.`
                         : isBudget
-                        ? `Máximo ahorro garantizado. He preparado tu reclamación de ${amount}€ para que la cobres íntegra.`
-                        : `Documentación legal lista para reclamar tus ${amount}€ por el retraso legal EU261.`, 
-                    estimatedCost: amount, 
-                    actionType: 'transport' 
+                            ? `Máximo ahorro garantizado. He preparado el proceso de reclamación legal para que puedas revisarlo y firmarlo.`
+                            : `Documentación legal lista para revisar y reclamar por el retraso legal EU261.`,
+                    estimatedCost: amount,
+                    actionType: 'transport'
                 },
-                { 
-                    type: 'CONFORT', 
-                    title: isVip ? 'ESTANCIA LUXURY GARANTIZADA' : isBalanced ? 'ESTANCIA CON CONFORT' : 'ALOJAMIENTO ASISTIDO', 
-                    description: isVip 
-                        ? `Habitación reservada en hotel 5 estrellas cercano. Traslado privado activado para ti.` 
+                {
+                    type: 'CONFORT',
+                    title: isVip ? 'ALOJAMIENTO CERCANO LOCALIZADO' : isBalanced ? 'ESTANCIA CON CONFORT' : 'ALOJAMIENTO ASISTIDO',
+                    description: isVip
+                        ? `He localizado opciones de alojamiento cercanas al aeropuerto. Confirma tú mismo la reserva llamando al hotel. También puedo orientarte sobre los pasos de tu posible reclamación EU261.`
                         : isBalanced
-                        ? `Reserva de hotel gestionada para asegurar tu descanso durante la incidencia.`
-                        : `Te gestionamos el alojamiento gratuito que te corresponde por ley por el retraso de ${context.delayMinutes} min.`, 
-                    estimatedCost: isVip ? 400 : 150, 
-                    actionType: 'hotel' 
+                            ? `He localizado alojamiento cercano al aeropuerto para que descanses. Confirma tú mismo la disponibilidad.`
+                            : `Opciones de alojamiento identificadas cerca del aeropuerto. Puedes solicitar a la aerolínea el alojamiento que te corresponda según la incidencia.`,
+                    estimatedCost: isVip ? 0 : 0,
+                    actionType: 'hotel'
                 }
             ],
             impact
@@ -556,9 +579,9 @@ IMPORTANT: Return ONLY the raw JSON object. Do not include markdown code blocks 
                 groundTransportRisk: impact.groundTransportRisk ? "SÍ — último tren perdido" : "NO",
                 compensationEligible: impact.compensationEligible ? "SÍ" : "NO",
                 compensationAmount: impact.compensationAmount.toString(),
-                travelProfile: travelProfile === 'premium' ? 'Élite / PREMIUM (Gestión Directa)' : 
-                              travelProfile === 'fast' ? 'Viajero RÁPIDO (Prioridad Tiempo)' :
-                              travelProfile === 'budget' ? 'Viajero ECONÓMICO (Prioridad Ahorro)' : 'Viajero EQUILIBRADO (Mix estándar)',
+                travelProfile: travelProfile === 'premium' ? 'Élite / PREMIUM (Gestión Directa)' :
+                    travelProfile === 'fast' ? 'Viajero RÁPIDO (Prioridad Tiempo)' :
+                        travelProfile === 'budget' ? 'Viajero ECONÓMICO (Prioridad Ahorro)' : 'Viajero EQUILIBRADO (Mix estándar)',
                 format_instructions: FORMAT_INSTRUCTIONS
             });
 
@@ -583,7 +606,7 @@ IMPORTANT: Return ONLY the raw JSON object. Do not include markdown code blocks 
             return result;
         } catch (e: any) {
             console.error("[Agent] Analysis Error, falling back to dynamic scenarios:", e.message);
-            
+
             // Especialización para el vuelo de prueba TP999
             if (flightId.toUpperCase() === 'TP999') {
                 return {

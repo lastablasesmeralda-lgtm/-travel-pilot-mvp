@@ -8,11 +8,18 @@ export default function ChatView() {
     const {
         showChat, setShowChat, isSpeaking, waveAnim, messages, isTyping, inputText, setInputText,
         handleSendMessage, scrollViewRef, clearMessages, stopSpeak, availableVoices,
-        selectedVoice, setSelectedVoice, speak
+        selectedVoice, setSelectedVoice, speak, chatOrigin, setChatOrigin, setTab,
+        setShowVIPAlternatives, flightData, compensationEligible
     } = useAppContext();
 
     const [showVoiceMenu, setShowVoiceMenu] = React.useState(false);
     const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+    useEffect(() => {
+        return () => {
+            setChatOrigin('global');
+        };
+    }, []);
 
     // Escuchar eventos reales del teclado
     useEffect(() => {
@@ -34,6 +41,14 @@ export default function ChatView() {
             hideSub.remove();
         };
     }, []);
+
+    // Quick Action: escribe y envía automáticamente
+    const sendQuickAction = (text: string) => {
+        setInputText(text);
+        setTimeout(() => {
+            handleSendMessage(text);
+        }, 100);
+    };
 
     if (!showChat) return null;
 
@@ -61,11 +76,32 @@ export default function ChatView() {
                         >
                             <Text style={{ color: '#999', fontWeight: 'bold', fontSize: 10 }}>BORRAR</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setShowChat(false)}>
+                        <TouchableOpacity onPress={() => { setShowChat(false); setChatOrigin('global'); }}>
                             <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>CERRAR</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
+                {chatOrigin === 'vip' && (
+                    <TouchableOpacity 
+                        onPress={() => {
+                            setShowChat(false);
+                            setTab('Vault');
+                            setTimeout(() => setShowVIPAlternatives(true), 400);
+                        }}
+                        style={{ 
+                            backgroundColor: '#AF52DE20', 
+                            padding: 12, 
+                            flexDirection: 'row', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            borderBottomWidth: 1,
+                            borderColor: '#AF52DE40'
+                        }}
+                    >
+                        <Text style={{ color: '#AF52DE', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 }}>✨ VER OTRAS ALTERNATIVAS VIP</Text>
+                        <Text style={{ color: '#AF52DE', marginLeft: 8, fontSize: 14 }}>→</Text>
+                    </TouchableOpacity>
+                )}
 
                 {showVoiceMenu && (
                     <View style={{ backgroundColor: '#111', padding: 10, borderBottomWidth: 1, borderColor: '#222' }}>
@@ -124,6 +160,46 @@ export default function ChatView() {
                     )}
                 </ScrollView>
 
+                {/* Quick Action Chips - solo cuando hay vuelo activo */}
+                {flightData && !isTyping && messages.length < 4 && (
+                    <ScrollView 
+                        horizontal 
+                        showsHorizontalScrollIndicator={false} 
+                        style={{ paddingHorizontal: 15, paddingVertical: 8, maxHeight: 50 }}
+                        contentContainerStyle={{ alignItems: 'center', gap: 8 }}
+                    >
+                        <TouchableOpacity 
+                            onPress={() => sendQuickAction('¿Cuál es el estado actual de mi vuelo?')}
+                            style={{ backgroundColor: '#1A1A2E', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#AF52DE40', flexDirection: 'row', alignItems: 'center' }}
+                        >
+                            <Text style={{ color: '#AF52DE', fontSize: 13, fontWeight: '600' }}>✈️ Estado de mi vuelo</Text>
+                        </TouchableOpacity>
+
+                        {compensationEligible && (
+                            <TouchableOpacity 
+                                onPress={() => sendQuickAction('¿Tengo derecho a compensación por el retraso de mi vuelo? ¿Cuánto me corresponde según EU261?')}
+                                style={{ backgroundColor: '#1A2E1A', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#34C75940', flexDirection: 'row', alignItems: 'center' }}
+                            >
+                                <Text style={{ color: '#34C759', fontSize: 13, fontWeight: '600' }}>💰 ¿Cuánto me deben?</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        <TouchableOpacity 
+                            onPress={() => sendQuickAction('Mi vuelo tiene problemas. ¿Qué debería hacer ahora mismo? Dame pasos concretos.')}
+                            style={{ backgroundColor: '#2E1A1A', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#FF453A40', flexDirection: 'row', alignItems: 'center' }}
+                        >
+                            <Text style={{ color: '#FF6B6B', fontSize: 13, fontWeight: '600' }}>🚨 ¿Qué hago ahora?</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            onPress={() => sendQuickAction('¿Hay vuelos alternativos disponibles desde mi aeropuerto para llegar a mi destino hoy?')}
+                            style={{ backgroundColor: '#1A1A2E', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#5E5CE640', flexDirection: 'row', alignItems: 'center' }}
+                        >
+                            <Text style={{ color: '#5E5CE6', fontSize: 13, fontWeight: '600' }}>🔄 Alternativas</Text>
+                        </TouchableOpacity>
+                    </ScrollView>
+                )}
+
                 <View style={{ paddingHorizontal: 20, paddingBottom: 6 }}>
                     <Text style={{ fontSize: 10, color: '#888', textAlign: 'center', fontWeight: '500' }}>
                          ⓘ El asistente puede cometer errores.{"\n"}Verifica siempre las decisiones importantes.
@@ -133,13 +209,29 @@ export default function ChatView() {
                 <View style={[s.chatInputWrap, { marginBottom: keyboardHeight > 0 ? keyboardHeight - (Platform.OS === 'ios' ? 34 : 0) : 20 }]}>
                     <TextInput 
                         style={s.chatInput} 
-                        placeholder={"Escribe o pulsa 🎙️ en tu teclado para dictar"} 
+                        placeholder={"Escribe tu mensaje..."} 
                         placeholderTextColor="#666" 
                         value={inputText} 
                         onChangeText={setInputText}
+                        keyboardAppearance="dark"
+                        keyboardType="default"
+                        autoCapitalize="sentences"
+                        autoCorrect={false}
+                        autoComplete="off"
+                        spellCheck={false}
+                        textContentType="none"
+                        disableFullscreenUI={true}
+                        blurOnSubmit={false}
+                        onSubmitEditing={() => {
+                            console.log(`[Chat] Enviando mensaje con contexto de vuelo: ${flightData?.flightNumber || 'Ninguno'}`);
+                            handleSendMessage();
+                        }}
                         onFocus={() => setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 350)}
                     />
-                    <TouchableOpacity style={s.chatBtn} onPress={handleSendMessage}>
+                    <TouchableOpacity style={s.chatBtn} onPress={() => {
+                        console.log(`[Chat] Enviando mensaje con contexto de vuelo: ${flightData?.flightNumber || 'Ninguno'}`);
+                        handleSendMessage();
+                    }}>
                         <Text style={{ color: '#FFF' }}>➤</Text>
                     </TouchableOpacity>
                 </View>

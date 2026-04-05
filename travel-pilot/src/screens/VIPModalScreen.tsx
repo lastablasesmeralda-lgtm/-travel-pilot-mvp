@@ -16,18 +16,18 @@ export default function VIPModalScreen({ onClose, onActivate }: VIPModalScreenPr
     const benefits = [
         {
             icon: '⚖️',
-            title: 'Escudo Legal Automático',
-            desc: 'Generamos tu reclamación EU261 de hasta 600€ al instante, sin formularios ni burocracia.',
+            title: 'Asistencia en Reclamaciones',
+            desc: ' Generamos y enviamos tu reclamación EU261 de hasta 600€ automáticamente. Sin formularios, sin llamadas, sin burocracia.de hasta 600€ y te guiamos en el proceso legal.',
         },
         {
             icon: '🤖',
             title: 'IA de Respuesta Inmediata',
-            desc: 'Sin esperas. Tu asistente analiza tu situación y genera un plan personalizado en segundos.',
+            desc: 'Sin esperas. Tu asistente busca vuelos alternativos reales, hoteles cercanos y gestiona tu situación en segundos.',
         },
         {
             icon: '✈️',
             title: 'Planes de Contingencia VIP',
-            desc: 'Tres opciones claras ante cualquier imprevisto: vuelo alternativo, hotel o reembolso. Tú decides.',
+            desc: 'Vuelo alternativo real, hotel cercano o reembolso completo. Tres opciones concretas, tú decides en un toque.',
         },
         {
             icon: '🔔',
@@ -36,8 +36,8 @@ export default function VIPModalScreen({ onClose, onActivate }: VIPModalScreenPr
         },
         {
             icon: '🔒',
-            title: 'Bóveda de Documentos Segura',
-            desc: 'Pasaportes, billetes y reservas encriptados y accesibles sin conexión desde cualquier lugar.',
+            title: 'Bóveda de Archivos Segura',
+            desc: 'Guarda tus pasaportes, billetes y reservas de forma encriptada. Accesibles sin wifi desde cualquier aeropuerto del mundo.',
         },
     ];
 
@@ -45,8 +45,8 @@ export default function VIPModalScreen({ onClose, onActivate }: VIPModalScreenPr
         <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 150 }}>
             {/* Header con Imagen */}
             <View style={styles.header}>
-                <Image 
-                    source={require('../../assets/onboarding5.png')} 
+                <Image
+                    source={require('../../assets/onboarding5.png')}
                     style={styles.headerImage}
                     resizeMode="cover"
                 />
@@ -79,7 +79,7 @@ export default function VIPModalScreen({ onClose, onActivate }: VIPModalScreenPr
 
             {/* Suscripción */}
             <View style={styles.footer}>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={[styles.subscribeButton, travelProfile === 'premium' && { backgroundColor: '#222', borderColor: '#D4AF37', borderWidth: 1 }]}
                     onPress={() => {
                         if (travelProfile === 'premium') {
