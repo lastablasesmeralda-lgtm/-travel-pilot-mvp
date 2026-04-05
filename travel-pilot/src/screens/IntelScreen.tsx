@@ -52,7 +52,7 @@ export default function IntelScreen() {
 
             {/* LOGO PREMIUM */}
             <Image 
-                source={require('../../assets/logo.jpg')} 
+                source={require('../../assets/logo.png')} 
                 style={{ width: 120, height: 40, resizeMode: 'contain', marginBottom: 20 }} 
             />
 
