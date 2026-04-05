@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Animated } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Animated, Image } from 'react-native';
 import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
 import { useNavigation } from '@react-navigation/native';
@@ -49,6 +49,12 @@ export default function IntelScreen() {
     };
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20, paddingTop: 60 }}>
+
+            {/* LOGO PREMIUM */}
+            <Image 
+                source={require('../../assets/logo.jpg')} 
+                style={{ width: 120, height: 40, resizeMode: 'contain', marginBottom: 20 }} 
+            />
 
             {/* SALUDO PERSONALIZADO ANIMADO */}
             <Animated.View style={{ marginBottom: 20, opacity: greetingOpacity }}>

@@ -12,7 +12,6 @@ const DOC_IMAGES: Record<string, any> = {
     'demo-boarding-premium': require('../assets/tarjeta_embarque_pura.jpg'),
     'demo-hotel-premium': require('../assets/reserva_hotel_pura.jpg'),
     'ticket-rapido': require('../assets/ticket_rapido_vip.jpg'),
-    'ticket-rapido-estandar': require('../assets/ticket_rapido_estandar.png'),
     'ticket-equilibrado': require('../assets/ticket_equilibrado_confort.jpg'),
     'ticket-economico': require('../assets/ticket_economico.jpg'),
 };
@@ -403,7 +402,7 @@ export default function GlobalOverlays() {
                                  
                                  const imgRescate = isHotel ? require('../assets/reserva_hotel_pura.jpg') :
                                                    isVip ? require('../assets/ticket_rapido_vip.jpg') : 
-                                                   isRápido ? require('../assets/ticket_rapido_estandar.png') :
+                                                   isRápido ? require('../assets/ticket_rapido_vip.jpg') :
                                                    isEco ? require('../assets/ticket_economico.jpg') : 
                                                    require('../assets/ticket_equilibrado_confort.jpg');
 
