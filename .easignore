@@ -8,3 +8,7 @@ ios/
 *.aab
 tsc_errors.log
 compile.log
+ngrok*
+tunnel_out.txt
+*.zip
+*.log

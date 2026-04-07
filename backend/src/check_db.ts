@@ -32,6 +32,14 @@ async function check() {
     } else {
         console.log("user_push_tokens exists. Sample data:", data4);
     }
+
+    console.log("Checking agent_logs...");
+    const { data: data5, error: error5 } = await supabase.from('agent_logs').select('*').limit(1);
+    if (error5) {
+        console.error("Error checking agent_logs:", error5.message);
+    } else {
+        console.log("agent_logs exists. Sample data:", data5);
+    }
 }
 
 check();

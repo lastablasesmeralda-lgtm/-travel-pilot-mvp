@@ -1,18 +1,33 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, ActivityIndicator, Alert, ScrollView, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ActivityIndicator, Alert, ScrollView, Modal, Platform } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as ImagePicker from 'expo-image-picker';
-import { cacheDirectory, writeAsStringAsync, EncodingType } from 'expo-file-system/legacy';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { s } from '../styles';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext, IS_BETA } from '../context/AppContext';
+import { getEU261Amount } from '../utils/flightUtils';
 import { BACKEND_URL } from '../../config';
 
-export default function DocsScreen() {
+export default function VaultScreen() {
     const {
-        legalShieldActive, setViewDoc, setIsScanning, claims, removeClaim, flightData,
-        compensationEligible, extraDocs, setExtraDocs, isExtracting, simulateGmailSync, user
+        legalShieldActive, setViewDoc, setIsScanning, claims, setClaims, removeClaim, flightData,
+        compensationEligible, extraDocs, setExtraDocs, isExtracting, simulateGmailSync, user,
+        removeExtraDoc, setHasNewDoc, setRecoveredMoney, setShowChat,
+        showVIPAlternatives, setShowVIPAlternatives, pendingVIPScroll, setPendingVIPScroll,
+        setShowPrivateVault, setTab, confirmFlightRescue, speak
     } = useAppContext();
+
+    React.useEffect(() => {
+        setHasNewDoc(false);
+        if (pendingVIPScroll) {
+            setTimeout(() => {
+                scrollViewRef.current?.scrollToEnd({ animated: true });
+                setPendingVIPScroll(false);
+            }, 500);
+        }
+    }, [pendingVIPScroll]);
 
     const [uploadingDoc, setUploadingDoc] = useState(false);
     const [generatingPdf, setGeneratingPdf] = useState(false);
@@ -20,645 +35,613 @@ export default function DocsScreen() {
     const [showSignature, setShowSignature] = useState(false);
     const [hasSigned, setHasSigned] = useState(false);
     const [signedClaimId, setSignedClaimId] = useState<string | null>(null);
-    const webViewRef = useRef<WebView>(null);
     const [capturedSignature, setCapturedSignature] = useState<string | null>(null);
+    const [pendingDoc, setPendingDoc] = useState<{ uri: string, type: string } | null>(null);
+    const [currentClaimForSig, setCurrentClaimForSig] = useState<any>(null);
+    const [showActionModal, setShowActionModal] = useState(false);
+    const [currentActionDoc, setCurrentActionDoc] = useState<any>(null);
+    const [isRescuing, setIsRescuing] = useState(false);
+    const [rescueProgress, setRescueProgress] = useState(0);
 
-    // Generar reclamación dinámica basada en el vuelo activo
-    const dynamicClaims = React.useMemo(() => {
-        if (!claims) return [];
-        const result = [...claims];
-        if (flightData && flightData.status === 'delayed' && (flightData.departure?.delay || 0) >= 180) {
-            const alreadyExists = result.some(c => c.id === `DYN-${flightData.flightNumber}`);
-            if (!alreadyExists) {
-                result.unshift({
-                    id: `DYN-${flightData.flightNumber}`,
-                    aerolinea: `${flightData.airline || 'Aerolínea'} — ${flightData.flightNumber}`,
-                    estado: 'GESTIONANDO RECLAMACIÓN...',
-                    compensacion: (flightData.departure?.delay || 0) >= 180 ? '600€' : '250€',
-                    progreso: 0.3,
-                    isDynamic: true,
-                });
-            }
-        }
-        return result;
-    }, [claims, flightData]);
+    const webViewRef = useRef<WebView>(null);
 
-    const uploadDocument = async () => {
+    const scrollViewRef = useRef<ScrollView>(null);
+    const [showPickMenu, setShowPickMenu] = useState(false);
+    const [showConfirmUpload, setShowConfirmUpload] = useState(false);
+
+    const uploadImage = async () => {
         try {
             const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (permissionResult.granted === false) {
-                Alert.alert("PERMISO DENEGADO", "Se requiere acceso a la galería para subir tus documentos.");
+                Alert.alert("PERMISO DENEGADO", "Acceso a galería requerido.");
                 return;
             }
-
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: false, 
+                allowsEditing: false,
                 quality: 0.7,
             });
-
             if (!result.canceled) {
+                setShowPickMenu(false);
                 const uri = result.assets[0].uri;
                 const fileType = uri.split('.').pop() || 'jpg';
-
-                Alert.alert(
-                    "AÑADIR DOCUMENTO",
-                    "Pasaporte, Tarjeta de embarque, reservas de hotel, etc.\n\n¿Quieres guardar este documento en tu Bóveda Segura? Se encriptará con AES-256.",
-                    [
-                        { text: "CANCELAR", style: "cancel" },
-                        { 
-                            text: "SÍ, SUBIR AHORA", 
-                            onPress: () => confirmAndUpload({ uri, type: fileType }) 
-                        }
-                    ]
-                );
+                setTimeout(() => {
+                    setPendingDoc({ uri, type: fileType });
+                    setShowConfirmUpload(true);
+                }, 400);
             }
         } catch (e) {
             Alert.alert("ERROR", "No se pudo abrir la galería.");
         }
     };
 
-    const confirmAndUpload = async (docToUpload: { uri: string, type: string }) => {
+    const pickDocument = async () => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+                copyToCacheDirectory: true,
+            });
+
+            if (!result.canceled) {
+                setShowPickMenu(false);
+                const asset = result.assets[0];
+                const uri = asset.uri;
+                const fileType = asset.name.split('.').pop() || 'pdf';
+                setTimeout(() => {
+                    setPendingDoc({ uri, type: fileType });
+                    setShowConfirmUpload(true);
+                }, 400);
+            }
+        } catch (e) {
+            Alert.alert("ERROR", "No se pudo abrir el selector de archivos.");
+        }
+    };
+
+    const confirmAndUpload = async (forcedDoc?: { uri: string, type: string }) => {
+        const docToUpload = forcedDoc || pendingDoc;
+        if (!docToUpload) return;
+
         try {
             setUploadingDoc(true);
             const formData = new FormData();
+            const cleanUri = Platform.OS === 'ios' ? docToUpload.uri.replace('file://', '') : docToUpload.uri;
+
+            // @ts-ignore
             formData.append('file', {
-                uri: docToUpload.uri,
+                uri: cleanUri,
                 name: `upload_${Date.now()}.${docToUpload.type}`,
-                type: `image/${docToUpload.type}`
-            } as any);
+                type: 'application/pdf'
+            });
 
             const response = await fetch(`${BACKEND_URL}/api/uploadDocument`, {
                 method: 'POST',
                 body: formData,
-                headers: { 'Content-Type': 'multipart/form-data' },
+                headers: { 'Accept': 'application/json' },
             });
 
             const data = await response.json();
             if (response.ok) {
                 setExtraDocs([
                     {
-                        t: 'DOCUMENTO SEGURO',
-                        s: 'Añadido recientemente',
+                        id: `upload_${Date.now()}`,
+                        t: 'ARCHIVO PRIVADO',
+                        s: 'Añadido a Bóveda Privada',
                         i: data.url,
                         source: 'DOCS',
-                        icon: '📄',
+                        icon: '📁',
                         verified: true
                     },
                     ...extraDocs
                 ]);
-                Alert.alert("ÉXITO", "Documento guardado en tu Bóveda Central.");
+                setPendingDoc(null);
+                setShowConfirmUpload(false);
+                Alert.alert("ÉXITO", "Documento guardado en tu Bóveda Segura.");
             } else {
-                Alert.alert("ERROR", "No se pudo guardar el documento.");
+                Alert.alert("ERROR", data.error || "Fallo en la subida.");
             }
         } catch (e) {
-            Alert.alert("ERROR DE RED", "No se pudo contactar con el servidor.");
+            Alert.alert("ERROR DE RED", "No se pudo contactar con la central.");
         } finally {
             setUploadingDoc(false);
         }
     };
 
-    const documents = [
-        {
-            t: 'PASAPORTE',
-            s: 'ID: ESP-9283 · Vigente',
-            i: 'https://images.unsplash.com/photo-1544333346-ced983050275?w=400',
-            source: 'DOCS',
-            icon: '🪪',
-            verified: true,
-        },
-        {
-            t: 'BOARDING PASS',
-            s: flightData ? `${flightData.flightNumber} · ${flightData.departure?.iata || 'ORG'} → ${flightData.arrival?.iata || 'DST'}` : 'GATE 12A // FLIGHT TP-90',
-            i: 'https://images.unsplash.com/photo-1582559930335-648679198642?w=400',
-            source: 'GMAIL',
-            icon: '✈️',
-            verified: true,
-        },
-        {
-            t: 'RESERVA HOTEL',
-            s: flightData ? `Hotel destino · ${flightData.arrival?.airport || 'Ciudad destino'}` : 'CONF: #88291-TX // TOKYO',
-            i: 'https://images.unsplash.com/photo-1551882547-ff43c630f5e1?w=400',
-            source: 'OUTLOOK',
-            icon: '🏨',
-            verified: true,
-        },
-        ...(Array.isArray(extraDocs) ? extraDocs : []),
-    ];
+
+    const handleSendClaim = async (sig: string) => {
+        if (!sig || sig.length < 100) {
+            Alert.alert('Error de Firma', 'La firma no se ha capturado correctamente. Inténtalo de nuevo.');
+            setGeneratingPdf(false);
+            return;
+        }
+
+        try {
+            console.log('[Firma] Enviando payload...', sig.length);
+            const res = await fetch(`${BACKEND_URL}/api/generateClaim`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    flightNumber: currentClaimForSig?.vuelo,
+                    airline: currentClaimForSig?.aerolinea,
+                    delayMinutes: currentClaimForSig?.delayActual || 0,
+                    status: currentClaimForSig?.status || 'delayed',
+                    departureAirport: currentClaimForSig?.ruta?.split('>')[0]?.trim() || 'Desconocido',
+                    arrivalAirport: currentClaimForSig?.ruta?.split('>')[1]?.trim() || 'Desconocido',
+                    userEmail: user?.email || 'pasajero@travel-pilot.com',
+                    signatureBase64: sig,
+                })
+            });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(errText || `Error ${res.status}`);
+            }
+
+            const json = await res.json();
+            if (json.pdfBase64) {
+                const fileUri = (FileSystem.cacheDirectory || '') + `reclamacion_EU261_${Date.now()}.pdf`;
+                const encoding = (FileSystem.EncodingType as any)?.Base64 || 'base64';
+                await FileSystem.writeAsStringAsync(fileUri, json.pdfBase64, { encoding });
+                setSignedClaimId(currentClaimForSig?.id);
+                setRecoveredMoney((prev: number) => prev + (parseInt(currentClaimForSig?.compensacion) || 250));
+
+                // Limpiar la bóveda interna y el panel visual de la firma:
+                webViewRef.current?.injectJavaScript('clearCanvas();true;');
+                setShowSignature(false);
+                setHasSigned(false);
+                setCapturedSignature('');
+                setCurrentClaimForSig(null);
+
+                Alert.alert(
+                    '✈️ RESUMEN PREPARADO',
+                    'Tu reclamación ha sido registrada. Ahora procedemos a enviarla a la aerolínea.',
+                    [
+                        {
+                            text: 'CONTINUAR Y ENVIAR',
+                            onPress: async () => {
+                                const canShare = await Sharing.isAvailableAsync();
+                                if (canShare) {
+                                    await Sharing.shareAsync(fileUri, {
+                                        mimeType: 'application/pdf',
+                                        dialogTitle: `Enviar Reclamación`,
+                                        UTI: 'com.adobe.pdf'
+                                    });
+                                    Alert.alert('✅ PROCESO FINALIZADO', 'El documento se ha compartido/guardado con éxito. Se está procesando tramitación legal.');
+                                } else {
+                                    Alert.alert('✅ PROCESO FINALIZADO', `El PDF legal está listo en tu dispositivo.`);
+                                }
+                            }
+                        }
+                    ]
+                );
+            } else {
+                Alert.alert('ERROR', json.error || 'El servidor no devolvió el PDF.');
+            }
+        } catch (e: any) {
+            console.error('[Vault] Fallo total:', e.message || e);
+            Alert.alert('FALLO TÉCNICO', `Servidor: ${e.message || 'Sin conexión'}. Refresca la app.`);
+        } finally {
+            setGeneratingPdf(false);
+        }
+    };
+
+    const documents = Array.isArray(extraDocs) ? extraDocs : [];
+
+    const handleDelete = (id: string, name: string) => {
+        Alert.alert(
+            "🗑️ ELIMINAR DOCUMENTO",
+            `¿Estás seguro de que quieres borrar "${name}"?`,
+            [
+                { text: "CANCELAR", style: "cancel" },
+                { text: "BORRAR", style: "destructive", onPress: () => removeExtraDoc(id) }
+            ]
+        );
+    };
 
     return (
-        <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20, paddingTop: 100, paddingBottom: 120, flexGrow: 1 }}>
+        <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
+            <ScrollView ref={scrollViewRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingTop: 60, paddingBottom: 160, flexGrow: 1 }}>
 
-            {/* ——— ESCUDO LEGAL ACTIVO ——— */}
-            {(legalShieldActive || compensationEligible) && (
-                <View style={{
-                    backgroundColor: 'rgba(39, 201, 63, 0.08)',
-                    padding: 16,
-                    borderRadius: 16,
-                    marginBottom: 20,
-                    borderWidth: 1,
-                    borderColor: 'rgba(39, 201, 63, 0.4)',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                }}>
+                {/* ESCUDO LEGAL */}
+                {(legalShieldActive || compensationEligible) && (
                     <View style={{
-                        width: 44, height: 44, borderRadius: 22,
-                        backgroundColor: 'rgba(39, 201, 63, 0.15)',
-                        justifyContent: 'center', alignItems: 'center', marginRight: 14
+                        backgroundColor: 'rgba(39, 201, 63, 0.08)',
+                        padding: 16, borderRadius: 16, marginBottom: 20,
+                        borderWidth: 1, borderColor: 'rgba(39, 201, 63, 0.4)',
+                        flexDirection: 'row', alignItems: 'center',
                     }}>
-                        <Text style={{ fontSize: 22 }}>🛡️</Text>
+                        <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(39, 201, 63, 0.15)', justifyContent: 'center', alignItems: 'center', marginRight: 14 }}>
+                            <Text style={{ fontSize: 22 }}>🛡️</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={{ color: '#27C93F', fontWeight: '900', fontSize: 14, letterSpacing: 0.5 }}>PROTECCIÓN LEGAL ACTIVA</Text>
+                            <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 3 }}>Vigilando tu viaje actual.</Text>
+                        </View>
                     </View>
-                    <View style={{ flex: 1 }}>
-                        <Text style={{ color: '#27C93F', fontWeight: '900', fontSize: 14, letterSpacing: 0.5 }}>PROTECCIÓN LEGAL ACTIVA</Text>
-                        <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 3 }}>
-                            {flightData?.status === 'delayed'
-                                ? `Expediente activo: retraso de ${flightData.departure?.delay || 0} min detectado.`
-                                : 'Protección activada para tu viaje actual.'}
-                        </Text>
-                    </View>
-                </View>
-            )}
-
-            {/* ——— ESTADO DEL ASISTENTE ——— */}
-            <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => Alert.alert(
-                    "📊 ESTADO DEL ASISTENTE",
-                    "ESTADO: Activo y Protegido\nConectado a: tu email y datos de vuelo\nÚLTIMA ACTUALIZACIÓN: Reciente\n\nTu asistente está vigilando 3 documentos detectados y comprobando tu conexión en tiempo real.",
-                    [{ text: "ENTENDIDO", style: "default" }]
                 )}
-                style={{
-                    backgroundColor: '#111',
-                    padding: 16,
-                    borderRadius: 16,
-                    marginBottom: 24,
-                    borderLeftWidth: 4,
-                    borderLeftColor: '#AF52DE',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                }}
-            >
-                <View style={{
-                    width: 8, height: 8, borderRadius: 4,
-                    backgroundColor: '#4CD964', marginRight: 12,
-                }} />
-                <View style={{ flex: 1 }}>
-                    <Text style={{ color: '#FFF', fontSize: 14, fontWeight: 'bold' }}>🧠 ASISTENTE ACTIVO</Text>
-                    <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 3 }}>Conectado con: tu email // Hace 12 min</Text>
-                </View>
-                <Text style={{ color: '#B0B0B0', fontSize: 19 }}>›</Text>
-            </TouchableOpacity>
 
-            {/* ——— SINCRONIZACIÓN DE EMAIL ——— */}
-            <TouchableOpacity
-                onPress={simulateGmailSync}
-                disabled={isExtracting}
-                style={{
-                    backgroundColor: '#1A1A1A',
-                    padding: 18,
-                    borderRadius: 16,
-                    marginBottom: 24,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderWidth: 1,
-                    borderColor: '#333',
-                    borderStyle: isExtracting ? 'dashed' : 'solid'
-                }}
-            >
-                {isExtracting ? (
-                    <ActivityIndicator size="small" color="#AF52DE" style={{ marginRight: 10 }} />
-                ) : (
-                    <Text style={{ fontSize: 18, marginRight: 10 }}>📧</Text>
-                )}
-                <Text style={{ color: isExtracting ? '#555' : '#AF52DE', fontWeight: '900', fontSize: 14, letterSpacing: 0.5 }}>
-                    {isExtracting ? 'BUSCANDO DOCUMENTOS...' : 'ACTUALIZAR CON MIS CORREOS'}
-                </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-                onPress={uploadDocument}
-                disabled={uploadingDoc}
-                style={{
-                    backgroundColor: '#111',
-                    padding: 18,
-                    borderRadius: 16,
-                    marginBottom: 24,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    borderWidth: 1,
-                    borderColor: '#D4AF37',
-                    borderStyle: uploadingDoc ? 'dashed' : 'solid'
-                }}
-            >
-                <Text style={{ fontSize: 24, marginRight: 15 }}>📤</Text>
-                <View style={{ flex: 1 }}>
-                    <Text style={{ color: uploadingDoc ? '#555' : '#D4AF37', fontWeight: '900', fontSize: 16, letterSpacing: 1 }}>
-                        {uploadingDoc ? 'ENCRIPTANDO...' : 'AÑADIR DOCUMENTO'}
-                    </Text>
-                    <Text style={{ color: uploadingDoc ? '#444' : '#888', fontSize: 11, marginTop: 2 }}>
-                        Pasaporte, Tarjeta de embarque, etc.
-                    </Text>
-                </View>
-                {uploadingDoc && <ActivityIndicator size="small" color="#D4AF37" />}
-            </TouchableOpacity>
-
-            {/* ——— DOCUMENTACIÓN PROTEGIDA ——— */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', letterSpacing: 1.5 }}>🔐 MIS DOCUMENTOS</Text>
-                <View style={{ backgroundColor: '#111', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
-                    <Text style={{ color: '#4CD964', fontSize: 9, fontWeight: 'bold' }}>AES-256</Text>
-                </View>
-            </View>
-
-            {documents.map((d, i) => (
+                {/* ASISTENTE ACTIVO */}
                 <TouchableOpacity
-                    key={d.t || i}
                     activeOpacity={0.7}
-                    style={{
-                        backgroundColor: '#111',
-                        borderRadius: 16,
-                        padding: 16,
-                        marginBottom: 12,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        borderWidth: 1,
-                        borderColor: '#1A1A1A',
-                    }}
-                    onPress={() => {
-                        if (!d) return;
-                        setViewDoc(d);
-                        setIsScanning(true);
-                        setTimeout(() => setIsScanning(false), 2500);
-                    }}
+                    onPress={() => Alert.alert("📊 ASISTENTE ACTIVO", "Protección AES-256 activada.")}
+                    style={{ backgroundColor: '#111', padding: 16, borderRadius: 16, marginBottom: 24, borderLeftWidth: 4, borderLeftColor: '#AF52DE', flexDirection: 'row', alignItems: 'center' }}
                 >
-                    {/* Icono + miniatura */}
-                    <View style={{
-                        width: 52, height: 52, borderRadius: 14,
-                        backgroundColor: '#0A0A0A',
-                        justifyContent: 'center', alignItems: 'center',
-                        borderWidth: 1, borderColor: '#222',
-                        overflow: 'hidden',
-                    }}>
-                        {d.i && <Image source={{ uri: d.i }} style={{ width: 52, height: 52, borderRadius: 14, opacity: 0.6 }} />}
-                        <Text style={{ position: 'absolute', fontSize: 21 }}>{d.icon || '📄'}</Text>
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#4CD964', marginRight: 12 }} />
+                    <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#FFF', fontSize: 14, fontWeight: 'bold' }}>🧠 ASISTENTE ACTIVO</Text>
+                        <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 3 }}>Conectado y seguro</Text>
                     </View>
-
-                    {/* Info del documento */}
-                    <View style={{ flex: 1, marginLeft: 14 }}>
-                        <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '800' }}>{d.t || 'Documento'}</Text>
-                        <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 3 }}>{d.s || 'Sin detalles'}</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                            {d.source && d.source !== 'DOCS' ? (
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: '#AF52DE', marginRight: 5 }} />
-                                    <Text style={{ color: '#AF52DE', fontSize: 9, fontWeight: 'bold' }}>DETECTADO EN {d.source}</Text>
-                                </View>
-                            ) : (
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: '#4CD964', marginRight: 5 }} />
-                                    <Text style={{ color: '#B0B0B0', fontSize: 8, fontWeight: 'bold' }}>GUARDADO EN LA APP</Text>
-                                </View>
-                            )}
-                        </View>
-                    </View>
-
-                    {/* Badge VERIFICADO */}
-                    <View style={{ alignItems: 'flex-end' }}>
-                        <View style={{
-                            backgroundColor: 'rgba(175, 82, 222, 0.1)',
-                            paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
-                            borderWidth: 1, borderColor: 'rgba(175, 82, 222, 0.3)',
-                        }}>
-                            <Text style={{ color: '#AF52DE', fontSize: 9, fontWeight: '900', letterSpacing: 0.5 }}>PROTEGIDO</Text>
-                        </View>
-                        <Text style={{ color: '#B0B0B0', fontSize: 9, marginTop: 6, fontWeight: 'bold' }}>VERIFICAR ›</Text>
-                    </View>
+                    <Text style={{ color: '#B0B0B0', fontSize: 19 }}>›</Text>
                 </TouchableOpacity>
-            ))}
 
-            {/* ——— GESTIÓN DE REEMBOLSOS EU261 ——— */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 14 }}>
-                <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', letterSpacing: 1.5 }}>⚖️ REEMBOLSOS Y RECLAMACIONES</Text>
-                {dynamicClaims.length > 0 && (
-                    <View style={{ backgroundColor: '#27C93F', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
-                        <Text style={{ color: '#FFF', fontSize: 9, fontWeight: '900' }}>{dynamicClaims.length} ACTIVA{dynamicClaims.length > 1 ? 'S' : ''}</Text>
-                    </View>
-                )}
-            </View>
+                {/* ACTUALIZAR EMAIL */}
+                <TouchableOpacity
+                    onPress={simulateGmailSync}
+                    disabled={isExtracting}
+                    style={{ backgroundColor: '#1A1A1A', padding: 18, borderRadius: 16, marginBottom: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#333' }}
+                >
+                    {isExtracting ? <ActivityIndicator size="small" color="#AF52DE" style={{ marginRight: 10 }} /> : <Text style={{ fontSize: 18, marginRight: 10 }}>📧</Text>}
+                    <Text style={{ color: isExtracting ? '#555' : '#AF52DE', fontWeight: '900', fontSize: 14 }}>{isExtracting ? 'BUSCANDO DOCUMENTOS...' : 'ACTUALIZAR CON MIS CORREOS'}</Text>
+                </TouchableOpacity>
 
-            {/* Botón de Manual de Derechos (Siempre visible) */}
-            <TouchableOpacity
-                onPress={() => setShowRights(true)}
-                style={{
-                    backgroundColor: 'rgba(175, 82, 222, 0.1)',
-                    padding: 16,
-                    borderRadius: 16,
-                    borderWidth: 1,
-                    borderColor: 'rgba(175, 82, 222, 0.4)',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 20
-                }}
-            >
-                <Text style={{ fontSize: 18, marginRight: 10 }}>📖</Text>
-                <Text style={{ color: '#AF52DE', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 }}>GUÍA DE DERECHOS DEL PASAJERO EU261</Text>
-            </TouchableOpacity>
+                {/* BOTÓN HISTÓRICO ELIMINADO EN FAVOR DEL FAB */}
+                <View style={{ height: 20 }} />
 
-            {dynamicClaims.length === 0 ? (
-                <View style={{
-                    backgroundColor: '#0D0D0D', borderRadius: 16, padding: 30,
-                    alignItems: 'center', borderWidth: 1, borderColor: '#222', borderStyle: 'dashed'
-                }}>
-                    <Text style={{ fontSize: 31, marginBottom: 12 }}>⚖️</Text>
-                    <Text style={{ color: '#B0B0B0', fontSize: 13, textAlign: 'center', fontWeight: 'bold' }}>SIN RECLAMACIONES</Text>
-                    <Text style={{ color: '#B0B0B0', fontSize: 11, textAlign: 'center', marginTop: 6 }}>
-                        Si tu vuelo se retrasa más de 3 horas, te ayudaremos a reclamar automáticamente.
-                    </Text>
+                {/* EXPEDIENTES DE ASISTENCIA (AUTOMÁTICOS) */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                    <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', letterSpacing: 1.5 }}>🔐 EXPEDIENTES DE ASISTENCIA</Text>
                 </View>
-            ) : (
-                dynamicClaims.map((c: any, i: number) => (
-                    <TouchableOpacity
-                        key={c.id || i}
-                        activeOpacity={0.7}
-                        onPress={() => {
-                            if (c.isDynamic && signedClaimId !== c.id) {
-                                setHasSigned(false);
-                                setShowSignature(true);
-                            } else if (signedClaimId === c.id) {
-                                Alert.alert("Estado", "El documento ya está firmado y en proceso de cobro.");
-                            }
-                        }}
-                        style={{
-                            backgroundColor: '#111',
-                            borderRadius: 16,
-                            padding: 18,
-                            marginBottom: 12,
-                            borderLeftWidth: 4,
-                            borderLeftColor: c.isDynamic ? '#FF9500' : '#27C93F',
-                            borderWidth: 1,
-                            borderColor: '#1A1A1A',
-                        }}
-                    >
-                        <View style={{ flexDirection: 'row', width: '100%', alignItems: 'center', marginBottom: 8 }}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '800' }}>{c.aerolinea}</Text>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                                    <View style={{
-                                        width: 6, height: 6, borderRadius: 3,
-                                        backgroundColor: (c.isDynamic || c.estado?.includes('GESTIONANDO')) ? '#FF9500' : '#27C93F', marginRight: 6,
-                                    }} />
-                                    <Text style={{ color: (c.isDynamic || c.estado?.includes('GESTIONANDO')) ? '#FF9500' : '#27C93F', fontSize: 11, fontWeight: 'bold' }}>{c.estado}</Text>
-                                </View>
-                            </View>
-                            <TouchableOpacity 
+
+                {documents.filter(d => d.source !== 'DOCS').length === 0 ? (
+                    <View style={{ backgroundColor: '#111', padding: 20, borderRadius: 16, marginBottom: 24, alignItems: 'center' }}>
+                        <Text style={{ color: '#555', fontSize: 13 }}>No hay expedientes automáticos todavía.</Text>
+                    </View>
+                ) : (
+                    documents.filter(d => d.source !== 'DOCS').map((d, i) => (
+                        <View key={d.id || i} style={{ backgroundColor: '#111', borderRadius: 18, marginBottom: 12, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#1A1A1A', overflow: 'hidden' }}>
+                            <TouchableOpacity
                                 onPress={() => {
-                                    Alert.alert(
-                                        "BORRAR EXPEDIENTE",
-                                        `¿Estás seguro de que quieres eliminar la reclamación de ${c.aerolinea}?`,
-                                        [
-                                            { text: "CANCELAR", style: "cancel" },
-                                            { text: "BORRAR", style: "destructive", onPress: () => removeClaim(c.id) }
-                                        ]
-                                    );
+                                    if (d.source === 'TRAVEL-PILOT IA') {
+                                        setCurrentActionDoc(d);
+                                        setShowActionModal(true);
+                                    } else {
+                                        setViewDoc(d);
+                                        setIsScanning(true);
+                                        setTimeout(() => setIsScanning(false), 2500);
+                                    }
                                 }}
-                                style={{ padding: 10, marginRight: -10 }}
+                                activeOpacity={0.7}
+                                style={{ flex: 1, flexDirection: 'row', alignItems: 'center', padding: 18 }}
                             >
-                                <Text style={{ color: '#666', fontSize: 18, fontWeight: 'bold' }}>✕</Text>
+                                <View style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: '#0A0A0A', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#222' }}>
+                                    {d.i ? <Image source={typeof d.i === 'number' ? d.i : { uri: d.i }} style={{ width: 52, height: 52, borderRadius: 14 }} /> : <Text style={{ fontSize: 21 }}>📄</Text>}
+                                </View>
+                                <View style={{ flex: 1, marginLeft: 14 }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '800' }}>{d.t || 'Documento'}</Text>
+                                        {IS_BETA && d.isDemo && (
+                                            <View style={{ marginLeft: 8, backgroundColor: 'rgba(255, 149, 0, 0.1)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 0.5, borderColor: '#FF9500' }}>
+                                                <Text style={{ color: '#FF9500', fontSize: 8, fontWeight: '900' }}>DEMO</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                    <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 3 }}>{d.s || 'Generado por IA'}</Text>
+                                </View>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => handleDelete(d.id, d.t)} style={{ padding: 20, borderLeftWidth: 1, borderLeftColor: '#222' }}>
+                                <Text style={{ color: '#FF3B30', fontSize: 18 }}>✕</Text>
                             </TouchableOpacity>
                         </View>
+                    ))
+                )}
 
-                        {/* Barra de progreso */}
-                        <View style={{ backgroundColor: '#222', width: '100%', height: 4, borderRadius: 2, marginVertical: 10 }}>
-                            <View style={{
-                                backgroundColor: c.isDynamic ? '#FF9500' : '#27C93F',
-                                width: c.estado.includes('ENVIADA') ? '60%' : c.isDynamic ? '30%' : '20%',
-                                height: '100%', borderRadius: 2,
-                            }} />
-                        </View>
+                {/* ACCESO A BÓVEDA PRIVADA (EXPERIENCIA VIP) */}
+                <View style={{ marginTop: 24, marginBottom: 14 }}>
+                    <Text style={{ color: '#D4AF37', fontSize: 11, fontWeight: 'bold', letterSpacing: 1.5 }}>💎 SEGURIDAD ELITE</Text>
+                </View>
 
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>
-                                COMPENSACIÓN: <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{c.compensacion}</Text>
+                <TouchableOpacity 
+                    activeOpacity={0.8}
+                    onPress={() => setShowPrivateVault(true)}
+                    style={{
+                        backgroundColor: '#111',
+                        borderRadius: 20,
+                        padding: 24,
+                        borderWidth: 2,
+                        borderColor: '#D4AF3744',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        shadowColor: "#D4AF37",
+                        shadowOffset: { width: 0, height: 10 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 15,
+                        elevation: 10
+                    }}
+                >
+                    <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#D4AF37' }}>
+                        <Text style={{ fontSize: 30 }}>🔒</Text>
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 20 }}>
+                        <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '900', letterSpacing: 0.5 }}>BÓVEDA PRIVADA</Text>
+                        <Text style={{ color: '#D4AF37', fontSize: 10, fontWeight: 'bold', marginTop: 4 }}>ENTRADA RESTRINGIDA · AES-256</Text>
+                    </View>
+                    <View style={{ backgroundColor: '#D4AF37', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 }}>
+                        <Text style={{ color: '#000', fontWeight: '900', fontSize: 10 }}>ENTRAR</Text>
+                    </View>
+                </TouchableOpacity>
+
+                <View style={{ padding: 15, alignItems: 'center' }}>
+                    <Text style={{ color: '#444', fontSize: 10, textAlign: 'center' }}>
+                        Tus documentos personales y sensibles están protegidos bajo protocolos de alta seguridad y no son visibles en el listado general.
+                    </Text>
+                </View>
+
+                {/* RECLAMACIONES */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 14 }}>
+                    <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', letterSpacing: 1.5 }}>⚖️ RECLAMACIONES EU261</Text>
+                </View>
+
+                <TouchableOpacity onPress={() => setShowRights(true)} style={{ backgroundColor: 'rgba(175, 82, 222, 0.1)', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(175, 82, 222, 0.4)', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+                    <Text style={{ fontSize: 18, marginRight: 10 }}>📖</Text>
+                    <Text style={{ color: '#AF52DE', fontWeight: 'bold', fontSize: 13 }}>GUÍA DE DERECHOS</Text>
+                </TouchableOpacity>
+
+                {claims.length === 0 ? (
+                    <View style={{ backgroundColor: '#0D0D0D', borderRadius: 16, padding: 30, alignItems: 'center', borderWidth: 1, borderColor: '#222', borderStyle: 'dashed' }}>
+                        <Text style={{ fontSize: 31, marginBottom: 12 }}>⚖️</Text>
+                        <Text style={{ color: '#B0B0B0', fontSize: 11 }}>No hay reclamaciones activas.</Text>
+                    </View>
+                ) : (
+                    claims.map((c: any, i: number) => (
+                        <TouchableOpacity
+                            key={c.id || i}
+                            onPress={() => {
+                                if (signedClaimId === c.id) {
+                                    Alert.alert("ESTADO", "Este documento ya está firmado.");
+                                } else if (c.isDynamic) {
+                                    setCurrentClaimForSig(c);
+                                    setShowSignature(true);
+                                } else {
+                                    Alert.alert(
+                                        "📑 DETALLES DE RECLAMACIÓN",
+                                        `Vuelo: ${c.vuelo}\nAerolínea: ${c.aerolinea}\nRuta: ${c.ruta}\nEstado: ${c.estado}\nIndemnización estimada: ${c.compensacion}€\n\nEste expediente está siendo gestionado por el departamento legal de Travel-Pilot.`
+                                    );
+                                }
+                            }}
+                            style={{ backgroundColor: '#111', borderRadius: 16, padding: 18, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: c.isDynamic ? '#FF9500' : '#27C93F', borderWidth: 1, borderColor: '#1A1A1A' }}
+                        >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '800' }}>{c.aerolinea}</Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: c.isDynamic ? '#FF9500' : '#27C93F', marginRight: 6 }} />
+                                        <Text style={{ color: c.isDynamic ? '#FF9500' : '#27C93F', fontSize: 11, fontWeight: 'bold' }}>{c.estado}</Text>
+                                    </View>
+                                </View>
+                                <TouchableOpacity onPress={() => removeClaim(c.id)} style={{ padding: 10 }}><Text style={{ color: '#555', fontSize: 18 }}>✕</Text></TouchableOpacity>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                                <Text style={{ color: '#B0B0B0', fontSize: 11 }}>COMPENSACIÓN: <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{c.compensacion.toString().replace('€', '')}€</Text></Text>
+                                <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold' }}>
+                                    {signedClaimId === c.id ? 'PROCEDIMIENTO REVISADO ✅' : c.isDynamic ? 'FIRMAR AHORA ✍️' : 'MÁS INFO ›'}
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
+                    ))
+                )}
+
+                <View style={{ marginTop: 30, opacity: 0.7, alignItems: 'center' }}>
+                    <Text style={{ color: '#B0B0B0', fontSize: 10 }}>PROTECCIÓN ENCRIPTADA · AES-256</Text>
+                </View>
+
+                {/* MODAL DE ACCIÓN IA */}
+                <Modal visible={showActionModal} transparent animationType="slide">
+                    <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', padding: 25 }}>
+                        <View style={{ backgroundColor: '#111', borderRadius: 24, padding: 25, borderWidth: 1, borderColor: '#333' }}>
+
+                            {/* Cabecera del Documento */}
+                            <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '900', marginBottom: 5 }}>
+                                {currentActionDoc?.t}
                             </Text>
-                            <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold' }}>
-                                {signedClaimId === c.id ? 'FIRMADA ✅' : c.isDynamic ? 'FIRMAR AHORA ✍️' : 'MÁS INFO ›'}
+                            <Text style={{ color: '#B0B0B0', fontSize: 12, marginBottom: 20 }}>
+                                {currentActionDoc?.s}
                             </Text>
-                        </View>
-                    </TouchableOpacity>
-                ))
-            )}
 
-            {/* ——— AUTORIZACIÓN DE FIRMA ——— */}
+                            {/* ECONÓMICO — Reclamación */}
+                            {currentActionDoc?.t?.includes('ECONÓMICO') && (
+                                <View>
+                                    <Text style={{ color: '#4CD964', fontSize: 14, lineHeight: 22, marginBottom: 20 }}>
+                                        ✅ Tu expediente legal está listo para firmar.{'\n'}
+                                        Ve a la sección RECLAMACIONES EU261 de esta pantalla y pulsa FIRMAR AHORA para enviarlo a la aerolínea.{'\n\n'}
+                                        ⚖️ Tienes derecho a compensación legal sin rellenar ningún formulario adicional.
+                                    </Text>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowActionModal(false);
+                                            setTimeout(() => {
+                                                scrollViewRef?.current?.scrollToEnd({ animated: true });
+                                            }, 300);
+                                        }}
+                                        style={{ backgroundColor: '#4CD964', padding: 16, borderRadius: 12, alignItems: 'center' }}>
+                                        <Text style={{ color: '#000', fontWeight: 'bold' }}>IR A RECLAMACIONES</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity onPress={() => setShowActionModal(false)} style={{ marginTop: 15, alignItems: 'center' }}>
+                                        <Text style={{ color: '#FF3B30', fontSize: 13, fontWeight: 'bold' }}>CERRAR</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {/* EQUILIBRADO — Hotel */}
+                            {(currentActionDoc?.t?.includes('EQUILIBRADO') || currentActionDoc?.t?.includes('ALOJAMIENTO')) && !currentActionDoc?.t?.includes('ECONÓMICO') && !currentActionDoc?.t?.includes('VIP') && (
+                                <View>
+                                    <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '900', marginBottom: 5 }}>
+                                        Propuesta de estancia
+                                    </Text>
+                                    <Text style={{ color: '#B0B0B0', fontSize: 12, marginBottom: 20 }}>
+                                        Plan equilibrado · Alojamiento y descanso
+                                    </Text>
+                                    <Text style={{ color: '#4CD964', fontSize: 14, lineHeight: 22, marginBottom: 20 }}>
+                                        Te orientamos con una solución de alojamiento cercana al aeropuerto para reducir el impacto de la incidencia y facilitar tu descanso. Antes de desplazarte, confirma directamente la disponibilidad con el hotel. La reclamación EU261 continúa activa en paralelo.
+                                    </Text>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowActionModal(false);
+                                            setTimeout(() => {
+                                                Alert.alert(
+                                                    "Siguiente paso",
+                                                    "✅ Tienes derecho a alojamiento gratuito por ley.\n\n1. Busca hoteles cercanos al aeropuerto en Google Maps\n2. Llama directamente para confirmar disponibilidad\n3. Pide factura — la aerolínea debe reembolsártela\n4. Tu reclamación EU261 está activa en paralelo\n\n⚖️ Guarda todos los tickets y facturas del hotel."
+                                                );
+                                            }, 300);
+                                        }}
+                                        style={{ backgroundColor: '#007AFF', padding: 16, borderRadius: 12, alignItems: 'center', marginBottom: 10 }}>
+                                        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Revisar propuesta</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity onPress={() => setShowActionModal(false)} style={{ marginTop: 10, alignItems: 'center', padding: 10 }}>
+                                        <Text style={{ color: '#FF3B30', fontSize: 13, fontWeight: 'bold' }}>Cerrar</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {/* RÁPIDO (Modo Económico) o VIP (Modo Élite) — AGENTE RESOLUTOR */}
+                            {(currentActionDoc?.t?.includes('RÁPID') || currentActionDoc?.t?.includes('RAPID') || currentActionDoc?.t?.includes('VIP') || currentActionDoc?.t?.includes('ELITE')) && (
+                                <View>
+                                    {!isRescuing ? (
+                                        <>
+                                            <View style={{ backgroundColor: currentActionDoc?.t?.includes('VIP') ? 'rgba(212, 175, 55, 0.1)' : 'rgba(255, 59, 48, 0.1)', padding: 15, borderRadius: 12, marginBottom: 20, borderWidth: 1, borderColor: currentActionDoc?.t?.includes('VIP') ? '#D4AF3744' : '#FF3B3044' }}>
+                                                <Text style={{ color: currentActionDoc?.t?.includes('VIP') ? '#D4AF37' : '#FF3B30', fontSize: 13, lineHeight: 20, fontWeight: '600' }}>
+                                                    {currentActionDoc?.t?.includes('VIP') ? '💎 PROTOCOLO ELITE ACTIVADO.' : '🚀 OPCIÓN DE RESCATE RÁPIDO.'}{'\n\n'}
+                                                    He localizado una plaza en el vuelo <Text style={{fontWeight:'900'}}>{currentActionDoc?.rescueData?.flightNumber || 'IB3167'}</Text> de las <Text style={{fontWeight:'900'}}>{currentActionDoc?.rescueData?.boardingTime || '14:20'}</Text>.{'\n\n'}
+                                                    Dime si quieres que ejecute la reubicación ahora mismo.
+                                                </Text>
+                                            </View>
+                                            <TouchableOpacity
+                                                onPress={async () => {
+                                                    setIsRescuing(true);
+                                                    speak("Entendido. Iniciando protocolo de firma digital y confirmación de plaza.");
+                                                    
+                                                    // Simular Firma Animada
+                                                    for (let i = 0; i <= 100; i += 5) {
+                                                        setRescueProgress(i);
+                                                        await new Promise(r => setTimeout(r, 100));
+                                                    }
+                                                    
+                                                    await confirmFlightRescue(currentActionDoc?.rescueData);
+                                                    setIsRescuing(false);
+                                                    setShowActionModal(false);
+                                                }}
+                                                style={{ backgroundColor: currentActionDoc?.t?.includes('VIP') ? '#D4AF37' : '#FF3B30', padding: 18, borderRadius: 16, alignItems: 'center', shadowColor: currentActionDoc?.t?.includes('VIP') ? '#D4AF37' : '#FF3B30', shadowOpacity: 0.3, shadowRadius: 10 }}>
+                                                <Text style={{ color: '#000', fontWeight: '900' }}>RESERVAR Y CONFIRMAR PLAZA</Text>
+                                            </TouchableOpacity>
+                                        </>
+                                    ) : (
+                                        <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+                                            <ActivityIndicator color={currentActionDoc?.t?.includes('VIP') ? '#D4AF37' : '#FF3B30'} size="large" />
+                                            <Text style={{ color: '#FFF', marginTop: 15, fontWeight: 'bold' }}>
+                                                {rescueProgress < 40 ? "ESTABLECIENDO CONEXIÓN SEGURA..." : 
+                                                 rescueProgress < 70 ? "EJECUTANDO FIRMA DIGITAL..." : 
+                                                 "CONFIRMANDO PLAZA CON AEROLÍNEA..."}
+                                            </Text>
+                                            <View style={{ width: '100%', height: 4, backgroundColor: '#222', borderRadius: 2, marginTop: 20, overflow: 'hidden' }}>
+                                                <View style={{ width: `${rescueProgress}%`, height: '100%', backgroundColor: currentActionDoc?.t?.includes('VIP') ? '#D4AF37' : '#FF3B30' }} />
+                                            </View>
+                                        </View>
+                                    )}
+                                </View>
+                            )}
+
+                            {/* BOTÓN DE CIERRE MAESTRO (PARA EVITAR BLOQUEOS) */}
+                            <TouchableOpacity 
+                                onPress={() => setShowActionModal(false)} 
+                                style={{ marginTop: 25, padding: 15, alignItems: 'center', borderTopWidth: 1, borderTopColor: '#222' }}
+                            >
+                                <Text style={{ color: '#555', fontSize: 12, fontWeight: 'bold', letterSpacing: 1 }}>CERRAR VENTANA</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+            </ScrollView>
+
+            {/* MODAL FIRMA */}
             <Modal visible={showSignature} animationType="slide" transparent={true}>
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', padding: 25 }}>
                     <View style={{ backgroundColor: '#111', borderRadius: 24, padding: 25, borderWidth: 1, borderColor: '#333' }}>
-
                         <View style={{ alignItems: 'center', marginBottom: 20 }}>
                             <Text style={{ fontSize: 40 }}>🖊️</Text>
                             <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '900', marginTop: 10 }}>AUTORIZACIÓN LEGAL</Text>
-                            <Text style={{ color: '#B0B0B0', fontSize: 12, textAlign: 'center', marginTop: 8 }}>
-                                Al firmar, autorizas a Travel-Pilot a iniciar la reclamación de 600€ en tu nombre según la EU261.
-                            </Text>
                         </View>
 
-                        {/* Lienzo de Firma — HTML5 Canvas (curvas suaves) */}
                         <View style={{ height: 200, borderRadius: 16, overflow: 'hidden', marginBottom: 20 }}>
                             <WebView
                                 ref={webViewRef}
                                 originWhitelist={['*']}
                                 scrollEnabled={false}
-                                bounces={false}
-                                onMessage={(event) => {
-                                    const data = event.nativeEvent.data;
-                                    if (data.startsWith('SIG_DATA:')) { setCapturedSignature(data.replace('SIG_DATA:', '')); setHasSigned(true); return; }
-                                    if (data === 'HAS_SIGNATURE') setHasSigned(true);
-                                    if (data === 'NO_SIGNATURE') setHasSigned(false);
+                                onMessage={async (event) => {
+                                    const msg = event.nativeEvent.data;
+                                    if (msg.startsWith('SIG_DATA:')) {
+                                        const b64 = msg.replace('SIG_DATA:', '');
+                                        setCapturedSignature(b64);
+                                        setHasSigned(true);
+                                        await handleSendClaim(b64);
+                                    } else if (msg === 'HAS_SIGNATURE') {
+                                        setHasSigned(true);
+                                    } else if (msg === 'NO_SIGNATURE') {
+                                        setHasSigned(false);
+                                    }
                                 }}
                                 source={{
                                     html: `
-<!DOCTYPE html>
-<html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<style>*{margin:0;padding:0;touch-action:none;}body{background:#EFEFEF;overflow:hidden;}
-canvas{display:block;width:100%;height:100%;}
-.placeholder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-color:#999;font-size:22px;font-weight:bold;opacity:0.3;font-family:sans-serif;pointer-events:none;}</style></head>
-<body>
-<div class="placeholder" id="ph">Firma aquí</div>
-<canvas id="c"></canvas>
-<script>
-var c=document.getElementById('c'),ctx=c.getContext('2d'),ph=document.getElementById('ph');
-var drawing=false,pts=[],totalPts=0;
-function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
-resize();window.onresize=resize;
-ctx.strokeStyle='#1A1A5E';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';
-
-function getXY(e){
-  var t=e.touches?e.touches[0]:e;
-  var r=c.getBoundingClientRect();
-  return{x:t.clientX-r.left,y:t.clientY-r.top};
-}
-
-function midPoint(a,b){return{x:(a.x+b.x)/2,y:(a.y+b.y)/2};}
-
-c.addEventListener('touchstart',function(e){
-  e.preventDefault();drawing=true;
-  var p=getXY(e);pts=[p];
-  ctx.beginPath();ctx.moveTo(p.x,p.y);
-  ph.style.display='none';
-},{passive:false});
-
-c.addEventListener('touchmove',function(e){
-  e.preventDefault();if(!drawing)return;
-  var p=getXY(e);pts.push(p);totalPts++;
-  if(pts.length>=3){
-    var l=pts.length;
-    var m=midPoint(pts[l-2],pts[l-1]);
-    ctx.quadraticCurveTo(pts[l-2].x,pts[l-2].y,m.x,m.y);
-    ctx.stroke();
-  }
-  if(totalPts===20)window.ReactNativeWebView.postMessage('HAS_SIGNATURE');
-},{passive:false});
-
-c.addEventListener('touchend',function(e){
-  e.preventDefault();
-  if(pts.length>=2){
-    var l=pts.length;
-    ctx.lineTo(pts[l-1].x,pts[l-1].y);
-    ctx.stroke();
-  }
-  drawing=false;pts=[];
-},{passive:false});
-
-window.clearCanvas=function(){
-  ctx.clearRect(0,0,c.width,c.height);
-  totalPts=0;ph.style.display='block';
-  window.ReactNativeWebView.postMessage('NO_SIGNATURE');
-};
-</script></body></html>
+                                    <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><style>*{margin:0;padding:0;touch-action:none;}body{background:#EFEFEF;overflow:hidden;}canvas{display:block;width:100%;height:100%;}.ph{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#999;font-size:22px;font-weight:bold;opacity:0.3;pointer-events:none;}</style></head>
+                                    <body><div class="ph" id="ph">Firma aquí</div><canvas id="c"></canvas>
+                                    <script>var c=document.getElementById('c'),ctx=c.getContext('2d'),ph=document.getElementById('ph'),drawing=false,pts=[];function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}resize();window.onresize=resize;ctx.strokeStyle='#1A1A5E';ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';
+                                    function getXY(e){var t=e.touches?e.touches[0]:e,r=c.getBoundingClientRect();return{x:t.clientX-r.left,y:t.clientY-r.top};}
+                                    c.addEventListener('touchstart',function(e){e.preventDefault();drawing=true;var p=getXY(e);pts=[p];ctx.beginPath();ctx.moveTo(p.x,p.y);ph.style.display='none';});
+                                    c.addEventListener('touchmove',function(e){e.preventDefault();if(!drawing)return;var p=getXY(e);pts.push(p);if(pts.length>=3){var l=pts.length,m={x:(pts[l-2].x+pts[l-1].x)/2,y:(pts[l-2].y+pts[l-1].y)/2};ctx.quadraticCurveTo(pts[l-2].x,pts[l-2].y,m.x,m.y);ctx.stroke();}if(pts.length>10)window.ReactNativeWebView.postMessage('HAS_SIGNATURE');});
+                                    c.addEventListener('touchend',function(e){e.preventDefault();drawing=false;});
+                                    window.clearCanvas=function(){ctx.clearRect(0,0,c.width,c.height);ph.style.display='block';window.ReactNativeWebView.postMessage('NO_SIGNATURE');};
+                                    window.getSig=function(){var png=c.toDataURL('image/png');window.ReactNativeWebView.postMessage('SIG_DATA:'+png);};
+                                    </script></body></html>
                                 `}}
                             />
                         </View>
 
-                        {/* Botones de acción */}
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    webViewRef.current?.injectJavaScript('clearCanvas();true;');
-                                    setHasSigned(false);
-                                }}
-                                style={{ flex: 1, backgroundColor: '#222', padding: 16, borderRadius: 12, marginRight: 10, alignItems: 'center' }}
-                            >
+                            <TouchableOpacity onPress={() => { webViewRef.current?.injectJavaScript('clearCanvas();true;'); setHasSigned(false); }} style={{ flex: 1, backgroundColor: '#222', padding: 16, borderRadius: 12, marginRight: 10, alignItems: 'center' }}>
                                 <Text style={{ color: '#B0B0B0', fontWeight: 'bold' }}>BORRAR</Text>
                             </TouchableOpacity>
-
                             <TouchableOpacity
-                                onPress={async () => {
-                                    if (!hasSigned) {
-                                        Alert.alert('Firma incompleta', 'Por favor, firma de forma clara para que tenga validez legal.');
-                                        return;
-                                    }
-                                    // Exportar firma como PNG base64 desde el canvas HTML
-                                    webViewRef.current?.injectJavaScript(`
-                                        (function(){
-                                          var png = document.getElementById('c').toDataURL('image/png');
-                                          window.ReactNativeWebView.postMessage('SIG_DATA:' + png);
-                                        })(); true;
-                                    `);
-                                    // Esperar un momento para recibir el mensaje del WebView
-                                    await new Promise(r => setTimeout(r, 600));
+                                onPress={() => {
+                                    if (!hasSigned) { Alert.alert("Firma incompleta", "Firma el panel."); return; }
                                     setGeneratingPdf(true);
-                                    try {
-                                        const res = await fetch(`${BACKEND_URL}/api/generateClaim`, {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({
-                                                flightNumber: flightData?.flightNumber,
-                                                airline: flightData?.airline,
-                                                delayMinutes: flightData?.departure?.delay || 0,
-                                                departureAirport: flightData?.departure?.airport,
-                                                arrivalAirport: flightData?.arrival?.airport,
-                                                userEmail: user?.email || 'pasajero@travel-pilot.com',
-                                                signatureBase64: capturedSignature,
-                                            })
-                                        });
-                                        const json = await res.json();
-                                        if (json.pdfBase64) {
-                                            const fileUri = cacheDirectory + `reclamacion_EU261_${Date.now()}.pdf`;
-                                            await writeAsStringAsync(fileUri, json.pdfBase64, { encoding: EncodingType.Base64 });
-                                            
-                                            setSignedClaimId(`DYN-${flightData?.flightNumber}`);
-                                            setShowSignature(false);
-
-                                            // Alerta de éxito antes de compartir
-                                            Alert.alert(
-                                                '✈️ DOCUMENTO GENERADO',
-                                                'Tu reclamación ha sido registrada en el sistema central de Travel-Pilot. Ahora procedemos a enviarla a la aerolínea.',
-                                                [
-                                                    {
-                                                        text: 'CONTINUAR Y ENVIAR',
-                                                        onPress: async () => {
-                                                            const canShare = await Sharing.isAvailableAsync();
-                                                            if (canShare) {
-                                                                await Sharing.shareAsync(fileUri, { 
-                                                                    mimeType: 'application/pdf', 
-                                                                    dialogTitle: `Enviar Reclamación ${flightData?.airline}`,
-                                                                    UTI: 'com.adobe.pdf'
-                                                                });
-                                                            } else {
-                                                                Alert.alert('✅ PROCESO FINALIZADO', `El PDF legal está listo en la memoria de tu dispositivo.`);
-                                                            }
-                                                        }
-                                                    }
-                                                ]
-                                            );
-                                        } else {
-                                            Alert.alert('ERROR', json.error || 'El servidor no devolvió el PDF.');
-                                        }
-                                    } catch (e) {
-                                        Alert.alert('ERROR DE RED', 'La central está saturada. Por favor, inténtalo en unos minutos.');
-                                    } finally {
-                                        setGeneratingPdf(false);
-                                    }
+                                    webViewRef.current?.injectJavaScript('getSig();true;');
                                 }}
                                 style={{ flex: 1, backgroundColor: hasSigned ? '#4CD964' : '#333', padding: 16, borderRadius: 12, alignItems: 'center' }}
                             >
-                                {generatingPdf
-                                    ? <ActivityIndicator color="#000" size="small" />
-                                    : <Text style={{ color: hasSigned ? '#000' : '#666', fontWeight: '900' }}>CONFIRMAR Y ENVIAR</Text>
-                                }
+                                {generatingPdf ? <ActivityIndicator color="#000" /> : <Text style={{ color: hasSigned ? '#000' : '#666', fontWeight: 'bold' }}>ENVIAR</Text>}
                             </TouchableOpacity>
                         </View>
 
                         <TouchableOpacity onPress={() => setShowSignature(false)} style={{ marginTop: 25, alignItems: 'center' }}>
-                            <Text style={{ color: '#FF3B30', fontSize: 13, fontWeight: 'bold' }}>CANCELAR PROCESO</Text>
+                            <Text style={{ color: '#FF3B30', fontSize: 13, fontWeight: 'bold' }}>CANCELAR</Text>
                         </TouchableOpacity>
-
                     </View>
                 </View>
             </Modal>
 
-            {/* ——— MANUAL DE DERECHOS ——— */}
+            {/* MODAL DERECHOS */}
             <Modal visible={showRights} animationType="slide" transparent={true}>
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', paddingTop: 60 }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, marginBottom: 20 }}>
-                        <View>
-                            <Text style={{ color: '#FFF', fontSize: 21, fontWeight: '900' }}>MANUAL DE DERECHOS</Text>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold' }}>REGLAMENTO EUROPEO EU261/2004</Text>
-                        </View>
-                        <TouchableOpacity onPress={() => setShowRights(false)} style={{ backgroundColor: '#222', width: 34, height: 34, borderRadius: 17, justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 16 }}>✕</Text>
-                        </TouchableOpacity>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25 }}>
+                        <Text style={{ color: '#FFF', fontSize: 20, fontWeight: 'bold' }}>DERECHOS EU261</Text>
+                        <TouchableOpacity onPress={() => setShowRights(false)}><Text style={{ color: '#B0B0B0', fontSize: 20 }}>✕</Text></TouchableOpacity>
                     </View>
-
                     <ScrollView contentContainerStyle={{ padding: 25 }}>
                         {[
-                            { color: '#AF52DE', h: 'RETRASO +2 HORAS', t: 'Derecho de Asistencia', d: 'La aerolínea DEBE darte comida, bebida y acceso a comunicación. Es el momento de guardar tickets si pagas tú.' },
-                            { color: '#4CD964', h: 'RETRASO +3 HORAS', t: 'Compensación Económica', d: 'Tienes derecho a entre 250€ y 600€ en efectivo. Travel-Pilot activará el Escudo Legal automáticamente aquí.' },
-                            { color: '#FFD700', h: 'RETRASO +5 HORAS', t: 'Derecho a Reembolso', d: 'Ya no estás obligado a viajar. Puedes pedir que te devuelvan el dinero del billete y buscarte la vida.' },
-                            { color: '#FF3B30', h: 'CANCELACIÓN', t: 'Protección Total', d: 'Si cancelan con menos de 14 días: Vuelo alternativo + Hotel (si es noche) + Indemnización económica.' },
-                            { color: '#007AFF', h: 'OVERBOOKING', t: 'Denegación de Embarque', d: 'Si te dejan fuera por falta de plazas: Reubicación inmediata y compensación económica al instante.' }
+                            { color: '#AF52DE', h: 'RETRASO +2 HORAS', t: 'Derecho de Asistencia', d: 'La aerolínea DEBE darte comida, bebida y acceso a comunicación. Guarda todos tus tickets.' },
+                            { color: '#4CD964', h: 'RETRASO +3 HORAS', t: 'Compensación Económica', d: 'Tienes derecho a una indemnización de entre 250€ y 600€ según la distancia. Travel-Pilot la gestiona por ti.' },
+                            { color: '#FFD700', h: 'RETRASO +5 HORAS', t: 'Derecho a Reembolso', d: 'Puedes solicitar el reembolso íntegro del billete si decides no viajar.' },
+                            { color: '#FF3B30', h: 'CANCELACIÓN', t: 'Protección Total', d: 'Vuelo alternativo + Hotel + Indemnización económica si avisan con menos de 14 días.' },
+                            { color: '#007AFF', h: 'OVERBOOKING', t: 'Denegación de Embarque', d: 'Si te dejan fuera por falta de plazas: Reubicación inmediata y compensación al instante.' }
                         ].map((r, i) => (
                             <View key={i} style={{ backgroundColor: '#111', padding: 20, borderRadius: 20, marginBottom: 15, borderLeftWidth: 4, borderLeftColor: r.color }}>
                                 <Text style={{ color: r.color, fontSize: 10, fontWeight: '900', letterSpacing: 1, marginBottom: 4 }}>{r.h}</Text>
@@ -666,28 +649,103 @@ window.clearCanvas=function(){
                                 <Text style={{ color: '#B0B0B0', fontSize: 13, marginTop: 8, lineHeight: 19 }}>{r.d}</Text>
                             </View>
                         ))}
-
-                        <View style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)', padding: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)', marginTop: 10 }}>
-                            <Text style={{ color: '#D4AF37', fontWeight: 'bold', fontSize: 14 }}>💡 ATENCIÓN</Text>
-                            <Text style={{ color: '#B0B0B0', fontSize: 12, marginTop: 8, lineHeight: 18 }}>
-                                Las "circunstancias extraordinarias" (clima extremo, huelgas de controladores) pueden anular la compensación económica, pero NUNCA el derecho a comida, bebida u hotel.
-                            </Text>
-                        </View>
-
-                        <TouchableOpacity
-                            onPress={() => setShowRights(false)}
-                            style={{ backgroundColor: '#AF52DE', padding: 18, borderRadius: 15, alignItems: 'center', marginTop: 30, marginBottom: 100 }}
-                        >
-                            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 15 }}>ENTENDIDO</Text>
-                        </TouchableOpacity>
                     </ScrollView>
                 </View>
             </Modal>
 
-            {/* ——— PIE DE PÁGINA ENCRIPTADO ——— */}
-            <View style={{ marginTop: 30, opacity: 0.7, alignItems: 'center' }}>
-                <Text style={{ color: '#B0B0B0', fontSize: 10, letterSpacing: 1 }}>PROTECCIÓN ENCRIPTADA · AES-256</Text>
-            </View>
-        </ScrollView>
+
+            {/* BOTÓN FLOTANTE (FAB) ELITE (+) */}
+            <TouchableOpacity
+                onPress={() => setShowPickMenu(true)}
+                activeOpacity={0.9}
+                style={{
+                    position: 'absolute',
+                    bottom: 140, 
+                    right: 25,
+                    width: 64,
+                    height: 64,
+                    borderRadius: 32,
+                    backgroundColor: '#D4AF37',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    shadowColor: "#D4AF37",
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: 12,
+                    elevation: 15,
+                    borderWidth: 2,
+                    borderColor: '#FFF'
+                }}
+            >
+                <Text style={{ color: '#000', fontSize: 32, fontWeight: 'bold' }}>+</Text>
+            </TouchableOpacity>
+
+            {/* MODAL DE SELECCIÓN DE ORIGEN (SOLO ARCHIVOS) */}
+            <Modal visible={showPickMenu} transparent animationType="slide">
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'flex-end' }}>
+                    <View style={{ backgroundColor: '#111', borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 30, paddingBottom: 50, borderWidth: 1, borderColor: '#333' }}>
+                        <View style={{ width: 40, height: 5, backgroundColor: '#333', borderRadius: 3, alignSelf: 'center', marginBottom: 25 }} />
+                        <Text style={{ color: '#D4AF37', fontSize: 10, fontWeight: '900', letterSpacing: 2, marginBottom: 25, textAlign: 'center' }}>💎 BÓVEDA PRIVADA · AÑADIR</Text>
+                        
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30 }}>
+                             <TouchableOpacity onPress={uploadImage} style={{ alignItems: 'center' }}>
+                                <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: '#1A1A1A', justifyContent: 'center', alignItems: 'center', marginBottom: 12, borderWidth: 1, borderColor: '#D4AF37' }}>
+                                    <Text style={{ fontSize: 30 }}>🖼️</Text>
+                                </View>
+                                <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800' }}>GALERÍA</Text>
+                             </TouchableOpacity>
+
+                             <TouchableOpacity onPress={pickDocument} style={{ alignItems: 'center' }}>
+                                <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: '#1A1A1A', justifyContent: 'center', alignItems: 'center', marginBottom: 12, borderWidth: 1, borderColor: '#D4AF37' }}>
+                                    <Text style={{ fontSize: 30 }}>📁</Text>
+                                </View>
+                                <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800' }}>ARCHIVOS</Text>
+                             </TouchableOpacity>
+                        </View>
+
+                        <TouchableOpacity onPress={() => setShowPickMenu(false)} style={{ backgroundColor: '#222', padding: 18, borderRadius: 16, alignItems: 'center' }}>
+                            <Text style={{ color: '#888', fontWeight: 'bold' }}>CANCELAR</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* MODAL CONFIRMACIÓN SUBIDA */}
+            <Modal visible={showConfirmUpload} transparent animationType="fade">
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center', padding: 25 }}>
+                    <View style={{ backgroundColor: '#111', borderRadius: 24, padding: 25, width: '100%', borderWidth: 1, borderColor: '#D4AF37', alignItems: 'center' }}>
+                        <Text style={{ color: '#D4AF37', fontSize: 18, fontWeight: 'bold', marginBottom: 20 }}>💎 PROTECCIÓN DE DOCUMENTO</Text>
+                        
+                        {(pendingDoc && ['jpg', 'jpeg', 'png'].includes(pendingDoc.type.toLowerCase())) ? (
+                            <Image source={{ uri: pendingDoc.uri }} style={{ width: 140, height: 180, borderRadius: 12, marginBottom: 20 }} />
+                        ) : (
+                            <View style={{ width: 140, height: 180, borderRadius: 12, backgroundColor: '#222', justifyContent: 'center', alignItems: 'center', marginBottom: 20 }}>
+                                <Text style={{ fontSize: 50 }}>📁</Text>
+                                <Text style={{ color: '#888', marginTop: 10 }}>{pendingDoc?.type.toUpperCase()}</Text>
+                            </View>
+                        )}
+
+                        <Text style={{ color: '#FFF', textAlign: 'center', marginBottom: 25, lineHeight: 20 }}>
+                            ¿Quieres encriptar y guardar este archivo en tu Bóveda Privada?
+                        </Text>
+
+                        <TouchableOpacity 
+                            disabled={uploadingDoc}
+                            onPress={() => confirmAndUpload()} 
+                            style={{ backgroundColor: '#D4AF37', width: '100%', padding: 18, borderRadius: 16, alignItems: 'center', marginBottom: 12 }}
+                        >
+                            {uploadingDoc ? <ActivityIndicator color="#000" /> : <Text style={{ color: '#000', fontWeight: 'bold' }}>ENCRIPTAR Y GUARDAR</Text>}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            onPress={() => { setShowConfirmUpload(false); setPendingDoc(null); }} 
+                            style={{ padding: 15 }}
+                        >
+                            <Text style={{ color: '#888' }}>DESCARTAR</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        </View>
     );
 }

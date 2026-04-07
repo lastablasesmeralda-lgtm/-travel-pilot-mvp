@@ -1,20 +1,16 @@
 
 export const getEU261Amount = (f: any) => {
-    if (!f) return '250€ - 600€';
-    // Manejo de f.delay o f.departure.delay dependiendo del objeto
-    const delay = f.delay || f.departure?.delay || 0;
-    if (delay < 120) return '0€';
-
+    if (!f) return '250';
     const origin = f.departure?.iata;
-    const dest = f.arrival?.iata || f.destination?.iata;
+    const dest = f.arrival?.iata;
     
-    // Rutas comunes cortas (< 1500km) -> 250€
+    // Rutas comunes cortas (< 1500km) -> 250
     const shortHaul = ['MAD', 'BCN', 'CDG', 'ORY', 'LHR', 'LGW', 'FRA', 'MUC', 'AMS', 'LIS', 'BIO'];
-    if (shortHaul.includes(origin) && shortHaul.includes(dest)) return '250€';
+    if (shortHaul.includes(origin) && shortHaul.includes(dest)) return '250';
     
-    // Rutas transatlánticas o largas (> 3500km) -> 600€
+    // Rutas transatlánticas o largas (> 3500km) -> 600
     const longHaul = ['JFK', 'EWR', 'LAX', 'MIA', 'SFO', 'GRU', 'MEX', 'BOG', 'DAR', 'SYE', 'NRT', 'HND', 'HAV', 'EZE'];
-    if (longHaul.includes(origin) || longHaul.includes(dest)) return '600€';
+    if (longHaul.includes(origin) || longHaul.includes(dest)) return '600';
 
-    return '400€'; // Por defecto para media distancia
+    return '400'; // Por defecto para media distancia
 };

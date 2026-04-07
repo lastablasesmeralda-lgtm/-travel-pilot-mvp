@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
-    View, Text, TouchableOpacity, Dimensions, FlatList, Animated, Easing,
+    View, Text, TouchableOpacity, Dimensions, FlatList, Animated, Easing, Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -9,148 +9,40 @@ const { width } = Dimensions.get('window');
 const SLIDES = [
     {
         id: '1',
-        icon: '🛡️',
-        title: 'Esto no es una app de viajes',
-        subtitle: 'Las apps normales te informan de un problema.\nTravel-Pilot lo resuelve por ti.\n\nEs la primera app del mundo que actúa\ncuando algo va mal en tu viaje.',
-        accent: '#AF52DE',
-        // Animation: pulsing shield
-        animType: 'pulse',
+        image: require('../../assets/onboarding1.jpg'), // Intel/Inicio
+        title: 'ESTO NO ES UNA APP DE VIAJES',
+        subtitle: 'Las apps normales te informan de un problema. Travel-Pilot te da las herramientas para resolverlo en segundos.\n\nEs la primera app del mundo que detecta y gestiona lo que falla en tu viaje.',
+        accent: '#9333EA', // Púrpura (Intel)
     },
     {
         id: '2',
-        icon: '✈️',
-        title: 'Solo necesitas tu vuelo',
-        subtitle: 'Ve a la pestaña VUELOS y escribe\ntu número de vuelo (ej: IB3166).\n\nA partir de ese momento, la IA vigila\ntu vuelo las 24 horas. Tú no tienes\nque hacer nada más.',
-        accent: '#007AFF',
-        // Animation: flying plane
-        animType: 'fly',
+        image: require('../../assets/onboarding2.jpg'), // Radar/Vuelos
+        title: 'SOLO NECESITAS TU VUELO',
+        subtitle: 'Introduce el número de vuelo (ej: IB3166).\n\nA partir de ese momento, mi IA estará atenta 24h a cada detalle. Tú olvídate de todo.',
+        accent: '#3B82F6', // Azul (Radar)
     },
     {
         id: '3',
-        icon: '🚨',
-        title: '¿Retraso? Nosotros actuamos',
-        subtitle: 'Si tu vuelo se retrasa, la IA:\n\n• Llama a tu hotel para avisar.\n• Busca vuelos alternativos.\n• Reclama tu compensación legal (hasta 600€).\n\nTodo automático. Sin que tú hagas nada.',
-        accent: '#FF3B30',
-        // Animation: alarm pulse
-        animType: 'alarm',
+        image: require('../../assets/onboarding3.jpg'), // Vault/Docs
+        title: '¿RETRASO? NOSOTROS ACTUAMOS',
+        subtitle: 'Si tu vuelo se retrasa, la IA:\n• Coordina con tu hotel para proteger tu reserva.\n• Encuentra tus mejores alternativas.\n• Prepara tu reclamación de hasta 600€.\nTodo listo. Tú decides en segundos.',
+        accent: '#EF4444', // Rojo (Vault)
     },
     {
         id: '4',
-        icon: '⚡',
-        title: 'Tú solo eliges',
-        subtitle: 'Te presentaremos 3 opciones personalizadas:\n\n🔴 Rápido — Llegar cuanto antes.\n🟢 Económico — Ahorrar dinero.\n🟣 Confort — Descansar y volar mañana.\n\n📖 En PERFIL tienes la guía completa.',
-        accent: '#27C93F',
-        // Animation: sparkle
-        animType: 'sparkle',
+        image: require('../../assets/onboarding4.jpg'), // Bio/Perfil
+        title: 'EL ESQUEMA DE RESCATE',
+        subtitle: 'Mi IA detectará cualquier incidencia y actuará basándose en tu prioridad predefinida:\n\n💎 PRIORIDAD CONFORT — Reubicación de élite y acceso a salas VIP.\n💰 PRIORIDAD REEMBOLSO — Máxima indemnización económica por ley.\n\nTodo gestionado. Tú solo decides.',
+        accent: '#D4AF37', // Dorado de status
+    },
+    {
+        id: '5',
+        image: require('../../assets/onboarding5.jpg'), // VIP
+        title: 'UNIVERSO VIP EXCLUSIVE',
+        subtitle: 'Cuando tu vuelo falla, la IA actúa por ti.\n\n• Reclamaciones EU261 automáticas hasta 600€.\n• Planes de contingencia personalizados a tu perfil.\n• Asistente IA proactivo: te avisamos antes de que lo sepa la aerolínea.\n• Voz premium y acceso anticipado a nuevas funciones.\n\nTodo gestionado. Tú solo decides.',
+        accent: '#D4AF37', // Dorado (VIP)
     },
 ];
-
-// Animated icon component
-function AnimatedIcon({ icon, accent, animType, isActive }: {
-    icon: string; accent: string; animType: string; isActive: boolean;
-}) {
-    const pulseAnim = useRef(new Animated.Value(1)).current;
-    const flyAnim = useRef(new Animated.Value(0)).current;
-    const rotateAnim = useRef(new Animated.Value(0)).current;
-    const glowAnim = useRef(new Animated.Value(0.3)).current;
-
-    useEffect(() => {
-        if (!isActive) return;
-
-        if (animType === 'pulse') {
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(pulseAnim, { toValue: 1.15, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-                    Animated.timing(pulseAnim, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-                ])
-            ).start();
-        }
-
-        if (animType === 'fly') {
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(flyAnim, { toValue: -12, duration: 1500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-                    Animated.timing(flyAnim, { toValue: 12, duration: 1500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-                ])
-            ).start();
-        }
-
-        if (animType === 'alarm') {
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(rotateAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-                    Animated.timing(rotateAnim, { toValue: -1, duration: 100, useNativeDriver: true }),
-                    Animated.timing(rotateAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-                    Animated.timing(rotateAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
-                    Animated.delay(2000),
-                ])
-            ).start();
-        }
-
-        if (animType === 'sparkle') {
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(pulseAnim, { toValue: 1.2, duration: 600, easing: Easing.elastic(2), useNativeDriver: true }),
-                    Animated.timing(pulseAnim, { toValue: 1, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-                    Animated.delay(1000),
-                ])
-            ).start();
-        }
-
-        // Glow animation for all
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(glowAnim, { toValue: 0.6, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-                Animated.timing(glowAnim, { toValue: 0.3, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-            ])
-        ).start();
-
-    }, [isActive, animType]);
-
-    const spin = rotateAnim.interpolate({
-        inputRange: [-1, 1],
-        outputRange: ['-8deg', '8deg'],
-    });
-
-    const bgColor = glowAnim.interpolate({
-        inputRange: [0.3, 0.6],
-        outputRange: [`${accent}15`, `${accent}30`],
-    });
-
-    return (
-        <Animated.View style={{
-            width: 130, height: 130, borderRadius: 65,
-            backgroundColor: bgColor,
-            justifyContent: 'center', alignItems: 'center',
-            marginBottom: 40,
-            borderWidth: 1,
-            borderColor: `${accent}40`,
-        }}>
-            {/* Orbital ring */}
-            <View style={{
-                position: 'absolute',
-                width: 150, height: 150, borderRadius: 75,
-                borderWidth: 1, borderColor: `${accent}15`,
-            }} />
-            <View style={{
-                position: 'absolute',
-                width: 170, height: 170, borderRadius: 85,
-                borderWidth: 1, borderColor: `${accent}08`,
-            }} />
-
-            <Animated.Text style={{
-                fontSize: 57,
-                transform: [
-                    { scale: pulseAnim },
-                    { translateY: animType === 'fly' ? flyAnim : 0 },
-                    { rotate: animType === 'alarm' ? spin : '0deg' },
-                ],
-            }}>
-                {icon}
-            </Animated.Text>
-        </Animated.View>
-    );
-}
 
 interface OnboardingScreenProps {
     onComplete: () => void;
@@ -158,13 +50,34 @@ interface OnboardingScreenProps {
 
 export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState<boolean | null>(null);
     const flatListRef = useRef<FlatList>(null);
     const scrollX = useRef(new Animated.Value(0)).current;
     const fadeAnim = useRef(new Animated.Value(1)).current;
 
+    useEffect(() => {
+        const checkDisclaimer = async () => {
+            try {
+                const accepted = await AsyncStorage.getItem('disclaimerOnboardingAccepted');
+                setIsDisclaimerAccepted(accepted === 'true');
+            } catch (e) {
+                setIsDisclaimerAccepted(false);
+            }
+        };
+        checkDisclaimer();
+    }, []);
+
+    const handleAcceptDisclaimer = async () => {
+        try {
+            await AsyncStorage.setItem('disclaimerOnboardingAccepted', 'true');
+            setIsDisclaimerAccepted(true);
+        } catch (e) {
+            setIsDisclaimerAccepted(true); // Fallback suave
+        }
+    };
+
     const handleNext = () => {
         if (currentIndex < SLIDES.length - 1) {
-            // Fade out, scroll, fade in
             Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => {
                 flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
                 setCurrentIndex(currentIndex + 1);
@@ -186,54 +99,142 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            paddingHorizontal: 40,
+            paddingHorizontal: 25,
         }}>
-            <AnimatedIcon
-                icon={item.icon}
-                accent={item.accent}
-                animType={item.animType}
-                isActive={currentIndex === index}
-            />
-
-            <Text style={{
-                color: '#FFF',
-                fontSize: 27,
-                fontWeight: '900',
-                textAlign: 'center',
-                marginBottom: 20,
-                letterSpacing: -0.5,
+            {/* Icono en Tarjeta 3D */}
+            <View style={{
+                height: '42%',
+                width: '100%',
+                borderRadius: 40,
+                backgroundColor: 'rgba(255,255,255,0.02)',
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.08)',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 30,
+                overflow: 'hidden'
             }}>
-                {item.title}
-            </Text>
+                <Image
+                    source={item.image}
+                    style={{ width: '85%', height: '85%' }}
+                    resizeMode="contain"
+                />
+            </View>
 
-            <Text style={{
-                color: '#B0B0B0',
-                fontSize: 15,
-                textAlign: 'center',
-                lineHeight: 24,
-            }}>
-                {item.subtitle}
-            </Text>
+            {/* Texto Dinámico Premium */}
+            <View style={{ width: '100%', alignItems: 'center', paddingHorizontal: 10 }}>
+                <Text style={{
+                    color: '#FFF',
+                    fontSize: 28,
+                    fontWeight: '900',
+                    textAlign: 'center',
+                    marginBottom: 15,
+                    letterSpacing: -0.5
+                }}>
+                    {item.title}
+                </Text>
+
+                <Text style={{
+                    color: '#B0B0B0',
+                    fontSize: 16,
+                    textAlign: 'center',
+                    lineHeight: 24,
+                    fontWeight: '400',
+                    paddingHorizontal: 10
+                }}>
+                    {item.subtitle}
+                </Text>
+            </View>
         </View>
     );
+
+    if (isDisclaimerAccepted === null) return null;
+
+    if (!isDisclaimerAccepted) {
+        return (
+            <View style={{ flex: 1, backgroundColor: '#000', paddingHorizontal: 25, justifyContent: 'center', alignItems: 'center' }}>
+                <View style={{ width: '100%', alignItems: 'center' }}>
+                    {/* Icono Disclaimer */}
+                    <View style={{
+                        height: 200,
+                        width: '100%',
+                        borderRadius: 40,
+                        backgroundColor: 'rgba(255,255,255,0.02)',
+                        borderWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.08)',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginBottom: 30,
+                    }}>
+                        <Text style={{ fontSize: 80 }}>🛡️</Text>
+                    </View>
+
+                    <Text style={{
+                        color: '#FFF',
+                        fontSize: 32,
+                        fontWeight: '900',
+                        textAlign: 'center',
+                        marginBottom: 15,
+                        letterSpacing: -1
+                    }}>
+                        Antes de empezar
+                    </Text>
+
+                    <Text style={{
+                        color: '#B0B0B0',
+                        fontSize: 16,
+                        textAlign: 'center',
+                        lineHeight: 24,
+                        marginBottom: 40,
+                        paddingHorizontal: 15
+                    }}>
+                        Travel-Pilot usa inteligencia artificial para informarte y guiarte en tiempo real.{"\n\n"}
+                        Las gestiones automáticas como avisar al hotel o preparar reclamaciones siempre requieren tu confirmación final.{"\n\n"}
+                        Nunca actuamos sin que lo sepas. Tú siempre tienes el control.
+                    </Text>
+
+                    <TouchableOpacity
+                        onPress={handleAcceptDisclaimer}
+                        style={{
+                            backgroundColor: '#9333EA',
+                            width: '100%',
+                            paddingVertical: 20,
+                            borderRadius: 16,
+                            alignItems: 'center',
+                            shadowColor: '#9333EA',
+                            shadowOpacity: 0.4,
+                            shadowRadius: 15,
+                            elevation: 10
+                        }}
+                    >
+                        <Text style={{ color: '#FFF', fontSize: 17, fontWeight: '900', letterSpacing: 1 }}>ENTENDIDO</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    }
 
     const isLastSlide = currentIndex === SLIDES.length - 1;
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
+        <View style={{ flex: 1, backgroundColor: '#000' }}>
+            {/* Top Badge */}
+            <View style={{ position: 'absolute', top: 60, width: '100%', alignItems: 'center', zIndex: 10 }}>
+                <View style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#D4AF37' }}>
+                    <Text style={{ color: '#D4AF37', fontSize: 11, fontWeight: '900', letterSpacing: 3 }}>TRAVEL-PILOT VIP</Text>
+                </View>
+            </View>
+
             {/* Skip button */}
             <TouchableOpacity
                 onPress={handleFinish}
                 style={{
-                    position: 'absolute', top: 60, right: 24, zIndex: 10,
+                    position: 'absolute', top: 55, right: 10, zIndex: 20,
                     paddingHorizontal: 16, paddingVertical: 8,
                 }}
             >
-                <Text style={{ color: '#B0B0B0', fontSize: 14, fontWeight: '600' }}>SALTAR</Text>
+                <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 'bold' }}>SALTAR</Text>
             </TouchableOpacity>
-            <Text style={{ color: '#B0B0B0', textAlign: 'center', fontSize: 13, lineHeight: 20 }}>
-                Hola. Soy tu asistente personal de viajes. He sido diseñado para proteger tu tiempo y tus derechos ante cualquier imprevisto en tus vuelos.
-            </Text>
 
             {/* Slides */}
             <FlatList
@@ -284,6 +285,20 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
                         />
                     ))}
                 </View>
+
+                {/* Beta Badge */}
+                {isLastSlide && (
+                    <Text style={{
+                        color: '#888',
+                        fontSize: 11,
+                        marginBottom: 15,
+                        textAlign: 'center',
+                        fontWeight: '500',
+                        letterSpacing: 0.5
+                    }}>
+                        Fase beta gratuita. Sin tarjeta requerida.
+                    </Text>
+                )}
 
                 {/* Button */}
                 <TouchableOpacity

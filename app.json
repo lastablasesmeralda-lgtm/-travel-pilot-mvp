@@ -1,50 +1,48 @@
 {
-    "expo": {
-          "name": "Travel-Pilot",
-          "slug": "travel-pilot",
-          "version": "1.0.3",
-          "orientation": "portrait",
-          "icon": "./assets/icon.jpg",
-          "userInterfaceStyle": "dark",
-          "splash": {
-                  "image": "./assets/splash.jpg",
-                  "resizeMode": "contain",
-                  "backgroundColor": "#0A0A0A"
-          },
-          "ios": {
-                  "supportsTablet": true
-          },
+  "expo": {
+    "name": "Travel-Pilot",
+    "slug": "travel-pilot",
+    "version": "1.0.1",
+    "orientation": "portrait",
+    "icon": "./assets/logo.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.travelpilot.app",
+      "permissions": [
+        "INTERNET"
+      ],
+      "softwareKeyboardLayoutMode": "resize",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#000000"
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "3a250c2c-ac83-471d-970e-e4cf92d99dc2"
+      }
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
           "android": {
-                  "adaptiveIcon": {
-                            "foregroundImage": "./assets/adaptive-icon.jpg",
-                            "backgroundColor": "#0A0A0A"
-                  },
-                  "package": "com.lastablasesmeralda.travelpilot",
-                  "permissions": [
-                            "RECORD_AUDIO",
-                            "android.permission.RECORD_AUDIO"
-                  ]
-          },
-          "extra": {
-                  "eas": {
-                            "projectId": "3a250c2c-ac83-471d-970e-e4cf92d99dc2"
-                  }
-          },
-          "plugins": [
-                  "@react-native-voice/voice",
-                  [
-                            "expo-build-properties",
-                            {
-                                        "android": {
-                                                      "enableJetifier": true
-                                        }
-                            }
-                  ]
-          ],
-          "sdkVersion": "54.0.0",
-          "platforms": [
-                  "ios",
-                  "android"
-          ]
-    }
+            "enableJetifier": true,
+            "gradleCommand": "assembleRelease",
+            "extraParams": {
+              "org.gradle.jvmargs": "-Xmx2048m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
+            }
+          }
+        }
+      ]
+    ],
+    "owner": "travelpilot"
+  }
 }
