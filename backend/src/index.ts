@@ -718,8 +718,9 @@ fastify.post('/api/testPush', async (request, reply) => {
 // ENDPOINT 11: MIS VIAJES — Crear un viaje
 // ============================================================
 fastify.post('/api/trips', async (request, reply) => {
-    const { userEmail, title, startDate, endDate, destination } = request.body as {
-        userEmail: string, title: string, startDate?: string, endDate?: string, destination?: string
+    const { userEmail, title, startDate, endDate, destination, hotelName, hotelPhone, flightNumber } = request.body as {
+        userEmail: string, title: string, startDate?: string, endDate?: string, destination?: string, 
+        hotelName?: string, hotelPhone?: string, flightNumber?: string
     };
 
     if (!userEmail || !title) {
@@ -727,7 +728,7 @@ fastify.post('/api/trips', async (request, reply) => {
     }
 
     try {
-        console.log(`[Trips] 📝 Creando viaje para: ${userEmail}`);
+        console.log(`[Trips] 📝 Creando viaje para: ${userEmail} | Hotel: ${hotelName} | Vuelo: ${flightNumber}`);
 
         // 1. Intentar buscar usuario por email (si la columna existe)
         let { data: userData, error: userError } = await supabase
@@ -758,7 +759,10 @@ fastify.post('/api/trips', async (request, reply) => {
                 title: destination ? `${title} | ${destination}` : title,
                 start_date: startDate ? new Date(startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
                 end_date: endDate ? new Date(endDate).toISOString().split('T')[0] : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                status: 'planned'
+                status: 'planned',
+                hotel_name: hotelName || null,
+                hotel_phone: hotelPhone || null,
+                flight_number: flightNumber?.toUpperCase() || null
             }])
             .select();
 
@@ -860,7 +864,10 @@ fastify.get('/api/weather', async (request, reply) => {
             geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(mainQuery)}&count=10&language=es`);
         } catch (fetchErr: any) {
             console.error(`[Weather] ❌ Fallo crítico en fetch geocoding:`, fetchErr.message);
-            // Fallback manual si la API de geocodificación está caída
+            // Registro de error en log persistente para Antigravity
+            try { require('fs').appendFileSync('backend_errors.log', `[${new Date().toISOString()}] Weather Geo Error: ${fetchErr.message}\n`); } catch(e) {}
+
+            // Fallback manual extendido para ciudades frecuentes
             const fallbacks: any = {
                 'madrid': { latitude: 40.4165, longitude: -3.70266, name: 'Madrid' },
                 'barcelona': { latitude: 41.38879, longitude: 2.15899, name: 'Barcelona' },
@@ -868,8 +875,18 @@ fastify.get('/api/weather', async (request, reply) => {
                 'london': { latitude: 51.50853, longitude: -0.12574, name: 'London' },
                 'parís': { latitude: 48.85341, longitude: 2.3488, name: 'París' },
                 'paris': { latitude: 48.85341, longitude: 2.3488, name: 'Paris' },
+                'lisboa': { latitude: 38.71667, longitude: -9.13333, name: 'Lisboa' },
+                'lisbon': { latitude: 38.71667, longitude: -9.13333, name: 'Lisbon' },
+                'roma': { latitude: 41.89193, longitude: 12.51133, name: 'Roma' },
+                'rome': { latitude: 41.89193, longitude: 12.51133, name: 'Rome' },
+                'berlín': { latitude: 52.52437, longitude: 13.40615, name: 'Berlín' },
+                'berlin': { latitude: 52.52437, longitude: 13.40615, name: 'Berlin' },
+                'ámsterdam': { latitude: 52.37403, longitude: 4.88969, name: 'Ámsterdam' },
+                'amsterdam': { latitude: 52.37403, longitude: 4.88969, name: 'Amsterdam' },
                 'nueva york': { latitude: 40.71427, longitude: -74.00597, name: 'Nueva York' },
                 'new york': { latitude: 40.71427, longitude: -74.00597, name: 'New York' },
+                'tokio': { latitude: 35.6895, longitude: 139.6917, name: 'Tokio' },
+                'tokyo': { latitude: 35.6895, longitude: 139.6917, name: 'Tokyo' },
                 'bora bora': { latitude: -16.5004, longitude: -151.7415, name: 'Bora Bora' }
             };
             const lowerQuery = mainQuery.toLowerCase();
