@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Pilot | Beta Táctica</title>
+    <meta name="description" content="Tu asistente táctico cuando tu vuelo se complica. Únete a la beta exclusiva.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <span class="logo-text">TRAVEL<span class="gradient-text">-PILOT</span></span>
+            </div>
+            <div class="status-indicator">
+                <span class="status-dot"></span> SISTEMA EN FASE BETA
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container hero-content">
+                <div class="hero-text">
+                    <span class="badge">PROYECTO TÁCTICO // BETA TESTERS</span>
+                    <h1>TRAVEL PILOT</h1>
+                    <h2 class="hero-subtitle">Tu asistente táctico cuando tu vuelo se complica.</h2>
+
+                    <div class="hero-description">
+                        <h3>Qué hace por ti</h3>
+                        <ul class="features-list-simple">
+                            <li>Vigila tus vuelos y te avisa si hay retrasos o cancelaciones.</li>
+                            <li>Te explica tus opciones y derechos como pasajero.</li>
+                            <li>Genera escenarios inteligentes: reconexiones, hotel y reclamaciones.</li>
+                        </ul>
+                    </div>
+
+                    <div class="hero-target">
+                        <h3>Para quién es</h3>
+                        <p>Viajeros frecuentes, nómadas digitales y cualquiera que no quiera volver a sentirse solo
+                            cuando su vuelo se va al caos.</p>
+                    </div>
+
+                    <div class="hero-status">
+                        <h3>Estado del proyecto</h3>
+                        <p>Estamos terminando la primera versión con IA integrada. Si te apuntas a la beta, serás de los
+                            primeros en probarla y en decirnos qué mejorar.</p>
+                    </div>
+
+                    <div class="hero-actions">
+                        <div class="terminal-portal">
+                            <div class="terminal-header">> REGISTRO DE ACCESO BETA</div>
+                            <div class="terminal-body">
+                                <label for="hero-email" class="terminal-label">EMAIL_OPERATIVO:</label>
+                                <div class="terminal-input-group">
+                                    <span class="terminal-prompt">></span>
+                                    <input type="email" id="hero-email" class="terminal-input"
+                                        placeholder="INGRESE_IDENTIFICACIÓN...">
+                                    <button onclick="registerBeta('hero-email')" class="terminal-btn">ENVIAR</button>
+                                </div>
+                                <div id="hero-email-status" class="terminal-status">ESTADO: ESPERANDO_CREDENCIALES</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-showcase">
+                    <img src="assets/hero_ia_options.jpg" alt="Opciones Tácticas IA" class="mockup-main">
+                    <img src="assets/hero_legal_shield.jpg" alt="Escudo Legal EU261" class="overlay-card floating">
+                </div>
+            </div>
+        </section>
+
+        <section id="showcase" class="showcase">
+            <div class="container">
+                <h2 class="section-title">LOS 4 PILARES TÁCTICOS</h2>
+                <div class="pillar-grid">
+                    <div class="pillar-card glass horizontal">
+                        <div class="pillar-image">
+                            <img src="assets/viaje.jpg" alt="Sección de Viaje">
+                        </div>
+                        <div class="pillar-info">
+                            <h3>VIAJE</h3>
+                            <p>Toda tu expedición bajo control. Clima en tiempo real, bitácora de ruta y alertas
+                                tácticas sincronizadas por la IA.</p>
+                        </div>
+                    </div>
+                    <div class="pillar-card glass horizontal">
+                        <div class="pillar-image">
+                            <img src="assets/vuelos.jpg" alt="Vigilancia de Vuelos">
+                        </div>
+                        <div class="pillar-info">
+                            <h3>VUELOS</h3>
+                            <p>Vigilancia activa del espacio aéreo. Radar de interceptación de retrasos y protocolos de
+                                contingencia inmediatos.</p>
+                        </div>
+                    </div>
+                    <div class="pillar-card glass horizontal">
+                        <div class="pillar-image">
+                            <img src="assets/docs.jpg" alt="Bóveda de Documentos">
+                        </div>
+                        <div class="pillar-info">
+                            <h3>DOCUMENTOS</h3>
+                            <p>Bóveda blindada para tu documentación crítica. Protección de datos y gestión automática
+                                de reclamaciones legales.</p>
+                        </div>
+                    </div>
+                    <div class="pillar-card glass horizontal">
+                        <div class="pillar-image">
+                            <img src="assets/perfil.jpg" alt="Perfil Elite">
+                        </div>
+                        <div class="pillar-info">
+                            <h3>PERFIL</h3>
+                            <p>Gestión estratégica de tu identidad operativa. Acceso a membresía Elite y configuración
+                                de asistencia por voz.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-footer">
+                    <h3>Apúntate a la beta</h3>
+                    <p>Déjame tu email y te avisaré en cuanto esté lista para probar.</p>
+                    <div class="terminal-portal" style="margin: 0 auto;">
+                        <div class="terminal-header">> SOLICITUD DE ACCESO BETA</div>
+                        <div class="terminal-body">
+                            <label for="footer-email" class="terminal-label">EMAIL_OPERATIVO:</label>
+                            <div class="terminal-input-group">
+                                <span class="terminal-prompt">></span>
+                                <input type="email" id="footer-email" class="terminal-input"
+                                    placeholder="SU_EMAIL_AQUÍ...">
+                                <button onclick="registerBeta('footer-email')" class="terminal-btn">SOLICITAR</button>
+                            </div>
+                            <div id="footer-email-status" class="terminal-status">ESTADO: LISTO_PARA_TRANSMISIÓN</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 TRAVEL-PILOT ELITE // <span class="status-dot"></span> ACCESO BETA RESTRINGIDO</p>
+        </div>
+    </footer>
+    <script>
+        // CONFIGURACIÓN TÁCTICA: ID de Formspark activado
+        const FORMSPARK_ACTION_URL = "https://submit-form.com/sbubR96H7"; 
+
+        async function registerBeta(inputId) {
+            const input = document.getElementById(inputId);
+            const status = document.getElementById(inputId + '-status');
+            const btn = input.nextElementSibling;
+
+            if (!input.value || !input.value.includes('@')) {
+                status.innerText = 'ERROR: CREDENCIAL_INVÁLIDA. VERIFIQUE FORMATO.';
+                status.style.color = '#e74c3c';
+                return;
+            }
+
+            // Inicio de transmisión
+            status.innerText = 'TRANSMITIENDO_DATOS...';
+            status.style.color = '#AF52DE';
+            btn.disabled = true;
+            input.disabled = true;
+
+            try {
+                // Envío real con reporte detallado
+                const response = await fetch(FORMSPARK_ACTION_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    body: JSON.stringify({
+                        email: input.value,
+                        _source: 'Landing Page Beta',
+                        _feedback: false
+                    }),
+                });
+
+                if (response.ok) {
+                    status.innerText = 'ÉXITO: OPERATIVO REGISTRADO. ESPERE INSTRUCCIONES CIFRADAS.';
+                    status.style.color = '#27ae60';
+                    btn.innerText = 'REGISTRADO';
+                    btn.classList.add('success');
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    status.innerText = `ERROR_SERVIDOR: STATUS_${response.status} [${errorData.message || 'DESCONOCIDO'}]`;
+                    status.style.color = '#e74c3c';
+                    btn.disabled = false;
+                    input.disabled = false;
+                }
+
+            } catch (error) {
+                status.innerText = 'ERROR_RED: FALLO DE CONEXIÓN TÁCTICA.';
+                status.style.color = '#e74c3c';
+                btn.disabled = false;
+                input.disabled = false;
+                console.error("DEBUG_INFO:", error);
+            }
+        }
+    </script>
+</body>
+
+</html>
