@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, Alert, ScrollView, Platform, Keyboard } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, Alert, ScrollView, Platform, Keyboard, StyleSheet, Modal } from 'react-native';
 import { s } from '../styles';
 import { useAppContext } from '../context/AppContext';
 
@@ -13,6 +13,7 @@ export default function LoginScreen() {
     const [showPassword, setShowPassword] = useState(false);
     const [focusedField, setFocusedField] = useState<string | null>(null);
     const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const [showTOS, setShowTOS] = useState(false);
     const scrollRef = useRef<ScrollView>(null);
 
     // Escuchar eventos reales del teclado del sistema operativo
@@ -166,21 +167,44 @@ export default function LoginScreen() {
                     </View>
 
                     {authMode === 'register' && (
-                        <View style={{ marginTop: 20, backgroundColor: '#000', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#222', maxHeight: 150 }}>
-                            <Text style={{ color: '#AF52DE', fontSize: 10, fontWeight: 'bold', marginBottom: 6 }}>TÉRMINOS DE SERVICIO (LEER ANTES DE REGISTRAR)</Text>
-                            <ScrollView nestedScrollEnabled showsVerticalScrollIndicator>
-                                <Text style={{ color: '#E0E0E0', fontSize: 11, lineHeight: 16 }}>
-                                    1. Travel-Pilot es una herramienta de información y monitorización, no un servicio de gestoría aérea.{"\n\n"}
-                                    2. La información proporcionada por el asistente IA puede contener errores. No nos hacemos responsables de decisiones tomadas basadas en dichas respuestas.{"\n\n"}
-                                    3. Los datos de vuelos mostrados pueden no reflejar en tiempo real el estado exacto del vuelo. Verifica siempre con la aerolínea oficial.{"\n\n"}
-                                    4. Travel-Pilot no realiza reservas, cancelaciones ni ninguna gestión en nombre del usuario.{"\n\n"}
-                                    5. Los documentos almacenados en DOCS son responsabilidad del usuario. Travel-Pilot proporciona almacenamiento cifrado pero no verifica la validez legal de los documentos.{"\n\n"}
-                                    6. La compensación EU261 calculada por el sistema es orientativa. El importe final lo determina la aerolínea o la autoridad aeronáutica competente.
-                                </Text>
-                            </ScrollView>
-                            <Text style={{ color: '#888', fontSize: 9, marginTop: 8, fontStyle: 'italic' }}>* Al pulsar "CONFIRMAR REGISTRO" aceptas estas condiciones de uso.</Text>
+                        <View style={{ marginTop: 20, alignItems: 'center' }}>
+                            <Text style={{ color: '#888', fontSize: 11, textAlign: 'center' }}>
+                                Al pulsar "CONFIRMAR REGISTRO" declaras haber leído y aceptado nuestro{' '}
+                                <Text 
+                                    onPress={() => setShowTOS(true)} 
+                                    style={{ color: '#AF52DE', fontWeight: 'bold', textDecorationLine: 'underline' }}
+                                >
+                                    Escudo Legal y Términos de Servicio
+                                </Text>.
+                            </Text>
                         </View>
                     )}
+
+                    {/* MODAL DE TÉRMINOS DE SERVICIO (LEGAL SHIELD) */}
+                    <Modal visible={showTOS} transparent animationType="slide">
+                        <View style={{ flex: 1, backgroundColor: '#000', padding: 25, paddingTop: 60 }}>
+                            <Text style={{ color: '#AF52DE', fontSize: 24, fontWeight: '900', marginBottom: 10 }}>ESCUDO LEGAL</Text>
+                            <Text style={{ color: '#888', fontSize: 13, marginBottom: 25, letterSpacing: 1 }}>TÉRMINOS DE SERVICIO Y USO</Text>
+                            
+                            <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1, marginBottom: 30 }}>
+                                <Text style={{ color: '#E0E0E0', fontSize: 15, lineHeight: 24, marginBottom: 20 }}>
+                                    1. <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>Naturaleza del Servicio:</Text> Travel-Pilot es una herramienta inteligencia artificial de monitorización informativa. No somos una aerolínea ni un servicio de gestoría jurídica directa.{"\n\n"}
+                                    2. <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>Limitación de Responsabilidad:</Text> Las respuestas del asistente IA son orientativas. Las decisiones operativas del viajero deben contrastarse siempre con el personal oficial del aeropuerto o aerolínea.{"\n\n"}
+                                    3. <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>Datos de Vuelo:</Text> Aunque monitorizamos redes globales, el estado oficial del vuelo es el comunicado por las pantallas del aeropuerto. Travel-Pilot no responde por retrasos en la actualización de datos externos.{"\n\n"}
+                                    4. <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>Gestión en Nombre del Usuario:</Text> El sistema no realiza transacciones económicas, reservas ni cancelaciones definitivas automáticamente sin intervención humana directa según el Plan suscrito.{"\n\n"}
+                                    5. <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>Protección de Documentos:</Text> El Escudo de DOCS proporciona almacenamiento cifrado de alta seguridad. El usuario garantiza que posee los derechos legales sobre cualquier documento subido a la plataforma.{"\n\n"}
+                                    6. <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>Indemnización EU261:</Text> El cálculo de compensaciones es una estimación técnica basada en la normativa europea. No garantiza el desembolso final, el cual depende de los plazos legales y la aceptación de la aerolínea.
+                                </Text>
+                            </ScrollView>
+
+                            <TouchableOpacity 
+                                onPress={() => setShowTOS(false)}
+                                style={{ backgroundColor: '#AF52DE', padding: 20, borderRadius: 16, alignItems: 'center', shadowColor: '#AF52DE', shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 }}
+                            >
+                                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 13, letterSpacing: 1 }}>ENTENDIDO Y ACEPTO</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Modal>
 
                     <View style={{ marginTop: 28 }}>
                         <TouchableOpacity

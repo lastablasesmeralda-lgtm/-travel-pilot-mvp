@@ -288,7 +288,7 @@ export default function VuelosScreen() {
                     </View>
                 </View>
                 <TouchableOpacity 
-                    onPress={() => { if (flightData) { searchFlight(); setLastUpdate(new Date()); } }}
+                    onPress={() => { if (flightData?.flightNumber) { searchFlight(flightData.flightNumber); setLastUpdate(new Date()); } }}
                     style={{ 
                         backgroundColor: flightData ? 'rgba(175, 82, 222, 0.2)' : 'rgba(255,255,255,0.05)', 
                         paddingHorizontal: 12, 

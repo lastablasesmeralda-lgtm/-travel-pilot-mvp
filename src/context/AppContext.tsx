@@ -243,8 +243,11 @@ export const AppProvider = ({ children }) => {
         if (stores.chatOrigin) setChatOrigin(stores.chatOrigin as any);
         if (stores.selectedVoice) setSelectedVoice(stores.selectedVoice);
         
-        // NO CARGAR AUTOMÁTICAMENTE hasSeenOnboarding SI QUEREMOS QUE SE VEA AL LOGUEARSE
-        setHasSeenOnboarding(false); // Forzamos Onboarding para que no se salte procesos
+        if (stores.hasSeenOnboarding === 'true') {
+          setHasSeenOnboarding(true);
+        } else {
+          setHasSeenOnboarding(false);
+        }
 
       } catch (err) {
         console.error("Error carga:", err);
@@ -406,15 +409,33 @@ export const AppProvider = ({ children }) => {
       ])
     ).start();
 
-    (async () => {
-      const voices = await Speech.getAvailableVoicesAsync();
+    const initVoices = async () => {
+      let voices: any[] = [];
+      try {
+        voices = await Speech.getAvailableVoicesAsync();
+      } catch (e) {
+        console.warn('Error fetching native voices', e);
+      }
+      
       // Buscar voces en español (incluyendo variantes MX, US, etc.)
-      let esVoices = voices.filter(v => v.language.startsWith('es'));
+      let esVoices = voices.filter(v => v.language && v.language.startsWith('es'));
+      
+      const internalFallback = [
+        { identifier: 'es-es-x-eed-network', name: 'es-es-x-eed-network', language: 'es-ES', quality: 'Enhanced' },
+        { identifier: 'es-es-x-eea-network', name: 'es-es-x-eea-network', language: 'es-ES', quality: 'Enhanced' },
+        { identifier: 'es-us-x-esc-network', name: 'es-us-x-esc-network', language: 'es-US', quality: 'Enhanced' },
+        { identifier: 'es-us-x-esf-network', name: 'es-us-x-esf-network', language: 'es-US', quality: 'Enhanced' }
+      ];
+
+      if (!esVoices || esVoices.length === 0) {
+        console.log("No native spanish voices found, using internal emergency pool...");
+        esVoices = internalFallback;
+      }
 
       // Ordenar para priorizar voces de Alta Definición (Evitar el efecto "Radio de la IA")
       esVoices.sort((a, b) => {
-          const idA = a.identifier.toLowerCase();
-          const idB = b.identifier.toLowerCase();
+          const idA = (a.identifier || '').toLowerCase();
+          const idB = (b.identifier || '').toLowerCase();
           let scoreA = 0; let scoreB = 0;
 
           // Premiar voces HD/Network
@@ -428,32 +449,20 @@ export const AppProvider = ({ children }) => {
           return scoreB - scoreA;
       });
 
-      console.log('--- REPORTE DE VOCES NATIVAS ES (ORDENADAS POR CALIDAD HQ) ---');
-      esVoices.forEach((v, i) => console.log(`[ES-${i}] Nombre: ${v.name} | ID: ${v.identifier} | Calidad: ${v.quality || 'N/A'}`));
-      console.log('-----------------------------------');
-
-      try {
-        fetch(`${BACKEND_URL}/api/logVoices`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ voices: esVoices })
-        });
-      } catch (e) {
-        console.warn('No se pudieron logear las voces');
-      }
-
       // Mapeo dinámico y traducción de identificadores nativos (iOS/Android)
       const categorizedVoices = esVoices.map(v => {
         let gender = 'unknown';
-        const id = (v.identifier + ' ' + v.name).toLowerCase();
+        const id = ((v.identifier || '') + ' ' + (v.name || '')).toLowerCase();
 
         // Clasificación absoluta basada en el hardware y feedback del usuario
-        // Femeninas: a, b, c, e / Masculinas: d, f
-        if (id.includes('monica') || id.includes('clara') || id.includes('paulina') || id.includes('luciana') ||
-          id.includes('-esa') || id.includes('-esc') || id.includes('-esb') || id.includes('-ese')) {
+        // Femeninas: a, c, e / Masculinas: b, d, f (Patrón común en Android/Google)
+        if (id.includes('monica') || id.includes('clara') || id.includes('paulina') || id.includes('luciana') || id.includes('helena') ||
+          id.includes('-esa') || id.includes('-esc') || id.includes('-ese') || id.includes('female') || id.includes('mujer') ||
+          id.includes('-eea') || id.includes('-eec') || id.includes('-eee')) {
           gender = 'female';
         } else if (id.includes('juan') || id.includes('carlos') || id.includes('jorge') || id.includes('diego') ||
-          id.includes('manuel') || id.includes('pablo') || id.includes('-esd') || id.includes('-esf')) {
+          id.includes('manuel') || id.includes('pablo') || id.includes('-esd') || id.includes('-esf') || id.includes('male') || id.includes('hombre') ||
+          id.includes('-eeb') || id.includes('-eed') || id.includes('-eef')) {
           gender = 'male';
         }
         return { ...v, gender };
@@ -468,11 +477,11 @@ export const AppProvider = ({ children }) => {
       const mPool = males.length > 0 ? males : (females.length > 0 ? females : unknowns);
 
       // Separar por acento para la asignación Premium (Español de España: es-ES)
-      const esEsFemales = fPool.filter((v: any) => v.language === 'es-ES' || v.identifier.toLowerCase().includes('es-es'));
-      const otherFemales = fPool.filter((v: any) => v.language !== 'es-ES' && !v.identifier.toLowerCase().includes('es-es'));
+      const esEsFemales = fPool.filter((v: any) => v.language === 'es-ES' || (v.identifier || '').toLowerCase().includes('es-es'));
+      const otherFemales = fPool.filter((v: any) => v.language !== 'es-ES' && !(v.identifier || '').toLowerCase().includes('es-es'));
 
-      const esEsMales = mPool.filter((v: any) => v.language === 'es-ES' || v.identifier.toLowerCase().includes('es-es'));
-      const otherMales = mPool.filter((v: any) => v.language !== 'es-ES' && !v.identifier.toLowerCase().includes('es-es'));
+      const esEsMales = mPool.filter((v: any) => v.language === 'es-ES' || (v.identifier || '').toLowerCase().includes('es-es'));
+      const otherMales = mPool.filter((v: any) => v.language !== 'es-ES' && !(v.identifier || '').toLowerCase().includes('es-es'));
 
       // Premium usa español de España prioritariamente
       const premiumFemalePool = esEsFemales.length > 0 ? esEsFemales : fPool;
@@ -488,25 +497,28 @@ export const AppProvider = ({ children }) => {
 
       // Premium (Acento es-ES garantizado si existe en el OS)
       // Si la voz libre cogió la misma (ej. solo hay 1 voz de mujer), forzamos a pillar el índice 1 del fPool si existe
-      const fPremVoice = premiumFemalePool[0].identifier === luciaV.identifier && premiumFemalePool.length > 1 ? premiumFemalePool[1] : (premiumFemalePool[0] || fPool[0]);
+      const fPremVoice = premiumFemalePool[0]?.identifier === luciaV.identifier && premiumFemalePool.length > 1 ? premiumFemalePool[1] : (premiumFemalePool[0] || fPool[0]);
       const claraV = { ...(fPremVoice || esVoices[0]), humanName: 'Clara', isPremium: true };
 
-      const mPremVoice = premiumMalePool[0].identifier === javierV.identifier && premiumMalePool.length > 1 ? premiumMalePool[1] : (premiumMalePool[0] || mPool[0]);
+      const mPremVoice = premiumMalePool[0]?.identifier === javierV.identifier && premiumMalePool.length > 1 ? premiumMalePool[1] : (premiumMalePool[0] || mPool[0]);
       const marcoV = { ...(mPremVoice || esVoices[0]), humanName: 'Marco', isPremium: true };
 
       const roles = [luciaV, javierV, claraV, marcoV];
 
       // Insertamos uniqueId para evitar quejas de React si usamos la misma voz 2 veces
-      const visibleRoles = roles.map((r, i) => ({ ...r, uniqueId: r.identifier + '_' + i }));
+      const visibleRoles = roles.map((r, i) => ({ ...r, uniqueId: (r.identifier || 'v') + '_' + i }));
 
       setAvailableVoices(visibleRoles);
 
-      if (visibleRoles.length > 0) {
-        // Javier por defecto si existe, si no, la de Clara (index 0)
+      if (visibleRoles.length > 0 && !selectedVoice) {
+        // Javier por defecto si existe, si no, Lucía
         const defaultVoiceId = javierV.identifier || visibleRoles[0].identifier;
         setSelectedVoice(defaultVoiceId);
       }
-    })();
+    };
+
+    initVoices();
+    const retry = setTimeout(initVoices, 3500);
 
     if (Platform.OS === 'android') {
       Notifications.setNotificationChannelAsync('tactical', {
@@ -527,7 +539,10 @@ export const AppProvider = ({ children }) => {
       }),
     });
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(retry);
+    };
   }, []);
 
   // SIMULACIÓN DE LOGS DEL NAVEGADOR ASISTENTE (EN TIEMPO REAL CON MOTOR SSE)
@@ -540,7 +555,6 @@ export const AppProvider = ({ children }) => {
       const destCity = flightData?.arrival?.airport || "tu destino";
       const pType = selectedPlan?.type || "General";
       
-      // Intentar extraer el nombre del hotel del razonamiento o título si es posible
       const hotelMatch = selectedPlan?.title?.match(/en\s([A-Za-z\s]+)/i);
       const hName = hotelMatch ? hotelMatch[1] : "Alojamiento Óptimo";
 
@@ -551,69 +565,80 @@ export const AppProvider = ({ children }) => {
       
       xhr = new XMLHttpRequest();
       xhr.open('GET', url);
-      xhr.timeout = 15000; // 15 segundos máximo antes de error de red
+      xhr.timeout = 25000; // Aumentado a 25s para dar tiempo a Render a arrancar
       xhr.setRequestHeader('Accept', 'text/event-stream');
       xhr.setRequestHeader('ngrok-skip-browser-warning', 'true');
       
-      setBrowserLogs(['[Sistema] Abriendo canal seguro con Motor de Ejecución...']);
+      // Logs iniciales de sistema para dar feedback inmediato
+      setBrowserLogs([
+        '🚀 [Sistema] Iniciando Motor de Ejecución en la nube...',
+        '🔒 Estableciendo túnel de seguridad AES-256...',
+        '📡 Contactando con la red global de Travel-Pilot...'
+      ]);
 
-      // MODO DEMO / FALLBACK DE SEGURIDAD
-      // Si en 4 segundos no hay logs reales, inyectamos logs de cortesía para que el usuario vea "acción"
       const demoTimer = setTimeout(() => {
-        if (browserLogs.length <= 1) {
+        if (browserLogs.length <= 3) {
           setBrowserLogs(prev => [
             ...prev, 
-            '⏳ Servidor en la nube despertando (esto puede tardar 10s)...',
-            '🤖 Iniciando protocolos de contingencia en modo espera...',
-            '🔍 Escaneando bases de datos de aviación civil...',
-            '📑 Verificando derechos del pasajero EU261...'
+            '⏳ El servidor está despertando (esto puede tardar unos segundos)...',
+            '🤖 Preparando agentes de búsqueda en tiempo real...',
           ]);
         }
-      }, 4000);
+      }, 5000);
 
       let seenBytes = 0;
       xhr.onreadystatechange = () => {
         if (xhr.readyState === 3 || xhr.readyState === 4) {
-          clearTimeout(demoTimer); // Si llegan datos reales, paramos el modo demo (o lo dejamos como histórico)
+          clearTimeout(demoTimer);
           
+          if (!xhr) return;
           const newData = xhr.responseText.substring(seenBytes);
           seenBytes = xhr.responseText.length;
           
-          const lines = newData.split('\n');
-          for (let line of lines) {
-             if (line.startsWith('data: ')) {
-                try {
-                    const parsed = JSON.parse(line.substring(6).trim());
-                    if (parsed.log) {
-                         setBrowserLogs(prev => [...prev, parsed.log]);
-                    }
-                    if (parsed.done && xhr) {
-                        xhr.abort();
-                    }
-                } catch(e) {} 
-             }
+          if (newData.trim().length > 0) {
+              const lines = newData.split('\n');
+              for (let line of lines) {
+                 if (line.startsWith('data: ')) {
+                    try {
+                        const payload = line.substring(6).trim();
+                        if (payload.startsWith('{')) {
+                            const parsed = JSON.parse(payload);
+                            if (parsed.log) {
+                                 setBrowserLogs(prev => [...prev, parsed.log]);
+                            }
+                            if (parsed.done && xhr) {
+                                xhr.abort();
+                            }
+                        }
+                    } catch(e) {
+                        // Ignorar errores de parseo parcial de chunks
+                    } 
+                 }
+              }
           }
         }
       };
 
       xhr.ontimeout = () => {
-        setBrowserLogs(prev => [...prev, '⚠️ [Timeout] El servidor está tardando demasiado en responder. Reintentando...']);
-        wakeUpBackend();
+        setBrowserLogs(prev => [...prev, '⚠️ [Timeout] El servidor está tardando en responder. Utiliza "Compartir" para una gestión manual inmediata si tienes prisa.']);
+        // No llamamos a wakeUpBackend recursivamente sin límite para evitar bloqueos
       };
 
       xhr.onerror = () => {
-         setBrowserLogs(prev => [...prev, '❌ [Error] No se pudo establecer la conexión segura con el Motor VIP.']);
-         wakeUpBackend();
+         setBrowserLogs(prev => [...prev, '❌ [Error] Servicio temporalmente indisponible. Protocolo Élite sugerido: Usa la opción COMPARTIR.']);
       };
       
       xhr.send();
       
-    } else if (!showBrowser) {
+    } else if (!showBrowser && !isExtracting) {
       setBrowserLogs([]);
     }
 
     return () => {
-        if (xhr) xhr.abort();
+        if (xhr) {
+            xhr.abort();
+            xhr = null;
+        }
     };
   }, [showBrowser, selectedPlan, flightData]);
 
@@ -666,12 +691,13 @@ export const AppProvider = ({ children }) => {
         console.log("🛡️ [Privacidad] Memoria local formateada al 100% para nueva cuenta.");
       }
 
-      setUser(firebaseUser);
       if (firebaseUser?.email) {
         loadMyFlights(firebaseUser.email);
         loadMyTrips(firebaseUser.email);
         registerForPushNotificationsAsync(firebaseUser.email);
+        
       }
+      setUser(firebaseUser);
     });
 
     return () => {
@@ -900,13 +926,41 @@ export const AppProvider = ({ children }) => {
 
   const handleLogin = async () => {
     if (!authEmail || !authPassword) return Alert.alert('Login', 'Introduce email y contraseña.');
-    try { setAuthLoading(true); await signInWithEmailAndPassword(auth, authEmail, authPassword); }
+    try { 
+      setAuthLoading(true); 
+      await signInWithEmailAndPassword(auth, authEmail, authPassword); 
+      
+      // SI LOGUEA, YA NO NECESITA ONBOARDING (Aseguramos persistencia)
+      setHasSeenOnboarding(true);
+      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+    }
     catch (e: any) { Alert.alert('Error', e.message); } finally { setAuthLoading(false); }
   };
 
   const handleLogout = async () => { await signOut(auth); };
 
-  const speak = (text: string, overrideVoiceId?: string) => {
+  const playVipAudio = async (voiceName: string) => {
+    try {
+      let soundAsset = null;
+      if (voiceName === 'Clara') soundAsset = require('../../assets/audio/clara_intro.mp3');
+      if (voiceName === 'Marco') soundAsset = require('../../assets/audio/marco_intro.mp3');
+
+      if (soundAsset) {
+        const { sound } = await Audio.Sound.createAsync(soundAsset);
+        await sound.playAsync();
+        // Limpieza automática tras sonar
+        sound.setOnPlaybackStatusUpdate((status: any) => {
+          if (status.didJustFinish) sound.unloadAsync();
+        });
+        return true; 
+      }
+    } catch (e) {
+      console.warn("[VIP-AUDIO] Error reproduciendo audio real:", e);
+    }
+    return false;
+  };
+
+  const speak = async (text: string, overrideVoiceId?: string) => {
     setIsSpeaking(true);
     Animated.loop(
       Animated.sequence([
@@ -915,13 +969,28 @@ export const AppProvider = ({ children }) => {
       ])
     ).start();
 
-    // Verificación de seguridad: ¿Existe la voz seleccionada en los recursos del sistema actual?
     const voiceId = overrideVoiceId || selectedVoice;
-    const isVoiceAvailable = availableVoices.some(v => v.identifier === voiceId);
+    const voiceObj = availableVoices.find(v => v.identifier === voiceId);
+    const isVoiceAvailable = !!voiceObj;
+
+    // LÓGICA VIP: Si estamos diciendo la frase de presentación y es una voz VIP
+    if (text.includes("soy Clara") || text.includes("soy tu asistente") || text.includes("Marco aquí")) {
+      if (voiceObj?.humanName === 'Clara' || voiceObj?.humanName === 'Marco') {
+        const success = await playVipAudio(voiceObj.humanName);
+        if (success) {
+          // Si el audio real funcionó, no necesitamos que hable el bot
+          setTimeout(() => {
+            setIsSpeaking(false);
+            waveAnim.stopAnimation();
+          }, 4000); // Duración estimada de la frase corta
+          return;
+        }
+      }
+    }
     
     Speech.speak(text, { 
       language: 'es-ES', 
-      voice: isVoiceAvailable ? voiceId! : undefined, // Fallback a voz del sistema si falla la preferida
+      voice: isVoiceAvailable ? voiceId! : undefined,
       onDone: () => onSpeechDone(),
       onError: (e) => {
         console.warn("[Speech] Error detectado, reintentando con voz nativa...", e);
@@ -992,8 +1061,9 @@ export const AppProvider = ({ children }) => {
     } catch (e) { } finally { setIsPrefetching(false); }
   };
 
-  const searchFlight = async () => {
-    const code = flightInput.trim();
+  const searchFlight = async (manualCode?: string | any) => {
+    // Si manualCode es un evento (de un onPress), lo ignoramos y usamos flightInput
+    const code = (typeof manualCode === 'string') ? manualCode.trim() : flightInput.trim();
     if (!code) return;
 
     // LÍMITE GRATUITO: Solo 1 vuelo simultáneo para usuarios no-VIP
@@ -1014,12 +1084,19 @@ export const AppProvider = ({ children }) => {
     stopSpeak();
     setShowSOS(false);
     setSearchError(null);
+    setIsSearching(true);
     wakeUpBackend(); // Ping proactivo para despertar la nube
     try {
-      // 2) BUSCAR EL VUELO
-      setBrowserLogs([`[AGENTE] Iniciando protocolo de rescate para el vuelo ${code}...`]);
-      // setShowBrowser(true); <-- ELIMINADO para evitar salto de pantalla
+      // 1.5) PREPARAR LOGS (En segundo plano, sin saltar de pantalla)
+      setBrowserLogs([`[SISTEMA] Iniciando interceptación táctica: Vuelo ${code.toUpperCase()}...`]);
       
+      // Simulación de pasos iniciales para feedback en UI local
+      setTimeout(() => setBrowserLogs(prev => [...prev, '🌐 Conectando con nodos de la Red Global de Aviación...']), 400);
+      setTimeout(() => setBrowserLogs(prev => [...prev, '🔐 Solicitando acceso a registros transpondedores...']), 1200);
+      setTimeout(() => setBrowserLogs(prev => [...prev, `🔍 Escaneando bases de datos en busca de '${code.toUpperCase()}'...`]), 2200);
+      setTimeout(() => setBrowserLogs(prev => [...prev, '📡 Estableciendo enlace con satélites Inmarsat...']), 3200);
+      setTimeout(() => setBrowserLogs(prev => [...prev, '⏳ Especialista IA analizando vectores de llegada...']), 4500);
+
       const response = await fetch(`${BACKEND_URL}/api/flightInfo?flight=${code}`, {
         headers: {
           'ngrok-skip-browser-warning': 'true'
@@ -1028,16 +1105,18 @@ export const AppProvider = ({ children }) => {
 
       if (!response.ok) {
         const err = await response.json();
-        setBrowserLogs(prev => [...prev, `❌ Error: Vuelo ${code} no localizado en servidores externos.`]);
+        setBrowserLogs(prev => [...prev, `❌ ERROR CRÍTICO: El vuelo ${code.toUpperCase()} no ha sido localizado en la red.`]);
         setSearchError(err.error || 'Vuelo no encontrado');
         return;
       }
+      
       const data = await response.json();
       setBrowserLogs(prev => [
         ...prev, 
-        `✅ Conexión establecida con la base de datos de ${data.airline || 'la aerolínea'}.`,
-        `📊 Estado actual: ${data.status === 'cancelled' ? 'CANCELADO' : 'RETRASADO'}.`,
-        `🧠 Iniciando cálculo de alternativas VIP para el tramo ${data.departure?.iata} > ${data.arrival?.iata}...`
+        `✅ ENLACE ESTABLECIDO. Datos recibidos de la flota de ${data.airline || 'la operadora'}.`,
+        `📊 ESTADA ACTUAL: ${data.status === 'cancelled' ? '🚨 CANCELADO' : '⚠️ RETRASADO'}.`,
+        `🧠 MODO RESCATE: Iniciando cálculo de alternativas VIP para el tramo ${data.departure?.iata} > ${data.arrival?.iata}...`,
+        `📑 Generando expediente legal para reclamación EU261 de hasta ${getEU261Amount(data)}...`
       ]);
       setFlightData(data);
       // INCREMENTO DE AHORRO: Buscar un vuelo ahorra al menos 15 mins (0.25h) de burocracia
@@ -1173,14 +1252,15 @@ export const AppProvider = ({ children }) => {
       };
       setApiPlan({ ...instantPlan, options: [econOption, lockedCard] });
     } else {
-      // MODO EJECUTIVO / MILLONARIO: Re-etiquetado táctico de alto nivel
-      const executiveOptions = instantPlan.options.map((o: any) => {
-        if (o.type === 'RÁPIDO') return { ...o, title: 'PROTOCOLO JET / PRIORIDAD MÁXIMA', description: 'Reubicación inmediata en flotas preferentes para cumplir con tu agenda.' };
-        if (o.type === 'ECONÓMICO') return { ...o, title: 'RECLAMACIÓN ELITE (GESTIÓN CERO)', description: 'Recuperación de tus fondos legales gestionada por nuestro departamento jurídico.' };
-        if (o.type === 'CONFORT') return { ...o, title: 'ESTANCIA LUXURY GARANTIZADA', description: 'Acceso a los mejores hoteles de la zona y traslados transfer privados.' };
-        return o;
-      });
-      setApiPlan({ ...instantPlan, options: executiveOptions });
+      // MODO VIP: Única tarjeta maestra resolutiva (OPCIÓN 3 seleccionada por el usuario)
+      const masterVIPOption = {
+        type: 'RÁPIDO', 
+        title: 'PROTOCOLO DE RESCATE PREMIUM', 
+        description: 'Acceso directo a tu panel personalizado de alternativas. Vuelos, salas VIP y expedientes legales listos para ejecución inmediata.',
+        aiReasoning: 'Protocolo Integral Activado: He unificado todas las vías de solución en tu panel de mando personal.',
+        voiceScriptFinal: 'Protocolo de Rescate Premium activado. He analizado todas las alternativas y he preparado tu panel de mando personalizado. Tú tienes la última palabra.'
+      };
+      setApiPlan({ ...instantPlan, options: [masterVIPOption] });
     }
     setShowSOS(true); setHasSeenPlan(true); setIsGenerating(false);
     setSavedTime(prev => prev + 0.5); // Generar un plan ahorra 30 mins
@@ -1206,14 +1286,23 @@ export const AppProvider = ({ children }) => {
           let desc = (o.description || '').replace(/\d+€/g, '').replace(/€/g, '').trim();
           
           if (travelProfile === 'premium') {
-             if (o.type === 'RÁPIDO') { title = 'PROTOCOLO JET / PRIORIDAD MÁXIMA'; desc = 'Reubicación inmediata en flotas preferentes para cumplir con tu agenda.'; }
-             if (o.type === 'ECONÓMICO') { title = 'RECLAMACIÓN ELITE (GESTIÓN CERO)'; desc = 'Recuperación de tus fondos legales gestionada por nuestro departamento jurídico.'; }
-             if (o.type === 'CONFORT') { title = 'ESTANCIA LUXURY GARANTIZADA'; desc = 'Acceso a los mejores hoteles de la zona y traslados transfer privados.'; }
+             // Reducimos a la tarjeta maestra si es VIP
+             return {
+                ...o,
+                type: 'RÁPIDO',
+                title: 'PROTOCOLO DE RESCATE PREMIUM',
+                description: 'Acceso directo a tu panel personalizado de alternativas. Vuelos, salas VIP y expedientes legales listos para ejecución inmediata.',
+                estimatedCost: 0
+             };
           }
           
           return { ...o, title, description: desc, estimatedCost: 0 };
         });
-        setApiPlan({ ...data.contingencyPlan, options: cleanOptions });
+
+        // Aseguramos que solo haya una opción si es VIP
+        const finalOptions = travelProfile === 'premium' ? [cleanOptions[0]] : cleanOptions;
+        
+        setApiPlan({ ...data.contingencyPlan, options: finalOptions });
       }
     } catch (e) {
       console.error("Error IA (plan local ya visible):", e);
@@ -1425,7 +1514,7 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const saveTrip = async (title: string, destination: string, startDate?: string, endDate?: string) => {
+  const saveTrip = async (title: string, destination: string, hotelName?: string, hotelPhone?: string, flightNumber?: string, startDate?: string, endDate?: string) => {
     if (!user?.email) return Alert.alert('Error', 'Inicia sesión primero');
     try {
       const resp = await fetch(`${BACKEND_URL}/api/trips`, {
@@ -1434,7 +1523,16 @@ export const AppProvider = ({ children }) => {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': 'true'
         },
-        body: JSON.stringify({ userEmail: user.email, title, destination, startDate, endDate })
+        body: JSON.stringify({ 
+          userEmail: user.email, 
+          title, 
+          destination, 
+          hotelName, 
+          hotelPhone, 
+          flightNumber, 
+          startDate, 
+          endDate 
+        })
       });
       const data = await resp.json();
       if (data.id) {
@@ -1591,6 +1689,7 @@ export const AppProvider = ({ children }) => {
   };
 
   const simulateGmailSync = () => {
+    // 1. Estados iniciales obligatorios
     setIsExtracting(true);
     setBrowserLogs(['[Sistema] Iniciando sincronización segura con Google Mail...']);
     setShowBrowser(true);
@@ -1598,7 +1697,6 @@ export const AppProvider = ({ children }) => {
     const dest = flightData?.arrival?.iata || flightData?.arrival?.airport || "GBL";
     const destName = (flightData?.arrival?.airport || "tu destino").toUpperCase();
     
-    // Lógica contextual: el agente busca lo que tiene sentido para el destino
     let docTitle = 'RESGUARDO PARKING';
     let docSub = `Parking P1 · Aeropuerto // Ticket ID: #G-9921`;
     let docIcon = '🅿️';
@@ -1619,12 +1717,27 @@ export const AppProvider = ({ children }) => {
       docImg = 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400';
     }
 
-    // Secuencia de logs para realismo
-    setTimeout(() => setBrowserLogs(prev => [...prev, `🔍 Escaneando correos relacionados con ${destName}...`]), 1000);
-    setTimeout(() => setBrowserLogs(prev => [...prev, '📄 Filtrando adjuntos y confirmaciones de viaje...']), 2000);
-    setTimeout(() => setBrowserLogs(prev => [...prev, `🧠 IA Analizando relevancia: '${docTitle}' detectado.`]), 3000);
-    setTimeout(() => setBrowserLogs(prev => [...prev, '✅ Extracción finalizada. Sincronizando con Bóveda...']), 4000);
+    // 2. Secuencia de logs con tiempos ajustados para visibilidad fluida
+    const logs = [
+        { t: 600, m: `🔐 Estableciendo túnel seguro con la pasarela de Google...` },
+        { t: 1500, m: `🔍 Escaneando correos relacionados con ${destName}...` },
+        { t: 2600, m: '📄 Filtrando adjuntos y metadatos de confirmación...' },
+        { t: 3700, m: '🛡️ Verificando autenticidad y firmas digitales...' },
+        { t: 4800, m: `🧠 IA detectó relevancia crítica: '${docTitle}'.` },
+        { t: 5900, m: '⚙️ Encriptando copia local en Bóveda AES-256...' },
+        { t: 6900, m: '✅ Extracción Élite finalizada. Registros sincronizados.' }
+    ];
 
+    logs.forEach(log => {
+        setTimeout(() => {
+            setBrowserLogs(prev => {
+                // Evitamos duplicados si el Vigilante ya puso el suyo
+                if (prev.includes(log.m)) return prev;
+                return [...prev, log.m];
+            });
+        }, log.t);
+    });
+    // 3. Finalización y creación del documento
     setTimeout(() => {
       const newDoc = {
         id: `gmail_${Date.now()}`,
@@ -1639,13 +1752,12 @@ export const AppProvider = ({ children }) => {
       setExtraDocs((prev: any) => [newDoc, ...prev]);
       setHasNewDoc(true);
       
-      speak(`Excelente noticia. He sincronizado tu correo y he localizado un documento relevante para tu viaje a ${destName}: he guardado tu ${docTitle.toLowerCase()} en tu sección de documentos.`);
+      speak(`Excelente noticia. He sincronizado tu correo y he localizado un documento relevante para tu viaje a ${destName}. He guardado tu ${docTitle.toLowerCase()} en la Bóveda.`);
       
-      setShowBrowser(false);
+      // No cerramos el navegador aquí, dejamos que el usuario vea el ✅ y pulse Volver
       Alert.alert('✅ EXTRACCIÓN COMPLETADA', `Se ha sincronizado tu correo. He detectado 1 documento nuevo: ${docTitle}.`);
-      
       setIsExtracting(false);
-    }, 4500);
+    }, 7500);
   };
 
   const value = {

@@ -1,4 +1,4 @@
-package com.lastablasesmeralda.travelpilot
+package com.travelpilot.app
 
 import android.app.Application
 import android.content.res.Configuration

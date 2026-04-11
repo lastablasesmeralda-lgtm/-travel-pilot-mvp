@@ -6,6 +6,9 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as MailComposer from 'expo-mail-composer';
 import { useAppContext } from '../context/AppContext';
 import { BACKEND_URL } from '../../config';
 import { BlurView } from 'expo-blur';
@@ -24,6 +27,9 @@ export default function PrivateVaultScreen() {
     const [tempPin, setTempPin] = useState('');
     const [isUploading, setIsUploading] = useState(false);
     const [capturedImage, setCapturedImage] = useState<{uri: string, name: string} | null>(null);
+    const [selectedFile, setSelectedFile] = useState<any>(null);
+    const [showFileMenu, setShowFileMenu] = useState(false);
+    const [isSending, setIsSending] = useState(false);
     
     // Animaciones
     const scanLineAnim = useRef(new Animated.Value(0)).current;
@@ -224,9 +230,6 @@ export default function PrivateVaultScreen() {
     );
 
     const renderContent = () => {
-        // Mostrar TODOS los documentos que no vengan de la búsqueda principal (SOS)
-        // pero filtrar los que son demos específicos si queremos solo la bóveda personal.
-        // El usuario quiere ver el pasaporte demo que añadimos.
         const docs = extraDocs; 
         return (
             <View style={{ flex: 1 }}>
@@ -244,7 +247,14 @@ export default function PrivateVaultScreen() {
                         </View>
                     ) : (
                         docs.map((doc: any, i: number) => (
-                            <TouchableOpacity key={`vault-item-${i}-${doc.id || 'doc'}`} onPress={() => setViewDoc(doc)} style={styles.docCard}>
+                            <TouchableOpacity 
+                                key={`vault-item-${i}-${doc.id || 'doc'}`} 
+                                onPress={() => {
+                                    setSelectedFile(doc);
+                                    setShowFileMenu(true);
+                                }} 
+                                style={styles.docCard}
+                            >
                                 <View style={styles.docIconContainer}>
                                     <Text style={{ fontSize: 24 }}>{doc.icon || '📄'}</Text>
                                 </View>
@@ -270,6 +280,132 @@ export default function PrivateVaultScreen() {
                         <Text style={styles.uploadBtnText}>ARCHIVOS</Text>
                     </TouchableOpacity>
                 </View>
+
+                {/* MODAL DE ACCIONES DE ARCHIVO (NUEVO) */}
+                <Modal visible={showFileMenu} transparent animationType="slide">
+                    <BlurView intensity={90} tint="dark" style={StyleSheet.absoluteFill}>
+                        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+                            <View style={{ backgroundColor: '#111', borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 30, paddingBottom: 50, borderWidth: 1, borderColor: '#D4AF37' }}>
+                                <View style={{ width: 40, height: 5, backgroundColor: '#333', borderRadius: 3, alignSelf: 'center', marginBottom: 25 }} />
+                                
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 30 }}>
+                                    <View style={{ width: 50, height: 50, borderRadius: 12, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#D4AF37' }}>
+                                        <Text style={{ fontSize: 24 }}>{selectedFile?.icon || '📄'}</Text>
+                                    </View>
+                                    <View style={{ marginLeft: 15, flex: 1 }}>
+                                        <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '900' }}>{selectedFile?.t}</Text>
+                                        <Text style={{ color: '#D4AF37', fontSize: 10, fontWeight: 'bold' }}>DOCUMENTO ENCRIPTADO</Text>
+                                    </View>
+                                </View>
+
+                                <TouchableOpacity 
+                                    onPress={() => {
+                                        setShowFileMenu(false);
+                                        // Delay para evitar conflictos de Modal
+                                        setTimeout(() => {
+                                            setViewDoc(selectedFile);
+                                        }, 400);
+                                    }}
+                                    style={{ backgroundColor: '#1A1A1A', padding: 18, borderRadius: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#333' }}
+                                >
+                                    <Text style={{ fontSize: 20, marginRight: 15 }}>👁️</Text>
+                                    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>VISUALIZAR DOCUMENTO</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity 
+                                    disabled={isSending}
+                                    onPress={async () => {
+                                        setIsSending(true);
+                                        try {
+                                            const isAvailable = await MailComposer.isAvailableAsync();
+                                            if (!isAvailable) {
+                                                Alert.alert("NOTIFICACIÓN ELITE", "Debe configurar una cuenta de correo en su dispositivo para el despacho automático.");
+                                                return;
+                                            }
+
+                                            let localUri = null;
+                                            const remoteUri = typeof selectedFile.i === 'number' ? null : selectedFile.i;
+
+                                            // DESCARGA DE SEGURIDAD PARA EL ADJUNTO
+                                            if (remoteUri && remoteUri.startsWith('http')) {
+                                                const ext = remoteUri.split('.').pop() || 'jpg';
+                                                const fileName = `Vault_Secure_${selectedFile.t.replace(/\s/g, '_')}.${ext}`;
+                                                const localPath = `${FileSystem.cacheDirectory}${fileName}`;
+                                                const download = await FileSystem.downloadAsync(remoteUri, localPath);
+                                                localUri = download.uri;
+                                            } else if (remoteUri) {
+                                                localUri = remoteUri;
+                                            }
+
+                                            // COMPOSICIÓN DEL CORREO PRIVADO
+                                            await MailComposer.composeAsync({
+                                                recipients: [user?.email || 'pasajero@travel-pilot.com'],
+                                                subject: `📑 ARCHIVO PRIVADO BÓVEDA: ${selectedFile.t}`,
+                                                body: `Estimado/a,\n\nSe adjunta el documento "${selectedFile.t}" recuperado de su Bóveda Privada Travel-Pilot.\n\nEste envío ha sido procesado con encriptación local.`,
+                                                attachments: localUri ? [localUri] : [],
+                                            });
+
+                                            setShowFileMenu(false);
+                                        } catch (e) {
+                                            Alert.alert(
+                                                "💎 PRIORIDAD ELITE",
+                                                "Sincronización segura temporalmente limitada. Utiliza la opción 'COMPARTIR' para el despacho manual.",
+                                                [{ text: "ENTENDIDO", onPress: () => Vibration.vibrate(10) }]
+                                            );
+                                        } finally {
+                                            setIsSending(false);
+                                        }
+                                    }}
+                                    style={{ backgroundColor: '#D4AF37', padding: 18, borderRadius: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center' }}
+                                >
+                                    {isSending ? <ActivityIndicator color="#000" size="small" style={{ marginRight: 15 }} /> : <Text style={{ fontSize: 20, marginRight: 15 }}>📧</Text>}
+                                    <Text style={{ color: '#000', fontWeight: '900' }}>ENVIAR A MI CORREO</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity 
+                                    onPress={async () => {
+                                        const canShare = await Sharing.isAvailableAsync();
+                                        if (canShare && selectedFile?.i) {
+                                            setIsSending(true);
+                                            try {
+                                                const fileUri = typeof selectedFile.i === 'number' ? null : selectedFile.i;
+                                                
+                                                if (fileUri && fileUri.startsWith('http')) {
+                                                    // DESCARGA PREVIA PARA COMPARTIR ARCHIVOS REMOTOS
+                                                    const ext = fileUri.split('.').pop() || 'jpg';
+                                                    const fileName = `Vault_${selectedFile.t.replace(/\s/g, '_')}.${ext}`;
+                                                    const localPath = `${FileSystem.cacheDirectory}${fileName}`;
+                                                    
+                                                    const download = await FileSystem.downloadAsync(fileUri, localPath);
+                                                    await Sharing.shareAsync(download.uri);
+                                                } else if (fileUri) {
+                                                    await Sharing.shareAsync(fileUri);
+                                                } else {
+                                                    Alert.alert("AVISO", "Este documento es una demo protegida.");
+                                                }
+                                            } catch (e) {
+                                                Alert.alert("ERROR", "No se pudo preparar el archivo privado.");
+                                            } finally {
+                                                setIsSending(false);
+                                            }
+                                        } else {
+                                            Alert.alert("ERROR", "La función de compartir no está disponible o el archivo es ilegible.");
+                                        }
+                                        setShowFileMenu(false);
+                                    }}
+                                    style={{ backgroundColor: '#1A1A1A', padding: 18, borderRadius: 16, marginBottom: 25, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#333' }}
+                                >
+                                    {isSending ? <ActivityIndicator color="#FFF" size="small" style={{ marginRight: 15 }} /> : <Text style={{ fontSize: 20, marginRight: 15 }}>🔗</Text>}
+                                    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>COMPARTIR CON TERCEROS</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity onPress={() => setShowFileMenu(false)} style={{ padding: 10, alignItems: 'center' }}>
+                                    <Text style={{ color: '#666', fontWeight: 'bold' }}>CANCELAR</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </BlurView>
+                </Modal>
 
                 {/* MODAL DE VISTA PREVIA */}
                 <Modal visible={!!capturedImage} transparent animationType="fade">

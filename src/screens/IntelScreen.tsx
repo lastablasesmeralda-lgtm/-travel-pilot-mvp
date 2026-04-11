@@ -20,10 +20,12 @@ export default function IntelScreen() {
     const { user, myTrips, saveTrip, removeTrip, myFlights, removeMyFlight, setFlightInput, weather, flightData, clearFlight, simulatePushNotification, tab, selectedVoice, showPlan, travelProfile, hasSeenPlan, selectedRescuePlan, speak, removeActiveSearch, availableVoices, handleLogout, setSavedTime, isSearching } = useAppContext();
     const [newTripTitle, setNewTripTitle] = useState('');
     const [newTripDest, setNewTripDest] = useState('');
+    const [newHotelName, setNewHotelName] = useState('');
+    const [newHotelPhone, setNewHotelPhone] = useState('');
+    const [newFlightNumber, setNewFlightNumber] = useState('');
     const [showForm, setShowForm] = useState(false);
 
-    // Animación de Saludo
-    const greetingOpacity = useRef(new Animated.Value(1)).current;
+    // Animación
     const rotateAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
@@ -36,41 +38,23 @@ export default function IntelScreen() {
         }
     }, [isSearching]);
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            Animated.timing(greetingOpacity, {
-                toValue: 0,
-                duration: 2000,
-                useNativeDriver: true,
-            }).start();
-        }, 5000); // 5 segundos visible
-
-        return () => clearTimeout(timer);
-    }, []);
 
     // Frase rotativa que cambia cada vez que se monta la pantalla
     const idlePhrase = useMemo(() => IDLE_PHRASES[Math.floor(Math.random() * IDLE_PHRASES.length)], []);
 
     const handleCreate = () => {
-        if (!newTripTitle || !newTripDest) return Alert.alert('Error', 'Completa los campos');
-        saveTrip(newTripTitle, newTripDest);
+        if (!newTripTitle || !newTripDest) return Alert.alert('Error', 'Completa los campos obligatorios (Título y Destino)');
+        saveTrip(newTripTitle, newTripDest, newHotelName, newHotelPhone, newFlightNumber);
         setNewTripTitle('');
         setNewTripDest('');
+        setNewHotelName('');
+        setNewHotelPhone('');
+        setNewFlightNumber('');
         setShowForm(false);
     };
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20, paddingTop: 60 }}>
 
-            {/* SALUDO PERSONALIZADO ANIMADO */}
-            <Animated.View style={{ marginBottom: 20, opacity: greetingOpacity }}>
-                <Text style={{ color: '#B0B0B0', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5 }}>BIENVENIDO A BORDO</Text>
-                {(() => {
-                    const fullName = (user?.displayName || user?.email?.split('@')[0] || 'Viajero').trim();
-                    const words = fullName.split(/\s+/);
-                    const firstName = words.length > 2 ? words.slice(0, 2).join(' ') : words[0];
-                    return <Text style={{ color: '#FFF', fontSize: 32, fontWeight: '900', marginTop: 5 }}>Hola, {firstName}</Text>;
-                })()}
-            </Animated.View>
 
             {/* TARJETA DE STATUS VIP (Solo si NO es VIP) */}
             {travelProfile !== 'premium' && (
@@ -96,10 +80,10 @@ export default function IntelScreen() {
                     <View style={{ flex: 1, paddingRight: 10 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                             <View style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginRight: 10, borderWidth: 0.5, borderColor: '#D4AF37' }}>
-                                <Text style={{ color: '#D4AF37', fontSize: 9, fontWeight: '900' }}>STATUS: ESTÁNDAR</Text>
+                                <Text style={{ color: '#D4AF37', fontSize: 9, fontWeight: '900' }}>STATUS: ESTÁNDAR (LIMITADO)</Text>
                             </View>
                         </View>
-                        <Text style={{ color: '#E0E0E0', fontSize: 13, lineHeight: 18 }}>Activa el <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>Escudo Legal de 600€</Text> y la IA más proactiva para proteger tu viaje.</Text>
+                        <Text style={{ color: '#E0E0E0', fontSize: 13, lineHeight: 18 }}>Desbloquea el <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>Acceso VIP</Text> para activar la vigilancia de crisis y la garantía de compensación legal en todos tus tramos.</Text>
                     </View>
 
                     <View style={{ backgroundColor: '#D4AF37', width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', shadowColor: '#D4AF37', shadowOpacity: 0.5, shadowRadius: 10, elevation: 5 }}>
@@ -156,10 +140,35 @@ export default function IntelScreen() {
                     <TextInput
                         placeholder="Ciudad (ej: Tokio, JP)"
                         placeholderTextColor="#666"
-                        style={{ backgroundColor: '#0A0A0A', color: '#FFF', padding: 15, borderRadius: 12, marginBottom: 20, borderWidth: 1, borderColor: '#222' }}
+                        style={{ backgroundColor: '#0A0A0A', color: '#FFF', padding: 15, borderRadius: 12, marginBottom: 15, borderWidth: 1, borderColor: '#222' }}
                         value={newTripDest}
                         onChangeText={setNewTripDest}
                     />
+                    <TextInput
+                        placeholder="Nº Vuelo (ej: IB3110)"
+                        placeholderTextColor="#666"
+                        style={{ backgroundColor: '#0A0A0A', color: '#FFF', padding: 15, borderRadius: 12, marginBottom: 15, borderWidth: 1, borderColor: '#222', fontWeight: 'bold' }}
+                        value={newFlightNumber}
+                        autoCapitalize="characters"
+                        onChangeText={setNewFlightNumber}
+                    />
+                    <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
+                        <TextInput
+                            placeholder="Hotel"
+                            placeholderTextColor="#666"
+                            style={{ flex: 1.5, backgroundColor: '#0A0A0A', color: '#FFF', padding: 15, borderRadius: 12, borderWidth: 1, borderColor: '#222' }}
+                            value={newHotelName}
+                            onChangeText={setNewHotelName}
+                        />
+                        <TextInput
+                            placeholder="Tel. Hotel"
+                            placeholderTextColor="#666"
+                            style={{ flex: 1, backgroundColor: '#0A0A0A', color: '#FFF', padding: 15, borderRadius: 12, borderWidth: 1, borderColor: '#222' }}
+                            value={newHotelPhone}
+                            keyboardType="phone-pad"
+                            onChangeText={setNewHotelPhone}
+                        />
+                    </View>
                     <TouchableOpacity
                         onPress={handleCreate}
                         style={{ backgroundColor: '#D4AF37', padding: 18, borderRadius: 15, alignItems: 'center' }}
@@ -195,7 +204,23 @@ export default function IntelScreen() {
                                         <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold' }}>VIAJE ACTIVO</Text>
                                     </View>
                                     <Text style={{ color: '#FFF', fontSize: 22, fontWeight: 'bold' }}>{displayTitle}</Text>
-                                    {displayDestination ? <Text style={{ color: '#CCCCCC', fontSize: 16, marginTop: 4 }}>📍 {displayDestination}</Text> : null}
+                                    
+                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
+                                        {displayDestination ? <Text style={{ color: '#CCCCCC', fontSize: 13 }}>📍 {displayDestination}</Text> : null}
+                                        {trip.flight_number ? (
+                                            <View style={{ backgroundColor: 'rgba(175, 82, 222, 0.2)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#AF52DE' }}>
+                                                <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold' }}>✈️ {trip.flight_number}</Text>
+                                            </View>
+                                        ) : null}
+                                    </View>
+                                    
+                                    {(trip.hotel_name || trip.hotel_phone) && (
+                                        <View style={{ marginTop: 15, padding: 12, backgroundColor: '#1A1A1A', borderRadius: 16, borderLeftWidth: 3, borderLeftColor: '#D4AF37' }}>
+                                            <Text style={{ color: '#D4AF37', fontSize: 9, fontWeight: '900', marginBottom: 4, letterSpacing: 1 }}>ESTANCIA PROTEGIDA</Text>
+                                            <Text style={{ color: '#FFF', fontSize: 14, fontWeight: 'bold' }}>{trip.hotel_name || 'Alojamiento Confirmado'}</Text>
+                                            {trip.hotel_phone ? <Text style={{ color: '#888', fontSize: 12, marginTop: 2 }}>📞 {trip.hotel_phone}</Text> : null}
+                                        </View>
+                                    )}
 
                                     {/* INFO DE CLIMA INDIVIDUAL POR TARJETA */}
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 15, backgroundColor: '#1A1A1A', padding: 10, borderRadius: 12, alignSelf: 'flex-start' }}>

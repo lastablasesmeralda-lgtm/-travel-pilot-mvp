@@ -42,6 +42,13 @@ const SLIDES = [
         subtitle: 'Cuando tu vuelo falla, la IA actúa por ti.\n\n• Reclamaciones EU261 automáticas hasta 600€.\n• Planes de contingencia personalizados a tu perfil.\n• Asistente IA proactivo: te avisamos antes de que lo sepa la aerolínea.\n• Voz premium y acceso anticipado a nuevas funciones.\n\nTodo gestionado. Tú solo decides.',
         accent: '#D4AF37', // Dorado (VIP)
     },
+    {
+        id: '6',
+        image: require('../../assets/onboarding5.jpg'), // Placeholder, will render an emoji instead
+        title: 'GUÍA DE INICIO RÁPIDO',
+        subtitle: '1️⃣ PERFIL 👤\nElige tu Nivel. (ESTÁNDAR: Información manual a tu cargo. VIP: Solución integral. La IA avisa automáticamente al hotel, redacta reclamaciones EU261 y asiste tus reubicaciones).\n\n2️⃣ TU PRIMERA MISIÓN ✈️\nVe a INICIO y pulsa [+ Nuevo Viaje] para decirle a la IA a dónde vas.\n\n3️⃣ MAGIA AUTOMÁTICA 🔐\nVe a DOCS y pulsa "ACTUALIZAR CON MIS CORREOS" para importar reservas y billetes de golpe.',
+        accent: '#10B981', // Verde Esmeralda
+    },
 ];
 
 interface OnboardingScreenProps {
@@ -103,7 +110,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
         }}>
             {/* Icono en Tarjeta 3D */}
             <View style={{
-                height: '42%',
+                height: item.id === '6' ? '18%' : '42%',
                 width: '100%',
                 borderRadius: 40,
                 backgroundColor: 'rgba(255,255,255,0.02)',
@@ -111,14 +118,18 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
                 borderColor: 'rgba(255,255,255,0.08)',
                 justifyContent: 'center',
                 alignItems: 'center',
-                marginBottom: 30,
+                marginBottom: item.id === '6' ? 15 : 30,
                 overflow: 'hidden'
             }}>
-                <Image
-                    source={item.image}
-                    style={{ width: '85%', height: '85%' }}
-                    resizeMode="contain"
-                />
+                {item.id === '6' ? (
+                    <Text style={{ fontSize: 75 }}>🚀</Text>
+                ) : (
+                    <Image
+                        source={item.image}
+                        style={{ width: '85%', height: '85%' }}
+                        resizeMode="contain"
+                    />
+                )}
             </View>
 
             {/* Texto Dinámico Premium */}
@@ -136,11 +147,11 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
 
                 <Text style={{
                     color: '#B0B0B0',
-                    fontSize: 16,
-                    textAlign: 'center',
-                    lineHeight: 24,
+                    fontSize: item.id === '6' ? 14 : 16,
+                    textAlign: 'left',
+                    lineHeight: item.id === '6' ? 22 : 24,
                     fontWeight: '400',
-                    paddingHorizontal: 10
+                    paddingHorizontal: item.id === '6' ? 5 : 10
                 }}>
                     {item.subtitle}
                 </Text>
@@ -220,8 +231,8 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
         <View style={{ flex: 1, backgroundColor: '#000' }}>
             {/* Top Badge */}
             <View style={{ position: 'absolute', top: 60, width: '100%', alignItems: 'center', zIndex: 10 }}>
-                <View style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#D4AF37' }}>
-                    <Text style={{ color: '#D4AF37', fontSize: 11, fontWeight: '900', letterSpacing: 3 }}>TRAVEL-PILOT VIP</Text>
+                <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#444' }}>
+                    <Text style={{ color: '#AAA', fontSize: 11, fontWeight: '900', letterSpacing: 3 }}>TRAVEL-PILOT AI</Text>
                 </View>
             </View>
 

@@ -1217,9 +1217,12 @@ fastify.post('/api/generateClaim', async (request, reply) => {
                 const base64Data = signatureBase64.replace(/^data:image\/png;base64,/, '');
                 const sigBytes = Buffer.from(base64Data, 'base64');
                 const sigImage = await pdfDoc.embedPng(sigBytes);
-                const sigDims = sigImage.scale(0.5);
-                page.drawImage(sigImage, { x: 40, y: y - sigDims.height, width: sigDims.width, height: sigDims.height });
-                y -= sigDims.height + 10;
+                const maxW = 200, maxH = 80;
+                const scale = Math.min(maxW / sigImage.width, maxH / sigImage.height);
+                const sigW = sigImage.width * scale;
+                const sigH = sigImage.height * scale;
+                page.drawImage(sigImage, { x: 40, y: y - sigH, width: sigW, height: sigH });
+                y -= sigH + 10;
             } catch (sigErr) {
                 page.drawText('[Firma digital registrada]', { x: 40, y, size: 9, font: fontRegular, color: GREY });
                 y -= 20;

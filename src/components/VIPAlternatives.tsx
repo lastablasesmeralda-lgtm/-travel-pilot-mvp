@@ -77,9 +77,9 @@ export default function VIPAlternatives({
 
     const renderFlightDetail = () => (
         <Modal visible={detailView === 'flight'} transparent animationType="fade">
-            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 }}>
-                <BlurView intensity={80} tint="dark" style={{ borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#D4AF3744' }}>
-                    <View style={{ backgroundColor: 'rgba(212,175,55,0.1)', paddingTop: 40, paddingBottom: 25, paddingHorizontal: 25, borderBottomWidth: 1, borderBottomColor: 'rgba(212,175,55,0.15)', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flex: 1, backgroundColor: '#050505', justifyContent: 'center', padding: 20 }}>
+                <View style={{ backgroundColor: '#0A0A0A', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#D4AF37', shadowColor: '#D4AF37', shadowOpacity: 0.2, shadowRadius: 30 }}>
+                    <View style={{ backgroundColor: '#111', paddingTop: 40, paddingBottom: 25, paddingHorizontal: 25, borderBottomWidth: 1, borderBottomColor: '#222', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <View>
                             <Text style={{ color: '#D4AF37', fontSize: 10, fontWeight: '900', letterSpacing: 2, marginBottom: 6 }}>📞 REUBICACIÓN INMEDIATA</Text>
                             <Text style={{ color: '#FFF', fontSize: 22, fontWeight: '900' }}>Llama a {airline}</Text>
@@ -181,10 +181,10 @@ export default function VIPAlternatives({
                         </View>
                     </ScrollView>
 
-                    <TouchableOpacity onPress={() => setDetailView(null)} style={{ padding: 18, alignItems: 'center', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' }}>
+                    <TouchableOpacity onPress={() => setDetailView(null)} style={{ padding: 18, alignItems: 'center', borderTopWidth: 1, borderTopColor: '#333' }}>
                         <Text style={{ color: '#FF3B30', fontSize: 13, fontWeight: '900' }}>VOLVER AL PANEL</Text>
                     </TouchableOpacity>
-                </BlurView>
+                </View>
             </View>
         </Modal>
     );
@@ -194,9 +194,9 @@ export default function VIPAlternatives({
     // ─── CLAIM DRAFT DETAIL ───
     const renderClaimDraft = () => (
         <Modal visible={detailView === 'claim'} transparent animationType="fade">
-            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.97)', justifyContent: 'center', padding: 20 }}>
-                <View style={{ backgroundColor: '#111', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#4CD964' }}>
-                    <View style={{ backgroundColor: 'rgba(76,217,100,0.06)', paddingTop: 40, paddingBottom: 25, paddingHorizontal: 25, borderBottomWidth: 1, borderBottomColor: 'rgba(76,217,100,0.15)', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flex: 1, backgroundColor: '#050505', justifyContent: 'center', padding: 20 }}>
+                <View style={{ backgroundColor: '#0A0A0A', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#4CD964' }}>
+                    <View style={{ backgroundColor: '#111', paddingTop: 40, paddingBottom: 25, paddingHorizontal: 25, borderBottomWidth: 1, borderBottomColor: '#222', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <View>
                             <Text style={{ color: '#4CD964', fontSize: 10, fontWeight: '900', letterSpacing: 2, marginBottom: 6 }}>⚖️ INFO RECOPILADA</Text>
                             <Text style={{ color: '#FFF', fontSize: 22, fontWeight: '900' }}>Reclamación EU261</Text>
@@ -208,7 +208,7 @@ export default function VIPAlternatives({
                     <ScrollView style={{ maxHeight: 650 }} contentContainerStyle={{ padding: 25 }}>
                         <View style={{ backgroundColor: '#0A0A0A', borderRadius: 14, padding: 16, marginBottom: 20 }}>
                             {[
-                                { label: 'VUELO', value: flightData?.flight?.iata || 'IB3166' },
+                                { label: 'VUELO', value: flightData?.flightNumber || flightData?.flight?.iata || '—' },
                                 { label: 'AEROLÍNEA', value: airline },
                                 { label: 'RUTA', value: `${depIata} → ${arrIata}` },
                                 { label: 'RETRASO', value: `${flightData?.departure?.delay || 185} min` },
@@ -225,7 +225,7 @@ export default function VIPAlternatives({
                         <View style={{ backgroundColor: 'rgba(76,217,100,0.06)', padding: 14, borderRadius: 12, borderWidth: 0.5, borderColor: 'rgba(76,217,100,0.2)', marginBottom: 20 }}>
                             <Text style={{ color: '#4CD964', fontSize: 11, fontWeight: '800', marginBottom: 6 }}>Informe legal preparado:</Text>
                             <Text style={{ color: '#999', fontSize: 11, lineHeight: 17 }}>
-                                Estimados señores de {airline}. Tras la incidencia detectada en el vuelo {flightData?.flight?.iata || 'IB3166'} entre {depIata} y {arrIata}, con un retraso verificado de más de 3 horas, procedemos a formalizar la solicitud de compensación de acuerdo al Reglamento (CE) 261/2004. Como pasajero con derecho a asistencia, adjunto los detalles recopilados por Travel-Pilot para su inmediata tramitación.
+                                Estimados señores de {airline}. Tras la incidencia detectada en el vuelo {flightData?.flightNumber || flightData?.flight?.iata || '—'} entre {depIata} y {arrIata}, con un retraso verificado de más de 3 horas, procedemos a formalizar la solicitud de compensación de acuerdo al Reglamento (CE) 261/2004. Como pasajero con derecho a asistencia, adjunto los detalles recopilados por Travel-Pilot para su inmediata tramitación.
                             </Text>
                         </View>
 
@@ -247,9 +247,9 @@ export default function VIPAlternatives({
     // ─── LOUNGE DETAIL ───
     const renderLoungeDetail = () => (
         <Modal visible={detailView === 'lounge'} transparent animationType="fade">
-            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.97)', justifyContent: 'center', padding: 20 }}>
-                <View style={{ backgroundColor: '#111', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#AF52DE' }}>
-                    <View style={{ backgroundColor: 'rgba(175,82,222,0.06)', paddingTop: 40, paddingBottom: 25, paddingHorizontal: 25, borderBottomWidth: 1, borderBottomColor: 'rgba(175,82,222,0.15)', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flex: 1, backgroundColor: '#050505', justifyContent: 'center', padding: 20 }}>
+                <View style={{ backgroundColor: '#0A0A0A', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#AF52DE' }}>
+                    <View style={{ backgroundColor: '#111', paddingTop: 40, paddingBottom: 25, paddingHorizontal: 25, borderBottomWidth: 1, borderBottomColor: '#333', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <View>
                             <Text style={{ color: '#AF52DE', fontSize: 10, fontWeight: '900', letterSpacing: 2, marginBottom: 6 }}>🥂 EXCLUSIVO VIP</Text>
                             <Text style={{ color: '#FFF', fontSize: 22, fontWeight: '900' }}>Salas VIP y Confort</Text>
@@ -307,9 +307,9 @@ export default function VIPAlternatives({
     // ─── WAITING COVERAGE DETAIL ───
     const renderPlanB = () => (
         <Modal visible={detailView === 'planB'} transparent animationType="fade">
-            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.97)', justifyContent: 'center', padding: 20 }}>
-                <View style={{ backgroundColor: '#111', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#5AC8FA' }}>
-                    <View style={{ backgroundColor: 'rgba(90,200,250,0.06)', paddingTop: 40, paddingBottom: 25, paddingHorizontal: 25, borderBottomWidth: 1, borderBottomColor: 'rgba(90,200,250,0.15)', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flex: 1, backgroundColor: '#050505', justifyContent: 'center', padding: 20 }}>
+                <View style={{ backgroundColor: '#0A0A0A', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#5AC8FA' }}>
+                    <View style={{ backgroundColor: '#111', paddingTop: 40, paddingBottom: 25, paddingHorizontal: 25, borderBottomWidth: 1, borderBottomColor: '#333', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <View>
                             <Text style={{ color: '#5AC8FA', fontSize: 10, fontWeight: '900', letterSpacing: 2, marginBottom: 6 }}>🛡️ COBERTURA TOTAL</Text>
                             <Text style={{ color: '#FFF', fontSize: 22, fontWeight: '900' }}>Derechos de asistencia</Text>
@@ -422,21 +422,6 @@ export default function VIPAlternatives({
                                         <Text style={{ color: '#000', fontWeight: '900', fontSize: 13, letterSpacing: 0.5 }}>COMPLETAR RESERVA VIP</Text>
                                     </TouchableOpacity>
                                 </View>
-
-                                {/* ── OPCIÓN B: VUELO ALTERNATIVO ── */}
-                                <TouchableOpacity 
-                                    onPress={() => setDetailView('flight')}
-                                    style={{ 
-                                        backgroundColor: '#0A0A0A', borderRadius: 18, padding: 18, marginBottom: 20, 
-                                        borderWidth: 1, borderColor: '#333', opacity: 0.8 
-                                    }}
-                                >
-                                    <Text style={{ color: '#AAA', fontSize: 9, fontWeight: '900', letterSpacing: 1, marginBottom: 10 }}>OPCIÓN B · ALTERNATIVA IA</Text>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <Text style={{ color: '#FFF', fontSize: 14, fontWeight: '800' }}>{depIata} → {arrIata} (Vía BCN)</Text>
-                                        <Text style={{ color: '#D4AF37', fontSize: 12, fontWeight: 'bold' }}>{fmt(new Date(altDep.getTime() + 120 * 60 * 1000))}</Text>
-                                    </View>
-                                </TouchableOpacity>
 
                                 {/* ── SEPARATOR ── */}
                                 <Text style={{ color: '#444', fontSize: 10, fontWeight: '900', letterSpacing: 2, marginBottom: 14, marginTop: 6 }}>OTRAS VÍAS DISPONIBLES</Text>

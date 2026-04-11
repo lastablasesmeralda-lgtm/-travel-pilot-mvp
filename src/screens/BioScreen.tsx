@@ -139,9 +139,9 @@ export default function BioScreen() {
                         >
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                                 <Text style={{ fontSize: 18, marginRight: 8 }}>🎒</Text>
-                                <Text style={{ color: travelProfile === 'budget' ? '#34C759' : '#FFF', fontSize: 14, fontWeight: 'bold' }}>MODO ECONÓMICO</Text>
+                                <Text style={{ color: travelProfile === 'budget' ? '#34C759' : '#FFF', fontSize: 14, fontWeight: 'bold' }}>MODO ESTÁNDAR</Text>
                             </View>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>Prioriza opciones baratas o compensaciones económicas altas.</Text>
+                            <Text style={{ color: '#B0B0B0', fontSize: 11 }}>Vigilancia estándar de tus vuelos. Los protocolos de resolución avanzada IA están reservados para usuarios VIP.</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -195,17 +195,31 @@ export default function BioScreen() {
 
                         <Text style={{ color: '#B0B0B0', fontSize: 10, marginTop: 12, marginBottom: 10 }}>SELECCIÓN RÁPIDA</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                            {availableVoices.slice(0, 5).map((v: any, i: number) => (
-                                <TouchableOpacity
-                                    key={v.identifier || i}
-                                    style={[s.voiceBtn, selectedVoice === v.identifier && s.voiceBtnSelected]}
-                                    onPress={() => { setSelectedVoice(v.identifier); speak('Hola, soy tu asistente de viaje inteligente.', v.identifier); }}
-                                >
-                                    <Text style={{ color: selectedVoice === v.identifier ? '#000' : '#AF52DE', fontSize: 10, fontWeight: 'bold' }}>
-                                        {v.humanName?.toUpperCase() || `VOZ ${i + 1}`}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
+                            {availableVoices.slice(0, 5).map((v: any, i: number) => {
+                                const isLocked = v.isPremium && travelProfile !== 'premium';
+                                return (
+                                    <TouchableOpacity
+                                        key={v.identifier || i}
+                                        style={[
+                                            s.voiceBtn, 
+                                            selectedVoice === v.identifier && s.voiceBtnSelected,
+                                            isLocked && { opacity: 0.6, borderColor: '#555' }
+                                        ]}
+                                        onPress={() => { 
+                                            if (isLocked) {
+                                                Alert.alert('Acceso Premium', 'Las voces de Marco y Clara son exclusivas para usuarios VIP. Mejora tu plan para desbloquearlas.');
+                                                return;
+                                            }
+                                            setSelectedVoice(v.identifier); 
+                                            speak('Hola, soy tu asistente de viaje inteligente.', v.identifier); 
+                                        }}
+                                    >
+                                        <Text style={{ color: selectedVoice === v.identifier ? '#000' : '#AF52DE', fontSize: 10, fontWeight: 'bold' }}>
+                                            {isLocked ? `🔒 ${v.humanName?.toUpperCase()}` : v.humanName?.toUpperCase() || `VOZ ${i + 1}`}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
                         </ScrollView>
                     </View>
                 </View>

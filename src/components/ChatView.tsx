@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Animated, ScrollView, Platform, ActivityIndicator, TextInput, Keyboard } from 'react-native';
+import { View, Text, TouchableOpacity, Animated, ScrollView, Platform, ActivityIndicator, TextInput, Keyboard, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppContext } from '../context/AppContext';
 import { s } from '../styles';
@@ -9,7 +9,7 @@ export default function ChatView() {
         showChat, setShowChat, isSpeaking, waveAnim, messages, isTyping, inputText, setInputText,
         handleSendMessage, scrollViewRef, clearMessages, stopSpeak, availableVoices,
         selectedVoice, setSelectedVoice, speak, chatOrigin, setChatOrigin, setTab,
-        setShowVIPAlternatives, flightData, compensationEligible
+        setShowVIPAlternatives, flightData, compensationEligible, travelProfile
     } = useAppContext();
 
     const [showVoiceMenu, setShowVoiceMenu] = React.useState(false);
@@ -113,12 +113,20 @@ export default function ChatView() {
                                 .slice(0, 4)
                                 .map((v: any, index: number) => {
                                     const label = v.humanName || `Asistente ${index + 1}`;
-                                    const isPremium = v.isPremium || false;
+                                    const isVoicePremium = v.isPremium || false;
+                                    const isLocked = isVoicePremium && travelProfile !== 'premium';
 
                                     return (
                                         <TouchableOpacity 
                                             key={v.uniqueId || v.identifier}
-                                            onPress={() => { setSelectedVoice(v.identifier); speak('He cambiado mi configuración de voz.', v.identifier); }} 
+                                            onPress={() => { 
+                                                if (isLocked) {
+                                                    Alert.alert('Acceso Premium', 'Las voces de Marco y Clara son exclusivas para usuarios VIP. Mejora tu plan para desbloquearlas.');
+                                                    return;
+                                                }
+                                                setSelectedVoice(v.identifier); 
+                                                speak('He cambiado mi configuración de voz.', v.identifier); 
+                                            }} 
                                             style={{ 
                                                 backgroundColor: selectedVoice === v.identifier ? '#AF52DE' : '#1A1A1A', 
                                                 paddingHorizontal: 16, 
@@ -126,14 +134,20 @@ export default function ChatView() {
                                                 borderRadius: 12, 
                                                 marginRight: 12,
                                                 borderWidth: 2,
-                                                borderColor: selectedVoice === v.identifier ? '#FFF' : (isPremium ? '#E0E0E0' : '#333')
+                                                borderColor: selectedVoice === v.identifier ? '#FFF' : (isVoicePremium ? '#D4AF3744' : '#333'),
+                                                opacity: isLocked ? 0.7 : 1
                                             }}
                                         >
                                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                <Text style={{ color: '#E0E0E0', fontSize: 13, fontWeight: isPremium ? 'bold' : '500' }}>{label}</Text>
-                                                {isPremium && <Text style={{ fontSize: 10, marginLeft: 8 }}>🔒</Text>}
+                                                <Text style={{ color: '#E0E0E0', fontSize: 13, fontWeight: isVoicePremium ? 'bold' : '500' }}>
+                                                    {isLocked ? `🔒 ${label.toUpperCase()}` : label.toUpperCase()}
+                                                </Text>
                                             </View>
-                                            {isPremium && <Text style={{ color: '#888', fontSize: 8, marginTop: 2, fontWeight: 'bold' }}>VERSION PREMIUM</Text>}
+                                            {isVoicePremium && (
+                                                <Text style={{ color: isLocked ? '#666' : '#D4AF37', fontSize: 8, marginTop: 2, fontWeight: 'bold' }}>
+                                                    {isLocked ? 'CERRADO (SOLO VIP)' : 'VERSIÓN PREMIUM'}
+                                                </Text>
+                                            )}
                                         </TouchableOpacity>
                                     );
                                 })}

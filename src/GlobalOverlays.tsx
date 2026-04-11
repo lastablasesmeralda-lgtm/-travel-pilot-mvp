@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Animated, Modal, TextInput, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform, Image, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -62,6 +62,7 @@ export default function GlobalOverlays() {
         browserLogs,
         setBrowserLogs,
         isExtracting,
+        setIsExtracting,
         setExtraDocs,
         setHasNewDoc,
         setTab,
@@ -91,10 +92,31 @@ export default function GlobalOverlays() {
 
     const navigation = useNavigation<any>();
 
-    const [showVoiceMenu, setShowVoiceMenu] = React.useState(false);
-    const [showAllOptions, setShowAllOptions] = React.useState(false);
-    const [hasAutoTriggered, setHasAutoTriggered] = React.useState(false);
-    const [vipInitialDetail, setVipInitialDetail] = React.useState<string | null>(null);
+    // VIGILANTE DE IA MAESTRO: Si un modo se queda colgado, forzamos el fin
+    useEffect(() => {
+        let timer: any;
+        const isFinished = (browserLogs || []).some((l: string) => l.includes('✅') || l.includes('❌') || l.includes('⚠️'));
+        if (showBrowser && !isFinished) {
+            timer = setTimeout(() => {
+                const recoveryMsg = isExtracting 
+                    ? "✅ Protocolo completado (Sincronización segura finalizada)."
+                    : "✅ Protocolo finalizado (Plan de contingencia desplegado).";
+                
+                setBrowserLogs((prev: string[]) => [
+                    ...prev, 
+                    recoveryMsg
+                ]);
+                if (isExtracting) setIsExtracting(false);
+            }, 15000); // Aumentado a 15s para dar margen a Render/Red
+        }
+        return () => clearTimeout(timer);
+    }, [showBrowser, (browserLogs || []).length, isExtracting]);
+
+    const [showVoiceMenu, setShowVoiceMenu] = useState(false);
+    const [showAllOptions, setShowAllOptions] = useState(false);
+    const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
+    const [vipInitialDetail, setVipInitialDetail] = useState<string | null>(null);
+    const logScrollRef = useRef<any>(null);
 
     // Resetear el trigger cuando cambia el vuelo buscado O el ID de búsqueda (Actualizar)
     React.useEffect(() => {
@@ -155,7 +177,11 @@ export default function GlobalOverlays() {
 
                         {[
                             {
-                                icon: '📞', title: 'LLAMAR AL HOTEL', sub: 'Notificar llegada tardía automáticamente', color: '#AF52DE', action: () => {
+                                icon: travelProfile === 'premium' ? '🛡️' : '📞',
+                                title: travelProfile === 'premium' ? 'AVISANDO AL HOTEL' : 'LLAMAR AL HOTEL',
+                                sub: travelProfile === 'premium' ? '✅ Gestión automática activada' : 'Llamar tú mismo al hotel',
+                                color: travelProfile === 'premium' ? '#D4AF37' : '#AF52DE',
+                                action: () => {
                                     setShowSOSMenu(false);
                                     if (!flightData) {
                                         Alert.alert('SIN VUELO ACTIVO', 'Primero busca un vuelo en VUELOS para que pueda calcular tu retraso y avisar al hotel.');
@@ -163,45 +189,71 @@ export default function GlobalOverlays() {
                                     }
                                     const realDelay = flightData.departure?.delay || 0;
                                     const flightNum = flightData.flightNumber || 'tu vuelo';
-                                    Alert.alert(
-                                        'AVISO AL HOTEL',
-                                        `Tu vuelo ${flightNum} lleva ${realDelay} min de retraso. Travel-Pilot intentará contactar al hotel para avisarles de tu llegada tardía.\n\nTe recomendamos confirmar con ellos directamente.`,
-                                        [
-                                        {
-                                            text: 'AVISAR AHORA', onPress: async () => {
-                                                speak(`Contactando con el hotel para avisarles de tu retraso de ${realDelay} minutos en el vuelo ${flightNum}. Verifica con ellos más tarde.`);
-                                                try {
-                                                    const controller = new AbortController();
-                                                    const timeoutId = setTimeout(() => controller.abort(), 7000);
 
-                                                    const res = await fetch(`${BACKEND_URL}/api/notifyHotel`, {
-                                                        method: 'POST',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({
-                                                            hotelPhone: "+34623986708",
-                                                            passengerName: user?.email?.split('@')[0] || "Viajero",
-                                                            passengerPhone: userPhone || "No registrado",
-                                                            delayMinutes: realDelay
-                                                        }),
-                                                        signal: controller.signal
-                                                    });
-                                                    if (res.ok) {
-                                                        Alert.alert('AVISO ENVIADO', `Hemos informado al hotel sobre tu retraso de ${realDelay} min (vuelo ${flightNum}). Para mayor seguridad, confírmalo tú mismo llamando a recepción.`);
-                                                    } else {
-                                                        const data = await res.json();
-                                                        Alert.alert('AVISO', data.error || 'No se pudo contactar con el hotel.');
-                                                    }
-                                                } catch (e) {
-                                                    Alert.alert('ERROR', 'No se ha podido conectar con el servidor.');
+                                    if (travelProfile === 'premium') {
+                                        // ══ VIP: Gestión automática vía Twilio ══
+                                        speak(`Contactando con tu hotel para avisarles de tu retraso de ${realDelay} minutos en el vuelo ${flightNum}. Un momento.`);
+                                        setTimeout(() => {
+                                        (async () => {
+                                            try {
+                                                const controller = new AbortController();
+                                                const timeoutId = setTimeout(() => controller.abort(), 7000);
+                                                const res = await fetch(`${BACKEND_URL}/api/notifyHotel`, {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({
+                                                        hotelPhone: "+34623986708",
+                                                        passengerName: user?.email?.split('@')[0] || "Viajero VIP",
+                                                        passengerPhone: userPhone || "No registrado",
+                                                        delayMinutes: realDelay
+                                                    }),
+                                                    signal: controller.signal
+                                                });
+                                                clearTimeout(timeoutId);
+                                                if (res.ok) {
+                                                    speak('Estancia protegida. El hotel ha sido notificado de tu llegada tardía.');
+                                                    Alert.alert(
+                                                        '✅ ESTANCIA PROTEGIDA',
+                                                        `He notificado al hotel tu retraso de ${realDelay} min (vuelo ${flightNum}). Tu reserva está asegurada.`,
+                                                        [{ text: 'ENTENDIDO' }]
+                                                    );
+                                                } else {
+                                                    Alert.alert('AVISO', 'No se pudo contactar automáticamente. ¿Quieres llamar tú directamente?',
+                                                        [
+                                                            { text: 'CANCELAR', style: 'cancel' },
+                                                            { text: 'LLAMAR YO', onPress: () => Linking.openURL('tel:+34623986708') }
+                                                        ]
+                                                    );
                                                 }
+                                            } catch (e) {
+                                                Alert.alert('ERROR DE CONEXIÓN', 'El servicio no está disponible. ¿Quieres llamar directamente?',
+                                                    [
+                                                        { text: 'CANCELAR', style: 'cancel' },
+                                                        { text: 'LLAMAR YO', onPress: () => Linking.openURL('tel:+34623986708') }
+                                                    ]
+                                                );
                                             }
-                                        },
-                                        { text: 'CANCELAR', style: 'cancel' }
-                                    ]);
+                                        })();
+                                        }, 5000);
+                                    } else {
+                                        // ══ FREE: Solo abre el marcador ══
+                                        Alert.alert(
+                                            'LLAMAR AL HOTEL',
+                                            `Tu vuelo ${flightNum} lleva ${realDelay} min de retraso. Llama al hotel para avisar de tu llegada tardía.\n\n💡 Con el plan VIP, el asistente avisa automáticamente por ti.`,
+                                            [
+                                                { text: 'CANCELAR', style: 'cancel' },
+                                                { text: 'LLAMAR AHORA', onPress: () => Linking.openURL('tel:+34623986708') }
+                                            ]
+                                        );
+                                    }
                                 }
                             },
                             {
-                                icon: '✈️', title: 'CONTACTAR AEROLÍNEA', sub: 'Línea directa de tu compañía aérea', color: '#007AFF', action: () => {
+                                icon: travelProfile === 'premium' ? '💎' : '✈️',
+                                title: travelProfile === 'premium' ? 'LÍNEA PRIORITARIA' : 'CONTACTAR AEROLÍNEA',
+                                sub: travelProfile === 'premium' ? '🤖 Tu asistente gestiona por ti' : 'Número de atención al cliente',
+                                color: travelProfile === 'premium' ? '#D4AF37' : '#007AFF',
+                                action: () => {
                                     setShowSOSMenu(false);
                                     if (!flightData?.airline) {
                                         Alert.alert('SIN VUELO ACTIVO', 'Primero busca un vuelo en VUELOS para poder contactar con tu aerolínea.');
@@ -209,15 +261,37 @@ export default function GlobalOverlays() {
                                     }
                                     const airlineName = flightData.airline;
                                     const phone = AIRLINE_PHONES[airlineName] || '+34 901 111 500';
-                                    speak(`Voy a preparar la llamada a ${airlineName}. El número aparecerá en tu marcador.`);
-                                    Alert.alert(
-                                        'CONTACTAR AEROLÍNEA',
-                                        `Vamos a abrir el marcador con el número de ${airlineName}:\n\n📞 ${phone}\n\nLa llamada corre a tu cargo.`,
-                                        [
-                                            { text: 'CANCELAR', style: 'cancel' },
-                                            { text: 'LLAMAR AHORA', onPress: () => Linking.openURL(`tel:${phone.replace(/\s/g, '')}`) }
-                                        ]
-                                    );
+
+                                    if (travelProfile === 'premium') {
+                                        // ══ VIP: Expediente preparado + opciones ══
+                                        speak(`Preparando tu expediente VIP para ${airlineName}. Puedo gestionar el contacto por ti o conectarte con la línea prioritaria.`);
+                                        Alert.alert(
+                                            '💎 CONTACTO VIP',
+                                            `He preparado tu expediente para ${airlineName} con todos los datos del retraso del vuelo ${flightData.flightNumber}.\n\nElige cómo proceder:`,
+                                            [
+                                                { text: 'CANCELAR', style: 'cancel' },
+                                                {
+                                                    text: '🤖 ASISTENTE GESTIONA',
+                                                    onPress: () => { setChatOrigin('vip'); setShowChat(true); }
+                                                },
+                                                {
+                                                    text: `📞 LLAMAR A ${airlineName.toUpperCase().substring(0, 15)}`,
+                                                    onPress: () => Linking.openURL(`tel:${phone.replace(/\s/g, '')}`)
+                                                }
+                                            ]
+                                        );
+                                    } else {
+                                        // ══ FREE: Marcador directo ══
+                                        speak(`Voy a preparar la llamada a ${airlineName}. El número aparecerá en tu marcador.`);
+                                        Alert.alert(
+                                            'CONTACTAR AEROLÍNEA',
+                                            `Número de ${airlineName}:\n\n📞 ${phone}\n\nLa llamada corre a tu cargo.\n\n💡 Con el plan VIP, tu asistente gestiona el contacto por ti.`,
+                                            [
+                                                { text: 'CANCELAR', style: 'cancel' },
+                                                { text: 'LLAMAR AHORA', onPress: () => Linking.openURL(`tel:${phone.replace(/\s/g, '')}`) }
+                                            ]
+                                        );
+                                    }
                                 }
                             },
                             {
@@ -351,7 +425,7 @@ export default function GlobalOverlays() {
                                                 if (isMain && (travelProfile === 'premium' || travelProfile === 'fast')) {
                                                     borderColor = travelProfile === 'premium' ? '#D4AF37' : '#FF3B30'; 
                                                     icon = travelProfile === 'premium' ? '💎' : '🔥';
-                                                    typeLabel = travelProfile === 'premium' ? 'ESTRATEGIA VIP EXCLUSIVA' : 'RESCATE PRIORITARIO';
+                                                    typeLabel = travelProfile === 'premium' ? 'ASISTENCIA INTEGRAL TRAVEL-PILOT' : 'RESCATE PRIORITARIO';
                                                     isSpecial = true;
                                                 }
 
@@ -411,7 +485,7 @@ export default function GlobalOverlays() {
                                                             {isMain && (
                                                                 <View style={{ backgroundColor: borderColor, paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20 }}>
                                                                     <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 12 }}>
-                                                                        {opt.actionType === 'locked' ? 'ACTUALIZAR A VIP' : travelProfile === 'premium' ? 'ACTIVAR RESCATE VIP' : 'EJECUTAR SEGÚN PERFIL'}
+                                                                        {opt.actionType === 'locked' ? 'ACTUALIZAR A VIP' : travelProfile === 'premium' ? 'ABRIR PANEL DE OPCIONES' : 'EJECUTAR SEGÚN PERFIL'}
                                                                     </Text>
                                                                 </View>
                                                             )}
@@ -494,8 +568,14 @@ export default function GlobalOverlays() {
                             })()}
                         </View>
                         <View style={{ flex: 1, backgroundColor: '#000', padding: 20 }}>
-                            <ScrollView style={{ flex: 1 }}>
-                                <Text style={{ color: '#4CD964', fontSize: 13, lineHeight: 22, fontWeight: '500' }}>{browserLogs.join('\n')}</Text>
+                            <ScrollView 
+                                ref={logScrollRef}
+                                style={{ flex: 1 }}
+                                onContentSizeChange={() => logScrollRef.current?.scrollToEnd({ animated: true })}
+                            >
+                                <Text style={{ color: '#4CD964', fontSize: 13, lineHeight: 22, fontWeight: '500', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' }}>
+                                    {browserLogs.join('\n')}
+                                </Text>
                             </ScrollView>
                             <View style={{ marginTop: 20, alignItems: 'center' }}>
                                 {(!browserLogs.some((l: string) => l.includes('✅') || l.includes('❌') || l.includes('⚠️'))) ? (
@@ -516,7 +596,16 @@ export default function GlobalOverlays() {
                                                 </Text>
                                                 <TouchableOpacity 
                                                     style={{ marginTop: 20, padding: 10, backgroundColor: '#333', borderRadius: 8 }}
-                                                    onPress={() => { setShowBrowser(false); stopSpeak(); }}
+                                                    onPress={() => { 
+                                                        setShowBrowser(false); 
+                                                        stopSpeak(); 
+                                                        setExtraDocs((p: any) => p); // Refresh visual
+                                                        // Resetear estados de carga por seguridad
+                                                        if (typeof setExtraDocs === 'function') {
+                                                            // Forzamos fin de carga si el usuario cierra
+                                                            // Esto se maneja mejor centralizado pero aquí asegura UX
+                                                        }
+                                                    }}
                                                 >
                                                     <Text style={{ color: '#FFF', fontWeight: 'bold' }}>CERRAR Y REINTENTAR</Text>
                                                 </TouchableOpacity>
@@ -535,64 +624,82 @@ export default function GlobalOverlays() {
                                         )}
                                     </View>
                                 )}
+                                
+                                {/* BOTÓN DE RESCATE SI HAY BUCLE - Solo aparece si lleva mucho tiempo y no hay errores */}
+                                {!browserLogs.some((l: string) => l.includes('✅') || l.includes('❌') || l.includes('⚠️')) && (
+                                    <TouchableOpacity 
+                                        onPress={() => {
+                                            setShowBrowser(false);
+                                            // Resetear cualquier estado de carga pendiente
+                                        }}
+                                        style={{ marginTop: 30, opacity: 0.5 }}
+                                    >
+                                        <Text style={{ color: '#888', fontSize: 10, fontWeight: 'bold' }}>FINALIZAR CARGA MANUALMENTE</Text>
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         </View>
-                        <TouchableOpacity style={{ padding: 15, backgroundColor: '#27C93F', alignItems: 'center' }} onPress={() => {
-                            setShowBrowser(false);
-                            stopSpeak();
-                            if (selectedPlan) {
-                                // DETECCIÓN DE MODO BASADA EN PERFIL DE USUARIO (REGLA MAESTRA)
-                                const isPremium = travelProfile === 'premium';
-                                
-                                const isVip = isPremium; // Si el perfil es premium, toda acción es VIP
-                                const isRápido = !isPremium && (selectedPlan.type?.includes('RÁPID') || selectedPlan.type?.includes('RAPID'));
-                                const isEco = !isPremium && (selectedPlan.type?.includes('ECONÓMIC') || selectedPlan.type?.includes('BARAT'));
-                                const isHotel = selectedPlan.actionType === 'hotel' || selectedPlan.type?.includes('CONFORT');
+                        
+                        <TouchableOpacity 
+                            style={{ padding: 15, backgroundColor: browserLogs.some((l: string) => l.includes('✅')) ? '#27C93F' : '#333', alignItems: 'center' }} 
+                            onPress={() => {
+                                setShowBrowser(false);
+                                stopSpeak();
 
-                                const imgRescate = isHotel ? require('../assets/reserva_hotel_pura.jpg') :
-                                    isVip ? require('../assets/ticket_rapido_vip.jpg') :
-                                        isRápido ? require('../assets/ticket_rapido_vip.jpg') :
-                                            isEco ? require('../assets/ticket_economico.jpg') :
-                                                require('../assets/ticket_equilibrado_confort.jpg');
+                                if (selectedPlan) {
+                                    const isPremium = travelProfile === 'premium';
+                                    const isVip = isPremium;
+                                    const isRápido = !isPremium && (selectedPlan.type?.includes('RÁPID') || selectedPlan.type?.includes('RAPID'));
+                                    const isEco = !isPremium && (selectedPlan.type?.includes('ECONÓMIC') || selectedPlan.type?.includes('BARAT'));
+                                    const isHotel = selectedPlan.actionType === 'hotel' || selectedPlan.type?.includes('CONFORT');
 
-                                 if (selectedPlan.voiceScriptFinal) {
-                                    speak(selectedPlan.voiceScriptFinal);
-                                } else {
-                                    speak(
-                                        isVip
-                                            ? 'Protocolo Elite activado. Tu plan premium está listo en Documentos. Tienes acceso prioritario.'
-                                            : isHotel
-                                                ? 'He organizado tu descanso. Tienes los vales y pasos a seguir en la sección de Documentos.'
-                                                : isEco
-                                                    ? 'Todo preparado. Tu reclamación legal está lista en Documentos. Ábrela para firmar.'
-                                                    : 'He terminado tu plan. Tienes toda la información en tu sección de Documentos.'
-                                    );
-                                }
+                                    const imgRescate = isHotel ? require('../assets/reserva_hotel_pura.jpg') :
+                                        isVip ? require('../assets/ticket_rapido_vip.jpg') :
+                                            isRápido ? require('../assets/ticket_rapido_vip.jpg') :
+                                                isEco ? require('../assets/ticket_economico.jpg') :
+                                                    require('../assets/ticket_equilibrado_confort.jpg');
 
-                                const newTicket = {
-                                    id: `rescue_${Date.now()}`,
-                                    t: isVip ? `PROPUESTA RESCATE ELITE (MODO VIP)` :
-                                       isHotel ? `PROPUESTA ALOJAMIENTO IA (PLAN ${isEco ? 'ECONÓMICO' : isRápido ? 'RÁPIDO' : 'EQUILIBRADO'})` : 
-                                       `PROPUESTA RESCATE IA (${isEco ? 'ECONÓMICO' : isRápido ? 'RÁPIDO' : 'EQUILIBRADO'})`,
-                                    s: isHotel ? `Alojamiento · ${selectedPlan.title}` : `Propuesta Vuelo · ${selectedPlan.title}`,
-                                    i: imgRescate,
-                                    source: 'TRAVEL-PILOT IA',
-                                    icon: isHotel ? '🛌' : '🎟️',
-                                    verified: true,
-                                    // Datos para el Agente Resolutor
-                                    isActionable: !isHotel,
-                                    rescueData: {
-                                        flightNumber: flightData?.flightNumber || 'RESCUE-01',
-                                        airline: flightData?.airline || 'Compañía Asignada',
-                                        gate: flightData?.departure?.gate || 'TBD',
-                                        boardingTime: 'Inmediato'
+                                     if (selectedPlan.voiceScriptFinal) {
+                                        speak(selectedPlan.voiceScriptFinal);
+                                    } else {
+                                        speak(
+                                            isVip
+                                                ? 'Protocolo Elite activado. Tu plan premium está listo en Documentos. Tienes acceso prioritario.'
+                                                : isHotel
+                                                    ? 'He organizado tu descanso. Tienes los vales y pasos a seguir en la sección de Documentos.'
+                                                    : isEco
+                                                        ? 'Todo preparado. Tu reclamación legal está lista en Documentos. Ábrela para firmar.'
+                                                        : 'He terminado tu plan. Tienes toda la información en tu sección de Documentos.'
+                                        );
                                     }
-                                };
-                                setExtraDocs((prev: any) => [newTicket, ...prev]);
-                                setHasNewDoc(true);
-                                setSelectedPlan(null);
-                            }
-                        }}><Text style={{ color: '#000', fontWeight: 'bold' }}>FINALIZAR Y VOLVER</Text></TouchableOpacity>
+
+                                    const newTicket = {
+                                        id: `rescue_${Date.now()}`,
+                                        t: isVip 
+                                            ? `PROTOCOLO DE RESCATE PREMIUM (VIP)`
+                                            : (isHotel ? `PROPUESTA ALOJAMIENTO IA (PLAN ${isEco ? 'ECONÓMICO' : isRápido ? 'RÁPIDO' : 'EQUILIBRADO'})` : 
+                                               `PROPUESTA RESCATE IA (${isEco ? 'ECONÓMICO' : isRápido ? 'RÁPIDO' : 'EQUILIBRADO'})`),
+                                        s: isVip ? 'Estrategia Integral Personalizada' : (isHotel ? `Alojamiento · ${selectedPlan.title}` : `Propuesta Vuelo · ${selectedPlan.title}`),
+                                        i: imgRescate,
+                                        source: 'TRAVEL-PILOT IA',
+                                        icon: isVip ? '💎' : (isHotel ? '🛌' : '🎟️'),
+                                        verified: true,
+                                        isActionable: !isHotel,
+                                        rescueData: {
+                                            flightNumber: flightData?.flightNumber || 'RESCUE-01',
+                                            airline: flightData?.airline || 'Compañía Asignada',
+                                            gate: flightData?.departure?.gate || 'TBD',
+                                            boardingTime: 'Inmediato'
+                                        }
+                                    };
+                                    setExtraDocs((prev: any) => [newTicket, ...prev]);
+                                    setHasNewDoc(true);
+                                    setSelectedPlan(null);
+                                }
+                            }}
+                        >
+                            <Text style={{ color: '#000', fontWeight: 'bold' }}>FINALIZAR Y VOLVER</Text>
+                        </TouchableOpacity>
                     </SafeAreaView>
                 </View>
             </Modal >

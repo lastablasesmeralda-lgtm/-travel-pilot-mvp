@@ -55,8 +55,10 @@ function RootComponent() {
                 <View style={s.topPanel}>
                   <View style={{ flex: 1, alignItems: 'center' }}>
                       <View style={{ backgroundColor: '#111', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, borderWidth: 1, borderColor: '#222', flexDirection: 'row', alignItems: 'center' }}>
-                        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#4CD964', marginRight: 6 }} />
-                        <Text style={{ color: '#B0B0B0', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 }}>ASISTENTE / ACTIVO</Text>
+                        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: travelProfile === 'premium' ? '#D4AF37' : '#4CD964', marginRight: 6 }} />
+                        <Text style={{ color: '#B0B0B0', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 }}>
+                          {travelProfile === 'premium' ? 'ASISTENTE VIP' : 'MODO ESTÁNDAR'} / ACTIVO
+                        </Text>
                       </View>
                   </View>
                 </View>
