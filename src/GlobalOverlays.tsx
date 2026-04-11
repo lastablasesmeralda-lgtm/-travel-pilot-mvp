@@ -87,7 +87,8 @@ export default function GlobalOverlays() {
         setPendingVIPScroll,
         showCancellation,
         setShowCancellation,
-        lastSearchId
+        lastSearchId,
+        myTrips
     } = useAppContext();
 
     const navigation = useNavigation<any>();
@@ -187,8 +188,16 @@ export default function GlobalOverlays() {
                                         Alert.alert('SIN VUELO ACTIVO', 'Primero busca un vuelo en VUELOS para que pueda calcular tu retraso y avisar al hotel.');
                                         return;
                                     }
-                                    const realDelay = flightData.departure?.delay || 0;
+                                     const realDelay = flightData.departure?.delay || 0;
                                     const flightNum = flightData.flightNumber || 'tu vuelo';
+
+                                    const matchTrip = myTrips?.find((t: any) => t.flight_number === flightData.flightNumber);
+                                    const realHotelPhone = matchTrip?.hotel_phone || "";
+
+                                    if (!realHotelPhone) {
+                                        Alert.alert('SIN TELÉFONO', 'No has añadido un teléfono de hotel para este viaje en INICIO.');
+                                        return;
+                                    }
 
                                     if (travelProfile === 'premium') {
                                         // ══ VIP: Gestión automática vía Twilio ══
@@ -202,7 +211,7 @@ export default function GlobalOverlays() {
                                                     method: 'POST',
                                                     headers: { 'Content-Type': 'application/json' },
                                                     body: JSON.stringify({
-                                                        hotelPhone: "+34623986708",
+                                                        hotelPhone: realHotelPhone,
                                                         passengerName: user?.email?.split('@')[0] || "Viajero VIP",
                                                         passengerPhone: userPhone || "No registrado",
                                                         delayMinutes: realDelay
@@ -221,7 +230,7 @@ export default function GlobalOverlays() {
                                                     Alert.alert('AVISO', 'No se pudo contactar automáticamente. ¿Quieres llamar tú directamente?',
                                                         [
                                                             { text: 'CANCELAR', style: 'cancel' },
-                                                            { text: 'LLAMAR YO', onPress: () => Linking.openURL('tel:+34623986708') }
+                                                            { text: 'LLAMAR YO', onPress: () => Linking.openURL(`tel:${realHotelPhone}`) }
                                                         ]
                                                     );
                                                 }
@@ -229,7 +238,7 @@ export default function GlobalOverlays() {
                                                 Alert.alert('ERROR DE CONEXIÓN', 'El servicio no está disponible. ¿Quieres llamar directamente?',
                                                     [
                                                         { text: 'CANCELAR', style: 'cancel' },
-                                                        { text: 'LLAMAR YO', onPress: () => Linking.openURL('tel:+34623986708') }
+                                                        { text: 'LLAMAR YO', onPress: () => Linking.openURL(`tel:${realHotelPhone}`) }
                                                     ]
                                                 );
                                             }
@@ -239,10 +248,10 @@ export default function GlobalOverlays() {
                                         // ══ FREE: Solo abre el marcador ══
                                         Alert.alert(
                                             'LLAMAR AL HOTEL',
-                                            `Tu vuelo ${flightNum} lleva ${realDelay} min de retraso. Llama al hotel para avisar de tu llegada tardía.\n\n💡 Con el plan VIP, el asistente avisa automáticamente por ti.`,
+                                            `Tu vuelo ${flightNum} lleva ${realDelay} min de retraso. Llama al hotel al ${realHotelPhone} para avisar de tu llegada tardía.\n\n💡 Con el plan VIP, el asistente avisa automáticamente por ti.`,
                                             [
                                                 { text: 'CANCELAR', style: 'cancel' },
-                                                { text: 'LLAMAR AHORA', onPress: () => Linking.openURL('tel:+34623986708') }
+                                                { text: 'LLAMAR AHORA', onPress: () => Linking.openURL(`tel:${realHotelPhone}`) }
                                             ]
                                         );
                                     }
@@ -485,7 +494,7 @@ export default function GlobalOverlays() {
                                                             {isMain && (
                                                                 <View style={{ backgroundColor: borderColor, paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20 }}>
                                                                     <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 12 }}>
-                                                                        {opt.actionType === 'locked' ? 'ACTUALIZAR A VIP' : travelProfile === 'premium' ? 'ABRIR PANEL DE OPCIONES' : 'EJECUTAR SEGÚN PERFIL'}
+                                                                        {opt.actionType === 'locked' ? 'ACTUALIZAR A VIP' : travelProfile === 'premium' ? 'INICIAR GESTIÓN VIP' : 'VER OPCIONES'}
                                                                     </Text>
                                                                 </View>
                                                             )}

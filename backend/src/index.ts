@@ -780,6 +780,39 @@ fastify.post('/api/trips', async (request, reply) => {
 });
 
 // ============================================================
+// ENDPOINT 11B: MIS VIAJES — Actualizar Viaje
+// ============================================================
+fastify.put('/api/trips/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { hotelName, hotelPhone, flightNumber } = request.body as { hotelName?: string, hotelPhone?: string, flightNumber?: string };
+
+    try {
+        console.log(`[Trips] 📝 Actualizando viaje ID: ${id}`);
+        
+        let updates: any = {};
+        if (hotelName !== undefined) updates.hotel_name = hotelName;
+        if (hotelPhone !== undefined) updates.hotel_phone = hotelPhone;
+        if (flightNumber !== undefined) updates.flight_number = flightNumber;
+
+        const { data, error } = await supabase
+            .from('trips')
+            .update(updates)
+            .eq('id', id)
+            .select();
+
+        if (error) {
+            console.error("[Trips] ❌ Error actualizando viaje:", error.message);
+            return reply.status(500).send({ error: 'Error actualizando desde BD' });
+        }
+
+        return reply.send(data?.[0] || { success: true });
+    } catch (error: any) {
+        console.error("[Trips] ❌ Excepción no manejada:", error.message);
+        return reply.status(500).send({ error: 'Fallo interno al actualizar viaje' });
+    }
+});
+
+// ============================================================
 // ENDPOINT 12: MIS VIAJES — Listar viajes del usuario
 // ============================================================
 fastify.get('/api/trips', async (request, reply) => {

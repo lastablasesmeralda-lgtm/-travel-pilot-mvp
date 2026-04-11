@@ -493,7 +493,7 @@ export default function VaultScreen() {
                             }}
                             style={{ backgroundColor: '#111', borderRadius: 16, padding: 18, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: c.isDynamic ? '#FF9500' : '#27C93F', borderWidth: 1, borderColor: '#1A1A1A' }}
                         >
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8, justifyContent: 'space-between' }}>
                                 <View style={{ flex: 1 }}>
                                     <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '800' }}>{c.aerolinea}</Text>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
@@ -501,6 +501,13 @@ export default function VaultScreen() {
                                         <Text style={{ color: c.isDynamic ? '#FF9500' : '#27C93F', fontSize: 11, fontWeight: 'bold' }}>{c.estado}</Text>
                                     </View>
                                 </View>
+                                <TouchableOpacity 
+                                    onPress={(e) => { e.stopPropagation(); removeClaim(c.id); }} 
+                                    style={{ padding: 5, paddingLeft: 15, zIndex: 10 }}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                >
+                                    <Text style={{ color: '#B0B0B0', fontSize: 20 }}>✕</Text>
+                                </TouchableOpacity>
                             </View>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                                 <Text style={{ color: '#B0B0B0', fontSize: 11 }}>{c.compensacion}€</Text>

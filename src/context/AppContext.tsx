@@ -1545,6 +1545,27 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  const updateTrip = async (tripId: string, hotelName?: string, hotelPhone?: string, flightNumber?: string) => {
+    try {
+      const resp = await fetch(`${BACKEND_URL}/api/trips/${tripId}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
+        body: JSON.stringify({ hotelName, hotelPhone, flightNumber })
+      });
+      const data = await resp.json();
+      if (data.id && user?.email) {
+        Alert.alert('Éxito', 'Viaje actualizado correctamente');
+        loadMyTrips(user.email);
+      }
+    } catch (e: any) {
+      console.error("Error actualizando viaje:", e);
+      Alert.alert('Error de conexión', `No se pudo actualizar el viaje: ${e.message}. Verifica que el backend esté corriendo.`);
+    }
+  };
+
   // ✅ GENERACIÓN AUTOMÁTICA DE RECLAMACIONES DINÁMICAS (Importado de utils)
 
   // La generación ahora es impulsada directamente desde searchFlight para evitar problemas de async/useEffect
@@ -1771,7 +1792,7 @@ export const AppProvider = ({ children }) => {
     flightData, setFlightData, isSearching, searchError, planes, setPlanes, searchFlight, clearFlight, showPlan, fetchContingencyPlan, handleSendMessage,
     agentLogs, fetchAgentLogs,
     myFlights, saveMyFlight, loadMyFlights, removeMyFlight, simulatePushNotification,
-    myTrips, saveTrip, loadMyTrips, removeTrip,
+    myTrips, saveTrip, loadMyTrips, removeTrip, updateTrip,
     weather: weatherMap,
     fetchWeather,
     hasSeenOnboarding, setHasSeenOnboarding,

@@ -24,6 +24,7 @@ export default function IntelScreen() {
     const [newHotelPhone, setNewHotelPhone] = useState('');
     const [newFlightNumber, setNewFlightNumber] = useState('');
     const [showForm, setShowForm] = useState(false);
+    const [editingTripId, setEditingTripId] = useState<string | null>(null);
 
     // Animación
     const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -44,13 +45,27 @@ export default function IntelScreen() {
 
     const handleCreate = () => {
         if (!newTripTitle || !newTripDest) return Alert.alert('Error', 'Completa los campos obligatorios (Título y Destino)');
+        if (editingTripId) {
+            removeTrip(editingTripId);
+        }
         saveTrip(newTripTitle, newTripDest, newHotelName, newHotelPhone, newFlightNumber);
         setNewTripTitle('');
         setNewTripDest('');
         setNewHotelName('');
         setNewHotelPhone('');
         setNewFlightNumber('');
+        setEditingTripId(null);
         setShowForm(false);
+    };
+
+    const handleEdit = (trip: any) => {
+        setNewTripTitle((trip.title || '').includes('|') ? trip.title.split('|')[0].trim() : (trip.title || ''));
+        setNewTripDest((trip.title || '').includes('|') ? trip.title.split('|')[1].trim() : (trip.destination || ''));
+        setNewFlightNumber(trip.flight_number || '');
+        setNewHotelName(trip.hotel_name || '');
+        setNewHotelPhone(trip.hotel_phone || '');
+        setEditingTripId(trip.id);
+        setShowForm(true);
     };
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} contentContainerStyle={{ padding: 20, paddingTop: 60 }}>
@@ -120,7 +135,10 @@ export default function IntelScreen() {
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <Text style={[s.b, { marginBottom: 0 }]}>🌍 INICIO</Text>
                 <TouchableOpacity
-                    onPress={() => setShowForm(!showForm)}
+                    onPress={() => { 
+                        if (showForm) setEditingTripId(null); 
+                        setShowForm(!showForm); 
+                    }}
                     style={{ backgroundColor: showForm ? '#333' : '#D4AF37', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 }}
                 >
                     <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 14 }}>{showForm ? 'CANCELAR' : '+ NUEVO VIAJE'}</Text>
@@ -129,7 +147,7 @@ export default function IntelScreen() {
 
             {showForm && (
                 <View style={{ backgroundColor: '#111', padding: 20, borderRadius: 24, marginBottom: 20, borderWidth: 1, borderColor: '#333' }}>
-                    <Text style={{ color: '#FFF', fontWeight: 'bold', marginBottom: 15, fontSize: 16 }}>AÑADIR NUEVO DESTINO</Text>
+                    <Text style={{ color: '#FFF', fontWeight: 'bold', marginBottom: 15, fontSize: 16 }}>{editingTripId ? 'EDITAR VIAJE' : 'AÑADIR NUEVO DESTINO'}</Text>
                     <TextInput
                         placeholder="Nombre (ej: Vacaciones Japón)"
                         placeholderTextColor="#666"
@@ -231,9 +249,14 @@ export default function IntelScreen() {
                                         </View>
                                     </View>
                                 </View>
-                                <TouchableOpacity onPress={() => removeTrip(trip.id)} style={{ padding: 5 }}>
-                                    <Text style={{ color: '#B0B0B0', fontSize: 20 }}>✕</Text>
-                                </TouchableOpacity>
+                                <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                                    <TouchableOpacity onPress={() => handleEdit(trip)} style={{ padding: 5, marginRight: 15, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 10 }}>
+                                        <Text style={{ color: '#FFF', fontSize: 14 }}>✏️ EDITAR</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => removeTrip(trip.id)} style={{ padding: 5 }}>
+                                        <Text style={{ color: '#B0B0B0', fontSize: 20 }}>✕</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
                     );
