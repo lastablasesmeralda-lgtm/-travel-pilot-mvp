@@ -409,6 +409,18 @@ export const AppProvider = ({ children }) => {
 
   // EFECTOS INICIALES
   useEffect(() => {
+    // Inicializar Audio globalmente para saltarse el modo silencioso de iOS
+    try {
+      Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
+    } catch (e) {
+      console.warn("Error config audio global", e);
+    }
+
     const timer = setInterval(() => setTicks(t => t + 1), 100);
     Animated.loop(
       Animated.sequence([
@@ -969,8 +981,14 @@ export const AppProvider = ({ children }) => {
   };
 
   const speak = async (text: string, overrideVoiceId?: string) => {
-    // Parar cualquier locución anterior para evitar colas infinitas
-    Speech.stop();
+    try {
+      const isSpeakingNow = await Speech.isSpeakingAsync();
+      if (isSpeakingNow) {
+        Speech.stop();
+        // Pequeño delay en Android para que el stop() asíncrono no cancele el nuevo speak()
+        if (Platform.OS === 'android') await new Promise(r => setTimeout(r, 100));
+      }
+    } catch (e) {}
     
     setIsSpeaking(true);
     Animated.loop(
