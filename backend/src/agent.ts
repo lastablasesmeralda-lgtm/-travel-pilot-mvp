@@ -281,8 +281,33 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
             connecting_flight: null, ground_transport: null, isSimulation: true,
         };
     }
+            connecting_flight: null, ground_transport: null, isSimulation: true,
+        };
+    }
 
+    if (code === 'RETRASO-400') {
+        const originalArrival = new Date(now.getTime() + 10 * 60 * 60 * 1000);
+        const delayMinutes = 400;
+        return {
+            flightId, flightNumber: 'RETRASO-400', status: 'delayed', delayMinutes,
+            airline: 'Turkish Airlines',
+            departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString(), terminal: 'T1', gate: 'B12' },
+            arrival: { iata: 'IST', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), terminal: 'Intl', gate: '210' },
+            hotel_booking: null, connecting_flight: null, ground_transport: null, isSimulation: true,
+        };
+    }
 
+    if (code === 'RETRASO-60') {
+        const originalArrival = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+        const delayMinutes = 65;
+        return {
+            flightId, flightNumber: 'RETRASO-60', status: 'delayed', delayMinutes,
+            airline: 'Iberia',
+            departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString(), terminal: 'T4', gate: 'J14' },
+            arrival: { iata: 'CDG', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), terminal: '2F', gate: 'F10' },
+            hotel_booking: null, connecting_flight: null, ground_transport: null, isSimulation: true,
+        };
+    }
     try {
     if (code === 'DESVIO-VLC') {
         return {
@@ -309,9 +334,9 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
     if (code === 'VUELO-HISTORIAL') {
         const landedTime = new Date(now.getTime() - 5 * 60 * 60 * 1000); // Aterrizó hace 5 horas
         return {
-            flightId, flightNumber: 'VUELO-HISTORIAL', status: 'landed', delayMinutes: 15,
+            flightId, flightNumber: 'VUELO-HISTORIAL', status: 'landed', delayMinutes: 210,
             airline: 'Lufthansa',
-            departure: { iata: 'FRA', delay: 15, scheduled: landedTime.toISOString() },
+            departure: { iata: 'FRA', delay: 210, scheduled: landedTime.toISOString() },
             arrival: { iata: 'MAD', scheduled: landedTime.toISOString(), estimated: landedTime.toISOString() },
             hotel_booking: null, connecting_flight: null, ground_transport: null, isSimulation: true,
         };
