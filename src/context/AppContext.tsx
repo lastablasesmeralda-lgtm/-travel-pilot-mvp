@@ -153,6 +153,14 @@ export const AppProvider = ({ children }) => {
   const wakeUpBackend = async () => {
     try {
       console.log('📡 [AppContext] Despertando servidor en la nube...');
+      // Aseguramos que el audio tenga permisos para sonar incluso en silencio
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+        staysActiveInBackground: false,
+      });
       // Pings ligeros a diferentes endpoints para asegurar que la instancia despierta
       fetch(`${BACKEND_URL}/api/logs`, { headers: { 'ngrok-skip-browser-warning': 'true' } }).catch(() => {});
       fetch(`${BACKEND_URL}/api/weather?location=Madrid`, { headers: { 'ngrok-skip-browser-warning': 'true' } }).catch(() => {});
@@ -961,6 +969,9 @@ export const AppProvider = ({ children }) => {
   };
 
   const speak = async (text: string, overrideVoiceId?: string) => {
+    // Parar cualquier locución anterior para evitar colas infinitas
+    Speech.stop();
+    
     setIsSpeaking(true);
     Animated.loop(
       Animated.sequence([
@@ -991,6 +1002,9 @@ export const AppProvider = ({ children }) => {
     Speech.speak(text, { 
       language: 'es-ES', 
       voice: isVoiceAvailable ? voiceId! : undefined,
+      pitch: 1.0,
+      rate: 0.95, // Un pelín más lento para que se entienda mejor en entornos ruidosos
+      volume: 1.0, 
       onDone: () => onSpeechDone(),
       onError: (e) => {
         console.warn("[Speech] Error detectado, reintentando con voz nativa...", e);
