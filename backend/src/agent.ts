@@ -175,24 +175,14 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
     const code = flightId.toUpperCase();
 
     // 🏆 SUITE DE PRUEBAS MAESTRA (DETERMINISTA)
-    if (code === 'TP999') {
-        const originalArrival = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-        const delayMinutes = 240;
-        const estimatedArrival = new Date(originalArrival.getTime() + delayMinutes * 60 * 1000);
+    if (code === 'RETRASO-60') {
+        const originalArrival = new Date(now.getTime() + 1 * 60 * 60 * 1000);
         return {
-            flightId,
-            flightNumber: 'TP999',
-            status: 'delayed',
-            delayMinutes,
-            airline: 'Lufthansa',
-            departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString(), terminal: 'T4', gate: 'K72' },
-            arrival: { iata: 'BER', scheduled: originalArrival.toISOString(), estimated: estimatedArrival.toISOString(), terminal: 'T1', gate: 'B15' },
-            hotel_booking: {
-                name: 'Hotel Adlon Kempinski Berlin', check_in_limit: '23:30',
-                check_in_limit_iso: new Date(now.toDateString() + ' 23:30').toISOString(),
-                address: 'Unter den Linden 77, 10117 Berlin', cost_per_night: 350, is_refundable: false,
-            },
-            connecting_flight: null, ground_transport: null, isSimulation: true,
+            flightId, flightNumber: 'RETRASO-60', status: 'delayed', delayMinutes: 65,
+            airline: 'Air Europa',
+            departure: { iata: 'MAD', delay: 65, scheduled: now.toISOString() },
+            arrival: { iata: 'LIS', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + 65 * 60 * 1000).toISOString() },
+            hotel_booking: null, connecting_flight: null, ground_transport: null, isSimulation: true,
         };
     }
 
@@ -294,54 +284,38 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
 
 
     try {
-        if (code === 'TK1860') {
-            const originalArrival = new Date(now.getTime() + 3 * 60 * 60 * 1000);
-            const delayMinutes = 190;
-            return {
-                flightId, flightNumber: 'TK1860', status: 'delayed', delayMinutes,
-                departure_airport: 'MAD', arrival_airport: 'IST',
-                original_arrival: originalArrival.toTimeString().slice(0, 5),
-                estimated_arrival_iso: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(),
-                hotel_booking: {
-                    name: 'Swissôtel The Bosphorus', check_in_limit: '22:00',
-                    check_in_limit_iso: new Date(now.toDateString() + ' 22:00').toISOString(),
-                    address: 'Visnezade Mah. Acisu Sok. No:19, Istanbul', cost_per_night: 280, is_refundable: false,
-                },
-                connecting_flight: null, ground_transport: null, isSimulation: true,
-            };
-        }
-        if (code === 'EK142') {
-            const originalArrival = new Date(now.getTime() + 6 * 60 * 60 * 1000);
-            const delayMinutes = 210;
-            return {
-                flightId, flightNumber: 'EK142', status: 'delayed', delayMinutes,
-                departure_airport: 'MAD', arrival_airport: 'DXB',
-                original_arrival: originalArrival.toTimeString().slice(0, 5),
-                estimated_arrival_iso: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(),
-                hotel_booking: {
-                    name: 'Burj Al Arab Jumeirah', check_in_limit: '23:59',
-                    check_in_limit_iso: new Date(now.toDateString() + ' 23:59').toISOString(),
-                    address: 'Jumeirah St, Dubai', cost_per_night: 1200, is_refundable: false,
-                },
-                connecting_flight: null, ground_transport: null, isSimulation: true,
-            };
-        }
-        if (code === 'IB3150') {
-            const originalArrival = new Date(now.getTime() + 2.5 * 60 * 60 * 1000);
-            const delayMinutes = 195;
-            return {
-                flightId, flightNumber: 'IB3150', status: 'delayed', delayMinutes,
-                departure_airport: 'MAD', arrival_airport: 'WAW',
-                original_arrival: originalArrival.toTimeString().slice(0, 5),
-                estimated_arrival_iso: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(),
-                hotel_booking: {
-                    name: 'Hotel Bristol, Warsaw', check_in_limit: '23:00',
-                    check_in_limit_iso: new Date(now.toDateString() + ' 23:00').toISOString(),
-                    address: 'Krakowskie Przedmieście 42/44, Warsaw', cost_per_night: 200, is_refundable: false,
-                },
-                connecting_flight: null, ground_transport: null, isSimulation: true,
-            };
-        }
+    if (code === 'DESVIO-VLC') {
+        return {
+            flightId, flightNumber: 'DESVIO-VLC', status: 'diverted', delayMinutes: 120,
+            airline: 'Iberia',
+            departure: { iata: 'MAD', delay: 0, scheduled: now.toISOString() },
+            arrival: { iata: 'VLC', scheduled: now.toISOString(), estimated: now.toISOString() },
+            ground_transport: { type: 'TRAIN', last_departure_iso: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString() },
+            hotel_booking: null, connecting_flight: null, isSimulation: true,
+        };
+    }
+
+    if (code === 'JET-PRIVADO') {
+        return {
+            flightId, flightNumber: 'JET-PRIVADO', status: 'delayed', delayMinutes: 600,
+            airline: 'Emirates',
+            departure: { iata: 'MAD', delay: 600, scheduled: now.toISOString() },
+            arrival: { iata: 'DXB', scheduled: now.toISOString(), estimated: now.toISOString() },
+            hotel_booking: { name: 'Burj Al Arab', check_in_limit: '23:59', check_in_limit_iso: now.toISOString(), address: 'Dubai', cost_per_night: 1500, is_refundable: false },
+            isSimulation: true, connecting_flight: null, ground_transport: null,
+        };
+    }
+
+    if (code === 'VUELO-HISTORIAL') {
+        const landedTime = new Date(now.getTime() - 5 * 60 * 60 * 1000); // Aterrizó hace 5 horas
+        return {
+            flightId, flightNumber: 'VUELO-HISTORIAL', status: 'landed', delayMinutes: 15,
+            airline: 'Lufthansa',
+            departure: { iata: 'FRA', delay: 15, scheduled: landedTime.toISOString() },
+            arrival: { iata: 'MAD', scheduled: landedTime.toISOString(), estimated: landedTime.toISOString() },
+            hotel_booking: null, connecting_flight: null, ground_transport: null, isSimulation: true,
+        };
+    }
 
         const osHeaders: Record<string, string> = { 'Accept': 'application/json' };
         const osUser = process.env.OPENSKY_USER || '';
@@ -462,7 +436,7 @@ export async function handleFlightMonitoring(flightId: string, travelProfile: st
     const impact = evaluateImpact(context, travelProfile);
 
     // 🛡️ QUOTA SHIELD: Buscar si ya existe un plan para este vuelo y este retraso hoy
-    const isTestCode = ['RETRASO-400', 'RETRASO-180', 'CANCELADO', 'VUELO-OK', 'RETRASO-VIP'].includes(code);
+    const isTestCode = ['RETRASO-400', 'RETRASO-180', 'CANCELADO', 'VUELO-OK', 'RETRASO-VIP', 'RETRASO-60', 'DESVIO-VLC', 'JET-PRIVADO', 'VUELO-HISTORIAL'].includes(code);
 
     if (!isTestCode) {
         try {
@@ -493,7 +467,7 @@ export async function handleFlightMonitoring(flightId: string, travelProfile: st
     }
 
     // ✅ FAST-PATH: Solo para códigos estrictos de sistema y NO para Iberia Express real
-    const testCodes = ['RETRASO-400', 'RETRASO-180', 'CANCELADO', 'VUELO-OK', 'RETRASO-VIP'];
+    const testCodes = ['RETRASO-400', 'RETRASO-180', 'CANCELADO', 'VUELO-OK', 'RETRASO-VIP', 'RETRASO-60', 'DESVIO-VLC', 'JET-PRIVADO', 'VUELO-HISTORIAL'];
     if (testCodes.includes(code)) {
         console.log(`[Agent] ⚡ Fast-Path DETERMINISTA activado para |${code}|`);
 
