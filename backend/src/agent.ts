@@ -345,13 +345,24 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
             };
         }
 
-        const response = await fetch(
-            `http://api.aviationstack.com/v1/flights?access_key=${AVIATION_KEY}&flight_iata=${flightId}&limit=1`
+        const paddedCallsign = code.padEnd(8, ' ');
+        const osHeaders: Record<string, string> = { 'Accept': 'application/json' };
+        const osUser = process.env.OPENSKY_USER || '';
+        const osPass = process.env.OPENSKY_PASS || '';
+        if (osUser && osPass) {
+            osHeaders['Authorization'] = 'Basic ' + Buffer.from(`${osUser}:${osPass}`).toString('base64');
+        }
+        const osRes = await fetch(
+            `https://opensky-network.org/api/states/all?callsign=${encodeURIComponent(paddedCallsign)}`,
+            { headers: osHeaders, signal: AbortSignal.timeout(8000) }
         );
-        const data = await response.json();
+        const osData = osRes.ok ? await osRes.json() : null;
+        const data = osData?.states ? { data: [osData.states[0]] } : null;
 
         if (data && data.data && data.data.length > 0) {
             const flight = data.data[0];
+            const callsign = (flight[1] || code).trim();
+            const onGround = flight[8] === true;
             const depDelay = flight.departure?.delay || 0;
             const arrDelay = flight.arrival?.delay || 0;
             const delayMinutes = Math.max(depDelay, arrDelay);
@@ -372,19 +383,19 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
 
             return {
                 flightId,
-                flightNumber: flight.flight?.iata || flightId,
-                status,
-                delayMinutes,
-                airline: flight.airline?.name || 'AviationStack Airline',
+                flightNumber: callsign,
+                status: onGround ? 'landed' : 'active',
+                delayMinutes: 0,
+                airline: callsign.substring(0, 3),
                 departure: {
-                    iata: flight.departure?.iata || 'N/A',
-                    delay: depDelay,
+                    iata: 'N/A',
+                    delay: 0,
                     scheduled: flight.departure?.scheduled || now.toISOString(),
                     terminal: flight.departure?.terminal || '—',
                     gate: flight.departure?.gate || '—'
                 },
                 arrival: {
-                    iata: flight.arrival?.iata || 'N/A',
+                    iata: 'N/A',
                     scheduled: flight.arrival?.scheduled || now.toISOString(),
                     estimated: estimatedArrival.toISOString(),
                     terminal: flight.arrival?.terminal || '—',
