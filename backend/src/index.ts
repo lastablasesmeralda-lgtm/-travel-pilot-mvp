@@ -1079,7 +1079,11 @@ fastify.post('/api/transcribe', async (request, reply) => {
 // ============================================================
 fastify.post('/api/generateClaim', async (request, reply) => {
     try {
-        const { flightNumber, airline, delayMinutes, departureAirport, arrivalAirport, userEmail, signatureBase64 } = request.body as any;
+        const {
+            flightNumber, airline, delayMinutes, departureAirport, arrivalAirport,
+            userEmail, signatureBase64,
+            passengerName, passengerDNI, flightDate, bookingRef, airlineAddress
+        } = request.body as any;
 
         const { PDFDocument, rgb, StandardFonts, degrees } = await import('pdf-lib');
 
@@ -1120,6 +1124,11 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         const sDep = sanitizeText(departureAirport);
         const sArr = sanitizeText(arrivalAirport);
         const sEmail = sanitizeText(userEmail);
+        const sPassName = sanitizeText(passengerName);
+        const sPassDNI = sanitizeText(passengerDNI);
+        const sFlightDate = sanitizeText(flightDate);
+        const sBookingRef = sanitizeText(bookingRef);
+        const sAirAddress = sanitizeText(airlineAddress);
         const sStatus = (request.body as any).status || 'delayed';
 
         // LÓGICA DINÁMICA DE TÍTULO Y CUERPO (Reglas Beta 555)
@@ -1180,17 +1189,31 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         }
 
         // Sobrescribir título en cabecera
-        page.drawRectangle({ x: 0, y: height - 100, width, height: 100, color: DARK });
-        page.drawText('TRAVEL-PILOT', { x: 40, y: height - 45, size: 22, font: fontBold, color: GOLD });
-        page.drawText(pdfTitle, { x: 40, y: height - 65, size: 10, font: fontRegular, color: rgb(0.8, 0.8, 0.8) });
-        page.drawText(`Ref: TP-${Date.now().toString().slice(-6)}`, { x: 400, y: height - 55, size: 9, font: fontRegular, color: GOLD });
+        page.drawRectangle({ x: 0, y: height - 120, width, height: 120, color: DARK });
+        page.drawText('TRAVEL-PILOT', { x: 40, y: height - 40, size: 22, font: fontBold, color: GOLD });
+        page.drawText(pdfTitle, { x: 40, y: height - 62, size: 10, font: fontRegular, color: rgb(0.8, 0.8, 0.8) });
+        page.drawText(`Ref: TP-${Date.now().toString().slice(-6)}`, { x: 400, y: height - 50, size: 9, font: fontRegular, color: GOLD });
+        // Dirección de la aerolínea (campo "A:") en la cabecera
+        const airAddressLine = sAirAddress && sAirAddress !== 'N/A'
+            ? `A: ${sAirline.toUpperCase()} · ${sAirAddress}`
+            : `A: ${sAirline.toUpperCase()} · Departamento de Reclamaciones de Pasajeros`;
+        page.drawText(airAddressLine, { x: 40, y: height - 82, size: 8, font: fontRegular, color: rgb(0.6, 0.6, 0.6) });
+        page.drawText(`Fecha: ${dateStr}`, { x: 40, y: height - 98, size: 8, font: fontRegular, color: rgb(0.6, 0.6, 0.6) });
 
         // Sección: datos del pasajero
-        let y = height - 150;
+        let y = height - 155;
         page.drawText('DATOS DEL PASAJERO', { x: 40, y, size: 11, font: fontBold, color: DARK });
         page.drawLine({ start: { x: 40, y: y - 5 }, end: { x: 555, y: y - 5 }, thickness: 0.5, color: GOLD });
-        y -= 25;
-        page.drawText(`Email: ${sEmail}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
+        y -= 22;
+        if (sPassName && sPassName !== 'N/A') {
+            page.drawText(`Nombre:       ${sPassName}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
+            y -= 17;
+        }
+        if (sPassDNI && sPassDNI !== 'N/A') {
+            page.drawText(`DNI/Pasaporte: ${sPassDNI}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
+            y -= 17;
+        }
+        page.drawText(`Email:         ${sEmail}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
 
         // Sección: datos del vuelo
         y -= 45;
@@ -1198,16 +1221,24 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         page.drawLine({ start: { x: 40, y: y - 5 }, end: { x: 555, y: y - 5 }, thickness: 0.5, color: GOLD });
         y -= 25;
         page.drawText(`Vuelo:         ${sFlight}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
-        y -= 18;
+        y -= 17;
         page.drawText(`Aerolinea:     ${sAirline}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
-        y -= 18;
+        y -= 17;
         page.drawText(`Ruta:          ${sDep} -> ${sArr}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
-        y -= 18;
+        y -= 17;
+        if (sFlightDate && sFlightDate !== 'N/A') {
+            page.drawText(`Fecha/Hora:    ${sFlightDate}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
+            y -= 17;
+        }
+        if (sBookingRef && sBookingRef !== 'N/A') {
+            page.drawText(`Localizador:   ${sBookingRef}`, { x: 40, y, size: 10, font: fontBold, color: DARK });
+            y -= 17;
+        }
         page.drawText(`Estado:        ${sStatus.toUpperCase()}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
-        y -= 18;
+        y -= 17;
         if (sStatus === 'delayed') {
             page.drawText(`Retraso:       ${delay} minutos`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
-            y -= 18;
+            y -= 17;
         }
 
         const getEU261AmountStr = (orig: string, dest: string, delay: number, status: string) => {

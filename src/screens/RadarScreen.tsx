@@ -50,7 +50,8 @@ export default function VuelosScreen() {
                     </View>
                     <View style={{ flex: 1 }}>
                         <Text style={{ color: '#FF9500', fontWeight: '900', fontSize: 13, letterSpacing: 0.5 }}>ENTORNO DE PRUEBAS BETA</Text>
-                        <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 2 }}>Prueba: IB3166 (Retraso), TP777 (Cancelado), TP555 (Largo Alcance), TP111 (Desvío) o TP404.</Text>
+                        <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 2 }}>Prueba: VUELO-OK, RETRASO-180, CANCELADO, RETRASO-400 o RETRASO-VIP.</Text>
+
                     </View>
                 </View>
             )}
@@ -89,7 +90,7 @@ export default function VuelosScreen() {
                 </View>
 
             </View>
-            
+
             {/* ——— SOS RESCUE BANNER (STICKY ALERT) ——— */}
             {flightData?.status?.includes('cancel') && !showCancellation && (
                 <TouchableOpacity
@@ -201,7 +202,7 @@ export default function VuelosScreen() {
                                 </View>
                             </View>
                         </View>
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             onPress={() => removeActiveSearch(data.flightNumber)}
                             style={{ position: 'absolute', top: 5, right: 5, width: 44, height: 44, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 22, justifyContent: 'center', alignItems: 'center', zIndex: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
                         >
@@ -211,11 +212,11 @@ export default function VuelosScreen() {
                 ))
             ) : !searchError && !isSearching && (
                 /* ——— C) TARJETA "RADAR VACÍO" PREMIUM ——— */
-                <View style={{ 
-                    backgroundColor: '#111', 
-                    borderRadius: 20, 
-                    padding: 30, 
-                    marginBottom: 16, 
+                <View style={{
+                    backgroundColor: '#111',
+                    borderRadius: 20,
+                    padding: 30,
+                    marginBottom: 16,
                     alignItems: 'center',
                     borderWidth: 1,
                     borderColor: 'rgba(175, 82, 222, 0.2)',
@@ -261,10 +262,10 @@ export default function VuelosScreen() {
             )}
 
             {/* ——— A) PANEL DE ESTADO EN TIEMPO REAL ——— */}
-            <View style={{ 
-                backgroundColor: '#111', 
-                borderRadius: 16, 
-                padding: 16, 
+            <View style={{
+                backgroundColor: '#111',
+                borderRadius: 16,
+                padding: 16,
                 marginBottom: 20,
                 borderWidth: 1,
                 borderColor: '#1A1A1A',
@@ -276,9 +277,9 @@ export default function VuelosScreen() {
                     <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: flightData ? '#4CD964' : '#666', marginRight: 10 }} />
                     <View>
                         <Text style={{ color: '#FFF', fontSize: 12, fontWeight: 'bold' }}>
-                            {flightData 
-                                ? (flightData.departure?.delay || 0) >= 60 
-                                    ? '⚠️ 1 vuelo con incidencia' 
+                            {flightData
+                                ? (flightData.departure?.delay || 0) >= 60
+                                    ? '⚠️ 1 vuelo con incidencia'
                                     : '✅ Sin incidencias'
                                 : '— Sin vuelos activos'}
                         </Text>
@@ -287,12 +288,12 @@ export default function VuelosScreen() {
                         </Text>
                     </View>
                 </View>
-                <TouchableOpacity 
+                <TouchableOpacity
                     onPress={() => { if (flightData?.flightNumber) { searchFlight(flightData.flightNumber); setLastUpdate(new Date()); } }}
-                    style={{ 
-                        backgroundColor: flightData ? 'rgba(175, 82, 222, 0.2)' : 'rgba(255,255,255,0.05)', 
-                        paddingHorizontal: 12, 
-                        paddingVertical: 6, 
+                    style={{
+                        backgroundColor: flightData ? 'rgba(175, 82, 222, 0.2)' : 'rgba(255,255,255,0.05)',
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
                         borderRadius: 10,
                         borderWidth: 1,
                         borderColor: flightData ? 'rgba(175, 82, 222, 0.4)' : '#222',

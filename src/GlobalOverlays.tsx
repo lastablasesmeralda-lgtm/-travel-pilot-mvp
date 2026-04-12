@@ -191,7 +191,7 @@ export default function GlobalOverlays() {
                                      const realDelay = flightData.departure?.delay || 0;
                                     const flightNum = flightData.flightNumber || 'tu vuelo';
 
-                                    const matchTrip = myTrips?.find((t: any) => t.flight_number === flightData.flightNumber);
+                                    const matchTrip = myTrips?.find((t: any) => t.flight_number?.toUpperCase().replace(/\s/g, '') === flightData.flightNumber?.toUpperCase().replace(/\s/g, '')) || myTrips?.find((t: any) => t.hotel_phone);
                                     const realHotelPhone = matchTrip?.hotel_phone || "";
 
                                     if (!realHotelPhone) {
@@ -466,9 +466,10 @@ export default function GlobalOverlays() {
                                                             const isEco = opt.type?.includes('ECONÓMIC') || opt.type?.includes('BARAT');
                                                             const optType = (isRápido && travelProfile === 'premium') ? 'VIP' : isRápido ? 'RÁPIDO' : isEco ? 'ECONÓMICO' : 'EQUILIBRADO';
                                                             const msg = opt.voiceScriptFinal || (travelProfile === 'premium'
-                                                                ? `De acuerdo. Me ocupo de todo personalmente. Tu plan de rescate ya está en marcha.`
+                                                                ? `De acuerdo. Me ocupo de todo personalmente. Buscando soluciones en tu destino.`
                                                                 : `Entendido. Estoy preparando toda la documentación legal para tu reclamación ahora mismo.`);
                                                             speak(msg);
+                                                            
                                                             setSelectedRescuePlan(opt.title); // Capturamos la elección
                                                             setSelectedPlan(opt);
                                                             setShowSOS(false);
@@ -493,8 +494,12 @@ export default function GlobalOverlays() {
                                                         <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 15 }}>
                                                             {isMain && (
                                                                 <View style={{ backgroundColor: borderColor, paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20 }}>
-                                                                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 12 }}>
-                                                                        {opt.actionType === 'locked' ? 'ACTUALIZAR A VIP' : travelProfile === 'premium' ? 'INICIAR GESTIÓN VIP' : 'VER OPCIONES'}
+                                                                    <Text 
+                                                                        numberOfLines={1} 
+                                                                        adjustsFontSizeToFit 
+                                                                        style={{ color: '#000', fontWeight: 'bold', fontSize: 13, textAlign: 'center' }}
+                                                                    >
+                                                                        {opt.actionType === 'locked' ? 'ACTUALIZAR A VIP' : travelProfile === 'premium' ? 'EJECUTAR PLAN VIP' : 'VER OPCIONES'}
                                                                     </Text>
                                                                 </View>
                                                             )}
@@ -728,7 +733,7 @@ export default function GlobalOverlays() {
                     <View style={[s.mc, { backgroundColor: '#000', padding: 0, overflow: 'hidden' }]}>
                         <View style={{ width: '100%', height: 300, backgroundColor: '#0A0A0A', position: 'relative' }}>
                             {(() => {
-                                const imgSource = DOC_IMAGES[viewDoc?.id] || (typeof viewDoc?.i === 'number' ? viewDoc.i : viewDoc?.i ? { uri: viewDoc.i } : null);
+                                const imgSource = DOC_IMAGES[viewDoc?.id] || (typeof viewDoc?.i === 'string' && DOC_IMAGES[viewDoc.i]) || (typeof viewDoc?.i === 'number' ? viewDoc.i : viewDoc?.i ? { uri: viewDoc.i } : null);
                                 return imgSource ? (
                                     <Image
                                         source={imgSource}

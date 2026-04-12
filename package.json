@@ -30,6 +30,7 @@
     "expo-notifications": "~0.32.16",
     "expo-sharing": "~14.0.8",
     "expo-speech": "~14.0.8",
+    "expo-splash-screen": "~31.0.13",
     "firebase": "^12.10.0",
     "patch-package": "^8.0.1",
     "react": "19.1.0",

@@ -1144,7 +1144,15 @@ export const AppProvider = ({ children }) => {
             status: data.status || 'delayed',
             delayActual: effectiveDelay,
             compensacion: getEU261Amount(data),
-            isDynamic: true
+            isDynamic: true,
+            // Datos del pasajero extraídos de la API y del perfil
+            passengerName: user?.displayName || null,
+            passengerDNI: null, // Se rellena manualmente si el usuario lo introduce
+            fechaHora: data.departure?.scheduledTime
+              ? new Date(data.departure.scheduledTime).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+              : (data.departure?.scheduled || null),
+            pnr: data.bookingRef || data.pnr || null,
+            airlineAddress: `${data.airline || 'Aerolínea'} · Dept. Atención al Pasajero`,
           };
           // INCREMENTO DE AHORRO: Generar una reclamación recupera dinero real
           setRecoveredMoney(prev => prev + parseFloat(getEU261Amount(data).replace('€', '')));
@@ -1296,6 +1304,16 @@ export const AppProvider = ({ children }) => {
              };
           }
           
+          if (!(o.type?.includes('ECONÓMIC') || o.type?.includes('BARAT'))) {
+             return { 
+                ...o, 
+                title: `🔒 ${title}`, 
+                description: desc, 
+                actionType: 'locked', 
+                estimatedCost: 0 
+             };
+          }
+          
           return { ...o, title, description: desc, estimatedCost: 0 };
         });
 
@@ -1407,24 +1425,37 @@ export const AppProvider = ({ children }) => {
 
             // ACCIÓN DINÁMICA: Si la IA dice que ha creado un documento, lo creamos de verdad en la Bóveda
             const responseLower = data.text.toLowerCase();
-            if (responseLower.includes('he generado') || responseLower.includes('he creado') || responseLower.includes('plan de vuelos')) {
-               const flightNum = flightData?.flightNumber || 'IB3166';
+            if (responseLower.includes('he generado') || responseLower.includes('he creado') || responseLower.includes('he preparado') || responseLower.includes('reclamación')) {
+               const flightNum = flightData?.flightNumber || 'TP404';
                const airport = flightData?.arrival?.airport || 'Destino';
+               const isClaim = responseLower.includes('reclamación') || responseLower.includes('defensa');
                
+               const amount = getEU261Amount(flightData);
                const chatDoc = {
                  id: `chat_doc_${Date.now()}`,
-                 t: responseLower.includes('plan') ? `PLAN DE VUELOS ALTERNATIVOS ${flightNum}` : 'DOCUMENTO DE ASISTENCIA IA',
+                 t: isClaim ? `Reclamación ${flightNum}_${amount}€` : responseLower.includes('plan') ? `PLAN DE VUELOS ALTERNATIVOS ${flightNum}` : 'DOCUMENTO DE ASISTENCIA IA',
                  s: `Generado por IA el ${new Date().toLocaleDateString()} // Ref: ${flightNum}-${airport}`,
-                 i: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400', // Imagen genérica de documento/laptop
+                 i: isClaim ? 'demo-boarding-premium' : 'demo-boarding-premium', // Cambiado a boarding para evitar la imagen del hotel
                  source: 'ASISTENTE IA',
-                 icon: '📄',
+                 icon: isClaim ? '⚖️' : '📄',
                  verified: true,
                };
 
                setTimeout(() => {
                  setExtraDocs((prev: any) => [chatDoc, ...prev]);
+                 if (isClaim) {
+                   const newClaim = {
+                     id: `CHAT-CLAIM-${Date.now()}`,
+                     aerolinea: flightData?.airline || 'Iberia',
+                     vuelo: flightNum,
+                     ruta: flightData ? `${flightData.departure?.iata} > ${flightData.arrival?.iata}` : airport,
+                     estado: 'DRAFT IA GENERADO',
+                     compensacion: '250', // Por defecto según el screenshot
+                   };
+                   setClaims((prev: any) => [newClaim, ...prev]);
+                 }
                  setHasNewDoc(true);
-                 console.log("📄 [IA Action] Documento inyectado en la Bóveda desde el Chat.");
+                 console.log("📄 [IA Action] Documento y Reclamación inyectados desde el Chat.");
                }, 1000);
             }
         } else {

@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, StatusBar, TouchableOpacity, Text, Animated, Alert, LogBox } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SplashScreen from 'expo-splash-screen';
+
+// Mantener la Splash Screen visible mientras preparamos la app
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // SILENCIAR TODOS LOS ERRORES DE DESARROLLO (ESTILO PRODUCCIÓN)
 // LogBox.ignoreAllLogs(true);
@@ -22,6 +26,15 @@ function RootComponent() {
     handleLogout, hasSeenOnboarding, setHasSeenOnboarding, isReplayingTutorial, setIsReplayingTutorial, flightData,
     compBannerDismissed, setCompBannerDismissed, travelProfile, availableVoices, selectedVoice
   } = useAppContext();
+
+  useEffect(() => {
+    const prepareApp = async () => {
+      // Esperar 4 segundos exactos (incluyendo el tiempo de carga)
+      await new Promise(resolve => setTimeout(resolve, 4000));
+      await SplashScreen.hideAsync().catch(() => {});
+    };
+    prepareApp();
+  }, []);
 
   const dynamicAmount = getEU261Amount(flightData);
 

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, ActivityIndicator, Alert, ScrollView, Modal, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ActivityIndicator, Alert, ScrollView, Modal, Platform, TextInput } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -42,6 +42,7 @@ export default function VaultScreen() {
     const [currentActionDoc, setCurrentActionDoc] = useState<any>(null);
     const [isRescuing, setIsRescuing] = useState(false);
     const [rescueProgress, setRescueProgress] = useState(0);
+    const [dniInput, setDniInput] = useState('');
 
     const [showFileMenu, setShowFileMenu] = useState(false);
     const [selectedFile, setSelectedFile] = useState<any>(null);
@@ -172,6 +173,12 @@ export default function VaultScreen() {
                     arrivalAirport: currentClaimForSig?.ruta?.split('>')[1]?.trim() || 'Desconocido',
                     userEmail: user?.email || 'pasajero@travel-pilot.com',
                     signatureBase64: sig,
+                    // Datos del pasajero extraídos del contexto
+                    passengerName: user?.displayName || currentClaimForSig?.passengerName || null,
+                    passengerDNI: dniInput || currentClaimForSig?.passengerDNI || null,
+                    flightDate: currentClaimForSig?.fechaHora || null,
+                    bookingRef: currentClaimForSig?.pnr || null,
+                    airlineAddress: currentClaimForSig?.airlineAddress || null,
                 })
             });
 
@@ -193,6 +200,7 @@ export default function VaultScreen() {
                 setHasSigned(false);
                 setCapturedSignature('');
                 setCurrentClaimForSig(null);
+                setDniInput('');
 
                 Alert.alert(
                     '✈️ RESUMEN PREPARADO',
@@ -307,14 +315,11 @@ export default function VaultScreen() {
                                         setCurrentActionDoc(d);
                                         setShowVIPAlternatives(true);
                                     } 
-                                    // 2. Otros casos de IA (Modo Free / Estándar)
-                                    else if (d.source === 'TRAVEL-PILOT IA') {
-                                        setCurrentActionDoc(d);
-                                        setShowActionModal(true);
-                                    } 
+                                    // 2. CASO DIRECTO: Abrir el visor inmediatamente (User Request: Cirugía de Agilidad)
                                     else {
-                                        setSelectedFile(d);
-                                        setShowFileMenu(true);
+                                        setViewDoc(d);
+                                        setIsScanning(true);
+                                        setTimeout(() => setIsScanning(false), 2000);
                                     }
                                 }}
                                 activeOpacity={0.7}
@@ -576,6 +581,29 @@ export default function VaultScreen() {
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', padding: 25 }}>
                     <View style={{ backgroundColor: '#111', borderRadius: 24, padding: 25, borderWidth: 1, borderColor: '#333' }}>
                         <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '900', textAlign: 'center', marginBottom: 20 }}>🖊️ FIRMA DE AUTORIZACIÓN</Text>
+                        
+                        <View style={{ marginBottom: 20 }}>
+                            <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', marginBottom: 8, letterSpacing: 1 }}>DNI / PASAPORTE DEL RECLAMANTE</Text>
+                            <TextInput
+                                value={dniInput}
+                                onChangeText={setDniInput}
+                                placeholder="Ej: 12345678X"
+                                placeholderTextColor="#444"
+                                autoCapitalize="characters"
+                                style={{ 
+                                    backgroundColor: '#000', 
+                                    borderWidth: 1, 
+                                    borderColor: '#333', 
+                                    borderRadius: 12, 
+                                    padding: 14, 
+                                    color: '#FFF',
+                                    fontSize: 15,
+                                    fontWeight: 'bold'
+                                }}
+                            />
+                        </View>
+
+                        <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', marginBottom: 8, letterSpacing: 1 }}>FIRMA DIGITAL</Text>
                         <View style={{ height: 200, borderRadius: 16, overflow: 'hidden', marginBottom: 20 }}>
                             <WebView
                                 ref={webViewRef} originWhitelist={['*']} scrollEnabled={false}
@@ -594,7 +622,9 @@ export default function VaultScreen() {
                                 {generatingPdf ? <ActivityIndicator color="#000" /> : <Text style={{ color: '#000', fontWeight: 'bold' }}>ENVIAR</Text>}
                             </TouchableOpacity>
                         </View>
-                        <TouchableOpacity onPress={() => setShowSignature(false)} style={{ marginTop: 20, alignItems: 'center' }}><Text style={{ color: '#FF3B30' }}>AL SALIR</Text></TouchableOpacity>
+                        <TouchableOpacity onPress={() => { setShowSignature(false); setDniInput(''); }} style={{ marginTop: 25 }}>
+                            <Text style={{ color: '#FF3B30', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.2 }}>CANCELAR</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>

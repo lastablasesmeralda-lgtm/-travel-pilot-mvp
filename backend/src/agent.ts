@@ -115,26 +115,26 @@ export function evaluateImpact(ctx: FlightContext, travelProfile: string = 'bala
     const estArrival = new Date(ctx.estimated_arrival_iso || ctx.arrival?.estimated || new Date().toISOString());
     const hours = estArrival.getHours();
     const minutes = estArrival.getMinutes().toString().padStart(2, '0');
-    
+
     // Nombres reales de Salas VIP en los principales hubs
     const vipLounges: Record<string, string> = {
-        'MAD': 'Sala VIP Neptuno', 'BCN': 'Sala VIP Pau Casals', 'LHR': 'Galleries Lounge', 
+        'MAD': 'Sala VIP Neptuno', 'BCN': 'Sala VIP Pau Casals', 'LHR': 'Galleries Lounge',
         'CDG': 'Salon Air France / Extime', 'JFK': 'Centurion Lounge', 'FRA': 'Lufthansa Senator Lounge',
         'AMS': 'KLM Crown Lounge', 'LIS': 'ANA Lounge'
     };
     const loungeName = vipLounges[dep] || 'Sala VIP asociada';
 
     if (ctx.status === 'cancelled') {
-         hotelAlert = `Vuelo cancelado. Te corresponde noche de hotel gestionada por la aerolínea en ${dep}. Dirígete al mostrador.`;
-         hotelRisk = true;
+        hotelAlert = `Vuelo cancelado. Te corresponde noche de hotel gestionada por la aerolínea en ${dep}. Dirígete al mostrador.`;
+        hotelRisk = true;
     } else if (travelProfile === 'premium' && ctx.delayMinutes >= 120) {
-         hotelAlert = `Sugerencia Elite: Retraso severo temporal. Mientras estamos preparando tu nueva ruta, te recordamos que tienes acceso garantizado a la ${loungeName} en ${dep}. Dirígete allí para esperar con total confort.`;
+        hotelAlert = `Sugerencia Elite: Retraso severo temporal. Mientras estamos preparando tu nueva ruta, te recordamos que tienes acceso garantizado a la ${loungeName} en ${dep}. Dirígete allí para esperar con total confort.`;
     } else if (hours >= 23 || hours <= 5) {
-         hotelAlert = `Llegada de madrugada a ${arr} (${hours}:${minutes}). El transporte público estará limitado, considera reservar un traslado con antelación.`;
+        hotelAlert = `Llegada de madrugada a ${arr} (${hours}:${minutes}). El transporte público estará limitado, considera reservar un traslado con antelación.`;
     } else if (ctx.delayMinutes > 120) {
-         hotelAlert = `Retraso severo. Tienes derecho a vales de comida y bebida en el aeropuerto de ${dep} mientras esperas.`;
+        hotelAlert = `Retraso severo. Tienes derecho a vales de comida y bebida en el aeropuerto de ${dep} mientras esperas.`;
     } else {
-         hotelAlert = `Vuelo vigilado. Llegada estimada a ${arr} a las ${hours}:${minutes}. Sigue las pantallas del aeropuerto para tu embarque.`;
+        hotelAlert = `Vuelo vigilado. Llegada estimada a ${arr} a las ${hours}:${minutes}. Sigue las pantallas del aeropuerto para tu embarque.`;
     }
 
     if (ctx.connecting_flight) {
@@ -201,7 +201,7 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         const delayMinutes = 300;
         return {
             flightId,
-            flightNumber: 'TP555',
+            flightNumber: 'RETRASO-400',
             status: 'delayed',
             delayMinutes,
             airline: 'Iberia',
@@ -216,7 +216,7 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         };
     }
 
-    if (code === 'IB3166') {
+    if (code === 'RETRASO-180') {
         const originalArrival = new Date(now.getTime() + 4 * 60 * 60 * 1000);
         const delayMinutes = 220;
         return {
@@ -240,7 +240,7 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         const originalArrival = new Date(now.getTime() + 1 * 60 * 60 * 1000);
         return {
             flightId,
-            flightNumber: 'TP777',
+            flightNumber: 'CANCELADO',
             status: 'cancelled',
             delayMinutes: 0,
             airline: 'Vueling',
@@ -255,32 +255,29 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         };
     }
 
-    if (code === 'TP111') {
-        const originalArrival = new Date(now.getTime() + 10 * 60 * 60 * 1000);
-        const delayMinutes = 180;
+    if (code === 'VUELO-OK') {
+        const originalArrival = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Mañana
         return {
             flightId,
-            flightNumber: 'TP111',
-            status: 'delayed',
-            delayMinutes,
+            flightNumber: 'VUELO-OK',
+            status: 'scheduled', // <--- CAMBIAR AQUÍ
+            delayMinutes: 0,     // <--- CAMBIAR AQUÍ
             airline: 'Air Europa',
-            departure: { iata: 'MEX', delay: delayMinutes, scheduled: now.toISOString(), terminal: 'T1', gate: '12' },
-            arrival: { iata: 'MAD', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), terminal: 'T4S', gate: 'S01' },
-            hotel_booking: {
-                name: 'Rosewood Villa Magna', check_in_limit: '23:59',
-                check_in_limit_iso: new Date(now.toDateString() + ' 23:59').toISOString(),
-                address: 'Castellana 22, Madrid', cost_per_night: 800, is_refundable: false,
-            },
-            connecting_flight: null, ground_transport: null, isSimulation: true,
+            departure: { iata: 'MEX', delay: 0, scheduled: now.toISOString(), terminal: 'T1', gate: '12' },
+            arrival: { iata: 'MAD', scheduled: originalArrival.toISOString(), estimated: originalArrival.toISOString(), terminal: 'T4S', gate: 'S01' },
+            hotel_booking: null, // <--- PONER EN NULL
+            connecting_flight: null,
+            ground_transport: null,
+            isSimulation: true,
         };
     }
 
-    if (code === 'TP404') {
+    if (code === 'RETRASO-VIP') { // <--- CAMBIAS EL NOMBRE AQUÍ
         const originalArrival = new Date(now.getTime() + 2 * 60 * 60 * 1000);
         const delayMinutes = 210;
         return {
             flightId,
-            flightNumber: 'TP404',
+            flightNumber: 'RETRASO-VIP', // <--- CAMBIAS EL NOMBRE AQUÍ
             status: 'delayed',
             delayMinutes,
             airline: 'British Airways',
@@ -294,6 +291,7 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
             connecting_flight: null, ground_transport: null, isSimulation: true,
         };
     }
+
 
     try {
         if (code === 'TK1860') {
@@ -360,14 +358,14 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
 
         // Mapeo inteligente para encontrar el indicativo real en el radar
         const airlineMap: Record<string, string> = {
-            'IB': 'IBE', 'JQ': 'JST', 'AA': 'AAL', 'BA': 'BAW', 'LH': 'DLH', 
+            'IB': 'IBE', 'JQ': 'JST', 'AA': 'AAL', 'BA': 'BAW', 'LH': 'DLH',
             'AF': 'AFR', 'UX': 'AEA', 'VY': 'VLG', 'FR': 'RYR', 'U2': 'EZY', 'RY': 'RYR'
         };
         const prefix = code.substring(0, 2);
         const num = code.substring(2);
         const callsignVariants = [code, `${airlineMap[prefix] || prefix}${num}`];
 
-        const state = osData?.states?.find((s: any[]) => 
+        const state = osData?.states?.find((s: any[]) =>
             s[1] && callsignVariants.includes(s[1].trim())
         );
         const data = state ? { data: [state] } : null;
@@ -464,7 +462,7 @@ export async function handleFlightMonitoring(flightId: string, travelProfile: st
     const impact = evaluateImpact(context, travelProfile);
 
     // 🛡️ QUOTA SHIELD: Buscar si ya existe un plan para este vuelo y este retraso hoy
-    const isTestCode = ['TP999', 'TP404', 'IB3166', 'TP777', 'TP555', 'TP111'].includes(code);
+    const isTestCode = ['RETRASO-400', 'RETRASO-180', 'CANCELADO', 'VUELO-OK', 'RETRASO-VIP'].includes(code);
 
     if (!isTestCode) {
         try {
@@ -495,7 +493,7 @@ export async function handleFlightMonitoring(flightId: string, travelProfile: st
     }
 
     // ✅ FAST-PATH: Solo para códigos estrictos de sistema y NO para Iberia Express real
-    const testCodes = ['TP999', 'TP404', 'TP777', 'TP555', 'TP111'];
+    const testCodes = ['RETRASO-400', 'RETRASO-180', 'CANCELADO', 'VUELO-OK', 'RETRASO-VIP'];
     if (testCodes.includes(code)) {
         console.log(`[Agent] ⚡ Fast-Path DETERMINISTA activado para |${code}|`);
 

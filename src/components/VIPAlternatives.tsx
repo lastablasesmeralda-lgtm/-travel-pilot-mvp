@@ -468,6 +468,32 @@ export default function VIPAlternatives({
                                     </View>
                                 </TouchableOpacity>
 
+                                {/* ── CARD: RESERVA DE HOTEL DE URGENCIA (BOOKING AFFILIATE) ── */}
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        const destStr = flightData?.arrival?.city || flightData?.arrival?.airport || flightData?.arrival?.iata || 'aeropuerto cercano';
+                                        const affiliateId = "0000000"; // TODO: Reemplazar con ID de Booking Affiliate real
+                                        const { Linking } = require('react-native');
+                                        Linking.openURL(`https://www.booking.com/searchresults.es.html?ss=${encodeURIComponent(destStr)}&aid=${affiliateId}`);
+                                    }}
+                                    activeOpacity={0.7}
+                                    style={{ backgroundColor: '#0F0F0F', borderRadius: 18, padding: 20, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: '#007AFF', borderWidth: 1, borderColor: '#1A1A1A' }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                                        <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(0,122,255,0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                                            <Text style={{ fontSize: 20 }}>🏨</Text>
+                                        </View>
+                                        <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '800', flex: 1 }}>Reservar Alojamiento de Urgencia</Text>
+                                    </View>
+                                    <Text style={{ color: '#888', fontSize: 12, lineHeight: 18, marginBottom: 14, marginLeft: 52 }}>
+                                        Las aerolíneas tardan horas en dar alojamiento. Reserva ahora y usa tu recibo para exigir el reembolso en tu reclamación.
+                                    </Text>
+                                    <View style={{ marginLeft: 52 }}>
+                                        <View style={{ backgroundColor: 'rgba(0,122,255,0.12)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, alignSelf: 'flex-start' }}>
+                                            <Text style={{ color: '#007AFF', fontSize: 11, fontWeight: '900', letterSpacing: 0.5 }}>ABRIR EN BOOKING.COM →</Text>
+                                        </View>
+                                    </View>
+                                </TouchableOpacity>
+
                                 {/* ── CARD 4: COBERTURA Y ASISTENCIA ── */}
                                 <TouchableOpacity
                                     onPress={() => setDetailView('planB')}
