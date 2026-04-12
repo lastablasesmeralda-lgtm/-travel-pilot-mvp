@@ -345,32 +345,44 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
             };
         }
 
-        const paddedCallsign = code.padEnd(8, ' ');
         const osHeaders: Record<string, string> = { 'Accept': 'application/json' };
         const osUser = process.env.OPENSKY_USER || '';
         const osPass = process.env.OPENSKY_PASS || '';
         if (osUser && osPass) {
             osHeaders['Authorization'] = 'Basic ' + Buffer.from(`${osUser}:${osPass}`).toString('base64');
         }
+
         const osRes = await fetch(
-            `https://opensky-network.org/api/states/all?callsign=${encodeURIComponent(paddedCallsign)}`,
-            { headers: osHeaders, signal: AbortSignal.timeout(8000) }
+            `https://opensky-network.org/api/states/all`,
+            { headers: osHeaders, signal: AbortSignal.timeout(12000) }
         );
         const osData = osRes.ok ? await osRes.json() : null;
-        const data = osData?.states ? { data: [osData.states[0]] } : null;
+
+        // Mapeo inteligente para encontrar el indicativo real en el radar
+        const airlineMap: Record<string, string> = {
+            'IB': 'IBE', 'JQ': 'JST', 'AA': 'AAL', 'BA': 'BAW', 'LH': 'DLH', 
+            'AF': 'AFR', 'UX': 'AEA', 'VY': 'VLG', 'FR': 'RYR', 'U2': 'EZY', 'RY': 'RYR'
+        };
+        const prefix = code.substring(0, 2);
+        const num = code.substring(2);
+        const callsignVariants = [code, `${airlineMap[prefix] || prefix}${num}`];
+
+        const state = osData?.states?.find((s: any[]) => 
+            s[1] && callsignVariants.includes(s[1].trim())
+        );
+        const data = state ? { data: [state] } : null;
 
         if (data && data.data && data.data.length > 0) {
             const flight = data.data[0];
             const callsign = (flight[1] || code).trim();
             const onGround = flight[8] === true;
-            const depDelay = flight.departure?.delay || 0;
-            const arrDelay = flight.arrival?.delay || 0;
-            const delayMinutes = Math.max(depDelay, arrDelay);
-            const status = delayMinutes > 30 ? 'delayed' : flight.flight_status || 'scheduled';
+            // Forzar datos básicos para que no fallen las variables interconectadas
+            const depDelay = 0;
+            const arrDelay = 0;
+            const delayMinutes = 0;
+            const status = onGround ? 'landed' : 'active';
 
-            const estimatedArrival = new Date(
-                flight.arrival?.estimated || flight.arrival?.scheduled || now.getTime() + 2 * 60 * 60 * 1000
-            );
+            const estimatedArrival = new Date(now.getTime() + 2 * 60 * 60 * 1000);
 
             const hotelBooking: HotelBooking = {
                 name: 'Hotel destino',
