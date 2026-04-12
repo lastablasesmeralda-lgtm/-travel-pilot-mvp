@@ -135,9 +135,9 @@ export default function IntelScreen() {
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <Text style={[s.b, { marginBottom: 0 }]}>🌍 INICIO</Text>
                 <TouchableOpacity
-                    onPress={() => { 
-                        if (showForm) setEditingTripId(null); 
-                        setShowForm(!showForm); 
+                    onPress={() => {
+                        if (showForm) setEditingTripId(null);
+                        setShowForm(!showForm);
                     }}
                     style={{ backgroundColor: showForm ? '#333' : '#D4AF37', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 }}
                 >
@@ -222,7 +222,7 @@ export default function IntelScreen() {
                                         <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold' }}>VIAJE ACTIVO</Text>
                                     </View>
                                     <Text style={{ color: '#FFF', fontSize: 22, fontWeight: 'bold' }}>{displayTitle}</Text>
-                                    
+
                                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
                                         {displayDestination ? <Text style={{ color: '#CCCCCC', fontSize: 13 }}>📍 {displayDestination}</Text> : null}
                                         {trip.flight_number ? (
@@ -231,7 +231,7 @@ export default function IntelScreen() {
                                             </View>
                                         ) : null}
                                     </View>
-                                    
+
                                     {(trip.hotel_name || trip.hotel_phone) && (
                                         <View style={{ marginTop: 15, padding: 12, backgroundColor: '#1A1A1A', borderRadius: 16, borderLeftWidth: 3, borderLeftColor: '#D4AF37' }}>
                                             <Text style={{ color: '#D4AF37', fontSize: 9, fontWeight: '900', marginBottom: 4, letterSpacing: 1 }}>ESTANCIA PROTEGIDA</Text>
@@ -281,15 +281,15 @@ export default function IntelScreen() {
                         let msg = '';
                         if (flightData?.status === 'cancelled') {
                             msg = travelProfile === 'premium'
-                                ? `Vuelo cancelado. Tu protocolo VIP está activo. Reembolso preparado y alternativas de máximo nivel seleccionadas. Dime cómo quieres proceder.`
-                                : `Vuelo cancelado. Tu reclamación de reembolso está preparada. Recuperarás el importe completo sin gestiones adicionales. Un toque y listo.`;
+                                ? `Vuelo cancelado. Tu reembolso y las alternativas de máximo nivel están preparadas. Tienes todo en tu sección de DOCS.`
+                                : `Vuelo cancelado. Tu reclamación de reembolso está preparada en DOCS. Revísala y fírmala para iniciar el proceso.`;
                         } else if ((flightData?.departure?.delay || 0) >= 180) {
                             const amt = getEU261Amount(flightData).replace('€', ' euros');
                             msg = travelProfile === 'premium'
-                                ? `Retraso crítico detectado. Tu protocolo VIP está activo. Tengo tu expediente legal listo y las mejores alternativas seleccionadas para ti. Todo preparado bajo tu nivel de exigencia.`
+                                ? `Retraso crítico detectado. He preparado tu expediente legal para reclamar ${amt} y analizado tus opciones de reubicación. Tienes todo listo en DOCS.`
                                 : travelProfile === 'budget'
-                                    ? `Retraso crítico detectado. Tu expediente de reclamación EU261 está listo para firmar. Sin formularios, sin llamadas. Un toque y el proceso legal empieza solo.`
-                                    : `Retraso crítico detectado. Tu expediente de reclamación EU261 está listo para firmar. Con el plan VIP tendrías acceso a opciones adicionales de rescate.`;
+                                    ? `Retraso crítico detectado. Tu expediente de reclamación EU261 está listo para firmar en tu Bóveda de DOCS. Un toque y el proceso legal empieza solo.`
+                                    : `Retraso crítico detectado. Tu expediente de reclamación EU261 está listo para firmar en DOCS. Con el plan VIP tendrías opciones adicionales de rescate.`;
                         } else if ((flightData?.departure?.delay || 0) >= 60) {
                             msg = travelProfile === 'premium'
                                 ? `Retraso detectado. Tu vuelo está bajo vigilancia prioritaria. Cualquier cambio relevante te llegará al instante.`

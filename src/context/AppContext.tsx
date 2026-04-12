@@ -1179,24 +1179,48 @@ export const AppProvider = ({ children }) => {
       const delay = data.departure?.delay || data.delayMinutes || 0;
       let finalSpeech = ''
 
-      if (data.status === 'cancelled') {
-        if (travelProfile === 'premium') {
-          finalSpeech = 'Vuelo cancelado. Tranquilo, ya he bloqueado una ruta alternativa y asegurado tu reembolso. Revisa tus opciones VIP.';
-        } else {
-          finalSpeech = 'Vuelo cancelado. He preparado tu reclamación legal y el reembolso. Tienes los detalles en pantalla.';
-        }
+      // ══════════════════════════════════════════════════════════════
+      // VENTANA 1: DETECCIÓN — Diálogos para los 9 escenarios de demo
+      // VIP = proactivo ("He preparado..."), Estándar = informativo ("Tienes derecho a...")
+      // ══════════════════════════════════════════════════════════════
+      if (data.flightNumber === 'VUELO-OK') {
+        finalSpeech = travelProfile === 'premium'
+          ? 'Tu vuelo está en hora. Todo bajo control, sigo monitorizando la red en tiempo real por si hay algún cambio.'
+          : 'Tu vuelo está en hora. Sin incidencias detectadas.';
+      } else if (data.flightNumber === 'JET-PRIVADO') {
+        finalSpeech = travelProfile === 'premium'
+          ? 'Retraso de larga duración detectado. He preparado tu reclamación legal de 600 euros y analizado las mejores rutas alternativas. Tienes tu expediente listo en DOCS.'
+          : 'Retraso extremo detectado. Tienes derecho a la indemnización máxima de 600 euros. Revisa las opciones en pantalla.';
+      } else if (data.flightNumber === 'DESVIO-VLC') {
+        finalSpeech = travelProfile === 'premium'
+          ? 'Vuelo desviado a Valencia. He generado tu informe de incidencia y el derecho a transporte alternativo. Revisa tu plan de reubicación en DOCS.'
+          : 'Vuelo desviado a Valencia. Tienes derecho a transporte alternativo hasta tu destino final. Consulta la información en pantalla.';
+      } else if (data.flightNumber === 'VUELO-HISTORIAL') {
+        finalSpeech = travelProfile === 'premium'
+          ? 'He analizado tu vuelo pasado. Tienes derecho a una indemnización por el retraso sufrido. He generado el expediente legal en tu Bóveda de DOCS.'
+          : 'Vuelo pasado con incidencia detectada. Según la ley EU261, aún puedes reclamar si fue dentro de los últimos 3 años. Más información en pantalla.';
+      } else if (data.flightNumber === 'RETRASO-VIP') {
+        finalSpeech = travelProfile === 'premium'
+          ? 'Incidencia crítica en tu vuelo. He preparado tu acceso a Sala VIP y el formulario de reclamación por 600 euros. Todo gestionado en tu sección de DOCS.'
+          : 'Retraso grave detectado. Tienes derecho a 600 euros de indemnización y manutención. Consulta los detalles en pantalla.';
+      } else if (data.flightNumber === 'RETRASO-60') {
+        finalSpeech = travelProfile === 'premium'
+          ? 'Retraso detectado. He preparado tu pase VIP y manutención por si la espera se alarga. Te aviso si la situación cambia.'
+          : 'Retraso detectado. Si supera las 2 horas, solicita tus vales de comida. Sigo vigilando tu vuelo.';
+      } else if (data.status === 'cancelled') {
+        // CANCELADO + cualquier otro vuelo cancelado real
+        finalSpeech = travelProfile === 'premium'
+          ? 'Vuelo cancelado. Tranquilo, ya he bloqueado una ruta alternativa y asegurado tu reembolso. Revisa tus opciones VIP.'
+          : 'Vuelo cancelado. He preparado tu reclamación legal y el reembolso. Tienes los detalles en pantalla.';
       } else if (delay > 180) {
-        if (travelProfile === 'premium') {
-          finalSpeech = 'Retraso crítico. Descuida, ya gestiono tu compensación y he activado tu acceso a la Sala VIP. Relájate.';
-        } else {
-          finalSpeech = 'Retraso importante. Tienes derecho a indemnización. He generado tu reclamación oficial, revísala en pantalla.';
-        }
+        // RETRASO-180, RETRASO-400 + cualquier vuelo real con retraso grave
+        finalSpeech = travelProfile === 'premium'
+          ? 'Retraso crítico detectado en tu vuelo. He activado tu asistencia y estoy preparando tu expediente de indemnización. Relájate.'
+          : 'Retraso importante detectado. Tienes derecho a indemnización según la normativa EU261. Revisa las opciones en pantalla.';
       } else if (delay > 60) {
-        if (travelProfile === 'premium') {
-          finalSpeech = 'Retraso detectado. He preparado tu pase VIP y manutención por si la espera se alarga. Te aviso.';
-        } else {
-          finalSpeech = 'Retraso detectado. Si supera las 2 horas, solicita tus vales de comida. Sigo vigilando tu vuelo.';
-        }
+        finalSpeech = travelProfile === 'premium'
+          ? 'Retraso detectado. He preparado tu pase VIP y manutención por si la espera se alarga. Te aviso.'
+          : 'Retraso detectado. Si supera las 2 horas, solicita tus vales de comida. Sigo vigilando tu vuelo.';
       }
 
       if (!finalSpeech) {
@@ -1280,7 +1304,7 @@ export const AppProvider = ({ children }) => {
         title: 'PROTOCOLO DE RESCATE PREMIUM', 
         description: 'Acceso directo a tu panel personalizado de alternativas. Vuelos, salas VIP y expedientes legales listos para ejecución inmediata.',
         aiReasoning: 'Protocolo Integral Activado: He unificado todas las vías de solución en tu panel de mando personal.',
-        voiceScriptFinal: 'Protocolo de Rescate Premium activado. He analizado todas las alternativas y he preparado tu panel de mando personalizado. Tú tienes la última palabra.'
+        voiceScriptFinal: 'Estrategia de rescate generada. He analizado todas las alternativas y preparado tu expediente de reclamación. Tienes todo listo en DOCS.'
       };
       setApiPlan({ ...instantPlan, options: [masterVIPOption] });
     }
