@@ -196,7 +196,7 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         };
     }
 
-    if (code === 'TP555') {
+    if (code === 'RETRASO-400') {
         const originalArrival = new Date(now.getTime() + 8 * 60 * 60 * 1000);
         const delayMinutes = 300;
         return {
@@ -236,7 +236,7 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         };
     }
 
-    if (code === 'TP777') {
+    if (code === 'CANCELADO') {
         const originalArrival = new Date(now.getTime() + 1 * 60 * 60 * 1000);
         return {
             flightId,
