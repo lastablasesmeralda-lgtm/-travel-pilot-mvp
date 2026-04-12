@@ -1193,7 +1193,7 @@ export const AppProvider = ({ children }) => {
           : 'Retraso extremo detectado. Tienes derecho a la indemnización máxima de 600 euros. Revisa las opciones en pantalla.';
       } else if (data.flightNumber === 'DESVIO-VLC') {
         finalSpeech = travelProfile === 'premium'
-          ? 'Vuelo desviado a Valencia. He generado tu informe de incidencia y el derecho a transporte alternativo. Revisa tu plan de reubicación en DOCS.'
+          ? 'Vuelo desviado a Valencia. Tienes derecho a transporte alternativo. Estoy analizando las mejores opciones para llegar a tu destino.'
           : 'Vuelo desviado a Valencia. Tienes derecho a transporte alternativo hasta tu destino final. Consulta la información en pantalla.';
       } else if (data.flightNumber === 'VUELO-HISTORIAL') {
         finalSpeech = travelProfile === 'premium'
