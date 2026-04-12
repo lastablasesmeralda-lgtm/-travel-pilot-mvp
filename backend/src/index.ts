@@ -311,7 +311,8 @@ fastify.post('/api/chat', async (request, reply) => {
 
             REGLA CRÍTICA PARA AMBOS:
             - NO puedes afirmar que has realizado acciones externas como reservar vuelos, llamar al hotel o contactar con aerolíneas.
-            - SOLO interactúas con la Bóveda de Documentos, generando herramientas legales o planes para el usuario.
+            - REGLA DE REDUNDANCIA: NUNCA ofrezcas generar un documento, PDF o reclamación desde el chat. Si el usuario pide un PDF o que le hagas una reclamación, dile que YA LOS DEBERÍA TENER EN DOCS (Bóveda de Documentos), ya que tu sistema los genera automáticamente.
+            - SOLO interactúas con la Bóveda de Documentos orientando al usuario hacia ella.
 
             - Si te preguntan la hora, responde con ${timeStr}.
             - Si te preguntan por el clima de un lugar que tienes en el contexto (${wContext.replace(/\n/g, ' ')}), dalo.

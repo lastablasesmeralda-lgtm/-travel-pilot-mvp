@@ -44,9 +44,9 @@ const SLIDES = [
     },
     {
         id: '6',
-        image: require('../../assets/onboarding5.jpg'), // Placeholder, will render an emoji instead
+        image: require('../../assets/onboarding5.jpg'), // Placeholder
         title: 'GUÍA DE INICIO RÁPIDO',
-        subtitle: '1️⃣ PERFIL 👤\nElige tu Nivel. (ESTÁNDAR: Información manual a tu cargo. VIP: Solución integral. La IA avisa automáticamente al hotel, redacta reclamaciones EU261 y asiste tus reubicaciones).\n\n2️⃣ TU PRIMERA MISIÓN ✈️\nVe a INICIO y pulsa [+ Nuevo Viaje] para decirle a la IA a dónde vas.\n\n3️⃣ MAGIA AUTOMÁTICA 🔐\nVe a DOCS y pulsa "ACTUALIZAR CON MIS CORREOS" para importar reservas y billetes de golpe.',
+        subtitle: '1️⃣ PERFIL 👤\nElige tu Nivel. (VIP: La IA avisa automáticamente al hotel, redacta reclamaciones y asiste tus reubicaciones).\n\n2️⃣ DOCS 🔐\nPulsa "ACTUALIZAR CON MIS CORREOS" para importar reservas y billetes.\n\n3️⃣ ESCENARIOS AVANZADOS 🚀\n¿Quieres ver el potencial total? Prueba estos códigos en el Radar:\n• DESVIO-VLC (Cambio de ruta)\n• JET-PRIVADO (Falla total / Emirates)\n• RETRASO-60 (Incidencia menor)\n• VUELO-HISTORIAL (Control post-vuelo)',
         accent: '#10B981', // Verde Esmeralda
     },
 ];
