@@ -1507,14 +1507,17 @@ fastify.post('/api/generateAssistanceCertificate', async (request: any, reply) =
         }
 
         // Firma y Cierre
-        y -= 40;
-        page.drawText('SOLICITUD PRESENTADA DIGITALMENTE VIA TRAVEL-PILOT', { x: 40, y, size: 8, font: fontBold, color: GREY });
-        y -= 15;
-        page.drawText(`Válido para presentación inmediata el ${new Date().toLocaleDateString()}`, { x: 40, y, size: 8, font: fontRegular, color: GREY });
-
-        // Pie de página
-        page.drawRectangle({ x: 0, y: 0, width, height: 40, color: DARK });
-        page.drawText('Este documento oficial tiene validez legal inmediata en territorio de la UE.', { x: 40, y: 15, size: 7, font: fontRegular, color: GOLD });
+        y -= 60;
+        page.drawLine({ start: { x: 40, y: y }, end: { x: 250, y: y }, thickness: 1, color: BLACK });
+        page.drawText('Firma del Pasajero / Reclamante', { x: 40, y: y - 15, size: 9, font: fontRegular, color: GREY });
+        
+        page.drawText('Lugar y Fecha:', { x: 350, y: y, size: 10, font: fontBold, color: BLACK });
+        page.drawText('________________________', { x: 430, y: y, size: 10, font: fontRegular, color: BLACK });
+        
+        y -= 60;
+        page.drawRectangle({ x: 40, y: y - 10, width: 515, height: 40, color: rgb(0.95, 0.95, 0.95) });
+        page.drawText('Este documento tiene validez legal bajo el Reglamento CE 261/2004.', { x: 50, y: y + 10, size: 8, font: fontRegular, color: DARK });
+        page.drawText('Presentado digitalmente vía Travel-Pilot IA.', { x: 50, y: y, size: 8, font: fontRegular, color: DARK });
 
         const pdfBytes = await pdfDoc.save();
         const pdfBase64 = Buffer.from(pdfBytes).toString('base64');

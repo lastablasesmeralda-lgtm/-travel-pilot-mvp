@@ -335,6 +335,7 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         };
     }
 
+    // 📡 PRIORIDAD 1: OpenSky (Ilimitado y Gratis - Seguimiento satelital en vivo)
     try {
         const osHeaders: Record<string, string> = { 'Accept': 'application/json' };
         const osUser = process.env.OPENSKY_USER || '';
@@ -345,7 +346,7 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
 
         const osRes = await fetch(
             `https://opensky-network.org/api/states/all`,
-            { headers: osHeaders, signal: AbortSignal.timeout(12000) }
+            { headers: osHeaders, signal: AbortSignal.timeout(10000) }
         );
         const osData = osRes.ok ? await osRes.json() : null;
 
@@ -383,27 +384,59 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         console.log('[Radar] Error OpenSky:', e);
     }
 
-    // FALLBACK FINAL
-    const originalArrival = new Date(now.getTime() + 1 * 60 * 60 * 1000);
-    return {
-        flightId,
-        flightNumber: flightId,
-        status: 'delayed',
-        delayMinutes: 210,
-        airline: 'Generic Airlines Fallback',
-        departure: { iata: 'MAD', delay: 210, scheduled: now.toISOString() },
-        arrival: { iata: 'LHR', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + 210 * 60 * 1000).toISOString() },
-        hotel_booking: {
-            name: 'The Ritz London',
-            check_in_limit: '23:00',
-            check_in_limit_iso: new Date(now.toDateString() + ' 23:00').toISOString(),
-            address: '150 Piccadilly, London',
-            cost_per_night: 450,
-            is_refundable: false,
-        },
-        connecting_flight: null,
-        ground_transport: null,
-    };
+    // 📡 PRIORIDAD 2: AeroDataBox (Profesional via RapidAPI)
+    try {
+        const rapidKey = process.env.RAPIDAPI_KEY || '4884af8ee1mshabc33da26b00b97p12fefdjsne293b2ca48bc';
+        if (rapidKey) {
+            console.log(`[Radar] 🔍 Consultando AeroDataBox para ${code}...`);
+            const adbRes = await fetch(
+                `https://aerodatabox.p.rapidapi.com/flights/number/${code}`,
+                { 
+                    headers: {
+                        'X-RapidAPI-Key': rapidKey,
+                        'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com'
+                    },
+                    signal: AbortSignal.timeout(7000) 
+                }
+            );
+            
+            if (adbRes.ok) {
+                const adbData = await adbRes.json();
+                if (Array.isArray(adbData) && adbData.length > 0) {
+                    const f = adbData[0];
+                    console.log(`[Radar] ✅ AeroDataBox localizó: ${f.status}`);
+                    
+                    return {
+                        flightId,
+                        flightNumber: code,
+                        status: f.status.toLowerCase().includes('active') || f.status.toLowerCase().includes('flight') ? 'active' : (f.status.toLowerCase().includes('cancelled') ? 'cancelled' : 'delayed'),
+                        delayMinutes: 0, // AeroDataBox a veces no da el delay directo en el top-level
+                        airline: f.airline?.name || code.substring(0, 2),
+                        departure: { 
+                            iata: f.departure?.airport?.iata || 'N/A', 
+                            delay: 0, 
+                            scheduled: f.departure?.scheduledTimeLocal || now.toISOString(),
+                            terminal: f.departure?.terminal,
+                        },
+                        arrival: { 
+                            iata: f.arrival?.airport?.iata || 'N/A', 
+                            scheduled: f.arrival?.scheduledTimeLocal || now.toISOString(),
+                            estimated: f.arrival?.scheduledTimeLocal || now.toISOString(),
+                            terminal: f.arrival?.terminal,
+                        },
+                        hotel_booking: null,
+                        connecting_flight: null,
+                        ground_transport: null,
+                    };
+                }
+            }
+        }
+    } catch (e) {
+        console.log('[Radar] Error AeroDataBox:', e);
+    }
+
+    // FALLBACK FINAL: En modo producción/global, si no hay simulación ni OpenSky lo ve, el vuelo no existe.
+    throw new Error(`Vuelo ${flightId} no localizado en el radar actual ni en simulación.`);
 }
 
 // ============================================================
