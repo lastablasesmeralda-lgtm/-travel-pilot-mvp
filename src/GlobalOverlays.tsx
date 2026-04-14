@@ -761,7 +761,7 @@ export default function GlobalOverlays() {
                                         id: `rescue_${Date.now()}`,
                                         t: isVip
                                             ? (isMajorIssue ? `PROTOCOLO DE RESCATE PREMIUM (VIP)` : `PROTOCOLO DE CORTESÍA VIP`)
-                                            : (isHotel ? `PROPUESTA ALOJAMIENTO IA (PLAN ${isEco ? 'ECONÓMICO' : isRápido ? 'RÁPIDO' : 'EQUILIBRADO'})` :
+                                            : (isHotel ? `GESTIÓN DE REUBICACIÓN Y TRASLADO` :
                                                 `PROPUESTA RESCATE IA (${isEco ? 'ECONÓMICO' : isRápido ? 'RÁPIDO' : 'EQUILIBRADO'})`),
                                         s: isVip ? (isMajorIssue ? 'Estrategia Integral Personalizada' : 'Privilegios y Confort Activados') : (isHotel ? `Alojamiento · ${selectedPlan.title}` : `Propuesta Vuelo · ${selectedPlan.title}`),
                                         i: imgRescate,
@@ -843,26 +843,80 @@ export default function GlobalOverlays() {
                                 {isScanning ? 'ESCANEANDO DOCUMENTO...' : `${viewDoc?.t || 'DOCUMENTO'} - VERIFICADO`}
                             </Text>
                             
-                            {viewDoc?.isPdf && (
-                                <TouchableOpacity 
-                                    style={[s.bt, { backgroundColor: '#4CD964', marginTop: 15, borderRadius: 12, width: '100%' }]} 
-                                    onPress={async () => {
-                                        if (viewDoc.i && await Sharing.isAvailableAsync()) {
-                                            await Sharing.shareAsync(viewDoc.i);
-                                        } else {
-                                            Alert.alert('Error', 'No se puede compartir el archivo en este dispositivo.');
-                                        }
-                                    }}
-                                >
-                                    <Text style={{ color: '#000', fontWeight: 'bold' }}>📥 DESCARGAR / COMPARTIR PDF</Text>
-                                </TouchableOpacity>
-                            )}
+                            {viewDoc?.t?.includes('GESTIÓN DE REUBICACIÓN') ? (
+                                <View style={{ width: '100%', marginTop: 10 }}>
+                                    {/* BOTÓN 1: TRANSPORTE */}
+                                    <TouchableOpacity 
+                                        style={[s.bt, { backgroundColor: '#AF52DE', borderRadius: 12, marginBottom: 10 }]}
+                                        onPress={() => {
+                                            Alert.alert(
+                                                "🚅 ESTRATEGIA DE TRANSPORTE",
+                                                "Tienes derecho legal a un Tren (AVE) o Autobús gratuito para llegar a tu destino original. \n\nPASOS A SEGUIR:\n1. Dirígete ahora mismo al mostrador de la aerolínea.\n2. Muestra este ticket y exige tu traslado bajo la ley EU261.\n3. Si no te dan solución, adquiere el billete de AVE y guarda el recibo para el reembolso total."
+                                            );
+                                        }}
+                                    >
+                                        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🚅 1. VER TRANSPORTE ALTERNATIVO</Text>
+                                    </TouchableOpacity>
 
-                            {viewDoc?.isConfirmed && (
-                                <View style={{ backgroundColor: '#27C93F', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, marginTop: 12, borderWidth: 1, borderColor: '#FFF' }}>
-                                    <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 10, letterSpacing: 1 }}>🛡️ CONFIRMADO POR AGENTE IA</Text>
+                                    {/* BOTÓN 2: ALOJAMIENTO (CHAT) */}
+                                    <TouchableOpacity 
+                                        style={[s.bt, { backgroundColor: '#007AFF', borderRadius: 12, marginBottom: 10 }]}
+                                        onPress={() => {
+                                            setViewDoc(null);
+                                            // Activar el chat con mensaje pregrabado
+                                            setTab('Intel');
+                                            // Pequeño delay para que el teclado/pantalla carguen
+                                            setTimeout(() => {
+                                                setFlightInput("Necesito asistencia con el alojamiento en Valencia");
+                                                // Simulamos el inicio de búsqueda con ese texto
+                                                setIsSearching(true);
+                                                setTimeout(() => setIsSearching(false), 2000);
+                                            }, 500);
+                                        }}
+                                    >
+                                        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🏨 2. GESTIONAR ALOJAMIENTO (CHAT)</Text>
+                                    </TouchableOpacity>
+
+                                    {/* BOTÓN 3: INDEMNIZACIÓN */}
+                                    <TouchableOpacity 
+                                        style={[s.bt, { backgroundColor: '#4CD964', borderRadius: 12 }]}
+                                        onPress={() => {
+                                            setViewDoc(null);
+                                            // Simular navegación al área legal/firma
+                                            Alert.alert("⚖️ ÁREA LEGAL", "Iniciando generación de reclamación oficial por 250€. Un momento...");
+                                            setTimeout(() => {
+                                                setShowCancellation(true);
+                                            }, 1000);
+                                        }}
+                                    >
+                                        <Text style={{ color: '#000', fontWeight: 'bold' }}>⚖️ 3. SOLICITAR INDEMNIZACIÓN</Text>
+                                    </TouchableOpacity>
                                 </View>
+                            ) : (
+                                <>
+                                    {viewDoc?.isPdf && (
+                                        <TouchableOpacity 
+                                            style={[s.bt, { backgroundColor: '#4CD964', marginTop: 15, borderRadius: 12, width: '100%' }]} 
+                                            onPress={async () => {
+                                                if (viewDoc.i && await Sharing.isAvailableAsync()) {
+                                                    await Sharing.shareAsync(viewDoc.i);
+                                                } else {
+                                                    Alert.alert('Error', 'No se puede compartir el archivo en este dispositivo.');
+                                                }
+                                            }}
+                                        >
+                                            <Text style={{ color: '#000', fontWeight: 'bold' }}>📥 DESCARGAR / COMPARTIR PDF</Text>
+                                        </TouchableOpacity>
+                                    )}
+
+                                    {viewDoc?.isConfirmed && (
+                                        <View style={{ backgroundColor: '#27C93F', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, marginTop: 12, borderWidth: 1, borderColor: '#FFF' }}>
+                                            <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 10, letterSpacing: 1 }}>🛡️ CONFIRMADO POR AGENTE IA</Text>
+                                        </View>
+                                    )}
+                                </>
                             )}
+                            
                             <TouchableOpacity style={[s.bt, { backgroundColor: '#222', marginTop: 15, borderRadius: 12, width: '100%' }]} onPress={() => setViewDoc(null)}>
                                 <Text style={{ color: '#FFF', fontWeight: 'bold' }}>CERRAR VISOR</Text>
                             </TouchableOpacity>
