@@ -12,7 +12,7 @@ import { BACKEND_URL } from '../../config';
 
 export default function VaultScreen() {
     const {
-        legalShieldActive, setViewDoc, setIsScanning, claims, setClaims, removeClaim, flightData,
+        legalShieldActive, setViewDoc, setIsScanning, claims, setClaims, removeClaim, flightData, setFlightData,
         compensationEligible, extraDocs, setExtraDocs, isExtracting, simulateGmailSync, user,
         removeExtraDoc, setHasNewDoc, setRecoveredMoney, setShowChat,
         showVIPAlternatives, setShowVIPAlternatives, pendingVIPScroll, setPendingVIPScroll,
@@ -312,10 +312,21 @@ export default function VaultScreen() {
                                 onPress={() => {
                                     // 1. Redirigir el Ticket Maestro VIP al panel de opciones (VIPAlternatives)
                                     if (d.t?.includes('VIP')) {
+                                        setFlightData((prev: any) => {
+                                            if (prev) {
+                                                return { ...prev, delayMinutes: d.t.includes('RESCATE') ? 180 : 60, status: 'delayed' };
+                                            }
+                                            return { delayMinutes: d.t.includes('RESCATE') ? 180 : 60, status: 'delayed', departure: { iata: 'MAD', delay: d.t.includes('RESCATE') ? 180 : 60 }, arrival: { iata: 'CDG' }, airline: 'Aerolínea' };
+                                        });
                                         setCurrentActionDoc(d);
                                         setShowVIPAlternatives(true);
                                     } 
-                                    // 2. CASO DIRECTO: Abrir el visor inmediatamente (User Request: Cirugía de Agilidad)
+                                    // 2. CASO PROPUESTA: Abrir ventana de acción detallada para planes de alojamiento/vuelo
+                                    else if (d.t?.includes('PROPUESTA') || d.t?.includes('ALOJAMIENTO')) {
+                                        setCurrentActionDoc(d);
+                                        setShowActionModal(true);
+                                    }
+                                    // 3. CASO DIRECTO: Abrir el visor inmediatamente (User Request: Cirugía de Agilidad)
                                     else {
                                         setViewDoc(d);
                                         setIsScanning(true);
@@ -472,6 +483,25 @@ export default function VaultScreen() {
                     </View>
                 </TouchableOpacity>
 
+                {/* BOTÓN CONOCE TUS DERECHOS */}
+                <TouchableOpacity
+                    onPress={() => setShowRights(true)}
+                    style={{
+                        backgroundColor: '#1A1A1A',
+                        borderRadius: 16,
+                        padding: 18,
+                        marginTop: 15,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderWidth: 1,
+                        borderColor: '#AF52DE66'
+                    }}
+                >
+                    <Text style={{ fontSize: 18, marginRight: 12 }}>⚖️</Text>
+                    <Text style={{ color: '#AF52DE', fontWeight: '900', fontSize: 13, letterSpacing: 0.5 }}>GUÍA: CONOCE TUS DERECHOS</Text>
+                </TouchableOpacity>
+
                 {/* RECLAMACIONES */}
                 <View onLayout={(e) => { claimsYRef.current = e.nativeEvent.layout.y; }} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 14 }}>
                     <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', letterSpacing: 1.5 }}>⚖️ RECLAMACIONES EU261</Text>
@@ -561,10 +591,21 @@ export default function VaultScreen() {
 
                             {currentActionDoc?.t?.includes('ECONÓMICO') && (
                                 <View>
-                                    <Text style={{ color: '#4CD964', fontSize: 13, marginBottom: 20 }}>Tu expediente legal está listo para firmar.</Text>
-                                    <TouchableOpacity onPress={() => { setShowActionModal(false); setTimeout(() => scrollViewRef.current?.scrollTo({ y: claimsYRef.current, animated: true }), 300); }} style={{ backgroundColor: '#4CD964', padding: 16, borderRadius: 12, alignItems: 'center' }}>
-                                        <Text style={{ color: '#000', fontWeight: 'bold' }}> IR A FIRMA </Text>
-                                    </TouchableOpacity>
+                                    {compensationEligible ? (
+                                        <>
+                                            <Text style={{ color: '#4CD964', fontSize: 13, marginBottom: 20 }}>Tu expediente legal de indemnización está listo para firmar.</Text>
+                                            <TouchableOpacity onPress={() => { setShowActionModal(false); setTimeout(() => scrollViewRef.current?.scrollTo({ y: claimsYRef.current, animated: true }), 300); }} style={{ backgroundColor: '#4CD964', padding: 16, borderRadius: 12, alignItems: 'center' }}>
+                                                <Text style={{ color: '#000', fontWeight: 'bold' }}> IR A FIRMA </Text>
+                                            </TouchableOpacity>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Text style={{ color: '#D4AF37', fontSize: 13, lineHeight: 20, marginBottom: 20 }}>Has elegido el plan de espera. Acércate al mostrador para solicitar tus vales de mantenimiento gratuitos.</Text>
+                                            <TouchableOpacity onPress={() => setShowActionModal(false)} style={{ backgroundColor: '#222', padding: 16, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#D4AF37' }}>
+                                                <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>ENTENDIDО</Text>
+                                            </TouchableOpacity>
+                                        </>
+                                    )}
                                 </View>
                             )}
 
@@ -574,6 +615,62 @@ export default function VaultScreen() {
                         </View>
                     </View>
                 </Modal>
+
+            {/* MODAL CONOCE TUS DERECHOS (PROTOCOLO EU261) */}
+            <Modal visible={showRights} animationType="slide" transparent>
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.98)', paddingTop: 60 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, marginBottom: 20 }}>
+                        <Text style={{ color: '#FFF', fontSize: 20, fontWeight: '900' }}>PROTOCOLO LEGAL EU261</Text>
+                        <TouchableOpacity onPress={() => setShowRights(false)} style={{ backgroundColor: '#222', padding: 8, borderRadius: 15, width: 40, alignItems: 'center' }}>
+                            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>✕</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <ScrollView contentContainerStyle={{ padding: 25, paddingBottom: 100 }}>
+                        <Text style={{ color: '#AF52DE', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 10 }}>TABLA DE INDEMNIZACIONES 💶</Text>
+                        <Text style={{ color: '#B0B0B0', fontSize: 14, lineHeight: 20, marginBottom: 20 }}>
+                            El reglamento europeo te protege en caso de incidentes graves. Estos son los importes que puedes reclamar por pasajero:
+                        </Text>
+
+                        <View style={{ backgroundColor: '#111', padding: 20, borderRadius: 20, marginBottom: 10, borderWidth: 1, borderColor: '#222' }}>
+                            <Text style={{ color: '#FFF', fontSize: 18, fontWeight: 'bold' }}>250€</Text>
+                            <Text style={{ color: '#888', fontSize: 12 }}>Vuelos cortos (hasta 1.500 km)</Text>
+                        </View>
+                        <View style={{ backgroundColor: '#111', padding: 20, borderRadius: 20, marginBottom: 10, borderWidth: 1, borderColor: '#222' }}>
+                            <Text style={{ color: '#FFF', fontSize: 18, fontWeight: 'bold' }}>400€</Text>
+                            <Text style={{ color: '#888', fontSize: 12 }}>Vuelos medios (1.500 - 3.500 km)</Text>
+                        </View>
+                        <View style={{ backgroundColor: '#111', padding: 20, borderRadius: 20, marginBottom: 30, borderWidth: 1, borderColor: '#222' }}>
+                            <Text style={{ color: '#FFF', fontSize: 18, fontWeight: 'bold' }}>600€</Text>
+                            <Text style={{ color: '#888', fontSize: 12 }}>Vuelos largos (más de 3.500 km)</Text>
+                        </View>
+
+                        <Text style={{ color: '#AF52DE', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 10 }}>REGLAS DE ORO ⚖️</Text>
+                        <View style={{ gap: 15, marginBottom: 30 }}>
+                            <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18 }}>• <Text style={{ color: '#FFF', fontWeight: 'bold' }}>RETRASO:</Text> Tienes derecho a indemnización si llegas a tu destino final con más de 3 horas de retraso.</Text>
+                            <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18 }}>• <Text style={{ color: '#FFF', fontWeight: 'bold' }}>CANCELACIÓN:</Text> Si te avisan con menos de 14 días. Tienes derecho a reembolso O transporte alternativo.</Text>
+                            <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18 }}>• <Text style={{ color: '#FFF', fontWeight: 'bold' }}>OVERBOOKING:</Text> Si se te deniega el embarque contra tu voluntad, la reclamación es inmediata.</Text>
+                        </View>
+
+                        <Text style={{ color: '#AF52DE', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 10 }}>ASISTENCIA INMEDIATA 🍔</Text>
+                        <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18, marginBottom: 30 }}>
+                            A partir de las 2h de retraso, la aerolínea DEBE proporcionarte comida, bebida y dos medios de comunicación. Si la salida es al día siguiente, deben pagar el hotel y el trasporte.
+                        </Text>
+
+                        <Text style={{ color: '#FF3B30', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 10 }}>EXCEPCIONES (SIN COBRO) ⚠️</Text>
+                        <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18, marginBottom: 40 }}>
+                            No hay indemnización económica si el problema fue causado por "Circunstancias Extraordinarias": cierres de espacio aéreo, meteorología extrema, inestabilidad política o huelgas de control aéreo.
+                        </Text>
+
+                        <TouchableOpacity
+                            onPress={() => setShowRights(false)}
+                            style={{ backgroundColor: '#AF52DE', padding: 18, borderRadius: 15, alignItems: 'center' }}
+                        >
+                            <Text style={{ color: '#FFF', fontWeight: 'bold', letterSpacing: 1 }}>ENTENDIDО</Text>
+                        </TouchableOpacity>
+                    </ScrollView>
+                </View>
+            </Modal>
             </ScrollView>
 
             {/* MODAL FIRMA */}

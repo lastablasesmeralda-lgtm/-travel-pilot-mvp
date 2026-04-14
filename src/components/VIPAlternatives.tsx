@@ -40,6 +40,9 @@ export default function VIPAlternatives({
     const now = new Date();
     const altDep = new Date(now.getTime() + 2 * 60 * 60 * 1000);
     const altArr = new Date(altDep.getTime() + 2.5 * 60 * 60 * 1000);
+ 
+    const delay = flightData?.delayMinutes || flightData?.departure?.delay || 0;
+    const isMajorIssue = delay >= 120 || flightData?.status === 'cancelled' || flightData?.status === 'diverted' || flightData?.status === 'RETRASO-400';
 
     const handleClose = () => {
         setDetailView(null);
@@ -370,9 +373,11 @@ export default function VIPAlternatives({
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <View style={{ flex: 1, marginRight: 15 }}>
                                 <Text style={{ color: '#D4AF37', fontSize: 10, fontWeight: '900', letterSpacing: 2, marginBottom: 8 }}>💎 TU ASISTENTE PERSONAL</Text>
-                                <Text style={{ color: '#FFF', fontSize: 22, fontWeight: '900', letterSpacing: 0.3 }}>TUS OPCIONES</Text>
+                                <Text style={{ color: '#FFF', fontSize: 22, fontWeight: '900', letterSpacing: 0.3 }}>{isMajorIssue ? 'TUS OPCIONES VIP' : 'TU PROTOCOLO DE CORTESÍA'}</Text>
                                 <Text style={{ color: '#777', fontSize: 12, marginTop: 10, lineHeight: 18 }}>
-                                    Hemos seleccionado lo mejor para tu situación. Elige la opción que más te convenga.
+                                    {isMajorIssue 
+                                        ? 'Hemos seleccionado lo mejor para tu situación. Elige la opción que más te convenga.' 
+                                        : 'Esta incidencia es leve. Hemos activado tus privilegios para que esperes con total comodidad.'}
                                 </Text>
                             </View>
                             <TouchableOpacity onPress={handleClose} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#1A1A1A', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#333' }}>
@@ -385,67 +390,71 @@ export default function VIPAlternatives({
                         {travelProfile === 'premium' ? (
                             <>
                                 {/* ── OPCIÓN A: VUELO PRIORITARIO ── */}
-                                <View style={{
-                                    backgroundColor: '#0F0F0F', borderRadius: 22, padding: 22, marginBottom: 15,
-                                    borderWidth: 1.5, borderColor: '#D4AF37',
-                                    shadowColor: '#D4AF37', shadowOpacity: 0.12, shadowRadius: 25, shadowOffset: { width: 0, height: 6 },
-                                }}>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                                        <View style={{ backgroundColor: 'rgba(212,175,55,0.12)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, borderWidth: 0.5, borderColor: 'rgba(212,175,55,0.5)' }}>
-                                            <Text style={{ color: '#D4AF37', fontSize: 9, fontWeight: '900', letterSpacing: 1.5 }}>OPCIÓN A · RESCATE INMEDIATO</Text>
-                                        </View>
-                                        <View style={{ backgroundColor: '#27C93F', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 }}>
-                                            <Text style={{ color: '#000', fontSize: 9, fontWeight: 'bold' }}>VIP LOCKED</Text>
-                                        </View>
-                                    </View>
-
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, backgroundColor: '#050505', padding: 15, borderRadius: 12 }}>
-                                        <View style={{ alignItems: 'center' }}>
-                                            <Text style={{ color: '#FFF', fontSize: 20, fontWeight: '900' }}>{depIata}</Text>
-                                            <Text style={{ color: '#666', fontSize: 10, marginTop: 4 }}>{fmt(altDep)}</Text>
-                                        </View>
-                                        <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 10 }}>
-                                            <View style={{ height: 1, backgroundColor: '#333', width: '100%', position: 'relative' }}>
-                                                <View style={{ position: 'absolute', top: -10, left: '42%' }}>
-                                                    <Text style={{ fontSize: 14 }}>✈️</Text>
-                                                </View>
+                                {isMajorIssue && (
+                                    <View style={{
+                                        backgroundColor: '#0F0F0F', borderRadius: 22, padding: 22, marginBottom: 15,
+                                        borderWidth: 1.5, borderColor: '#D4AF37',
+                                        shadowColor: '#D4AF37', shadowOpacity: 0.12, shadowRadius: 25, shadowOffset: { width: 0, height: 6 },
+                                    }}>
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                            <View style={{ backgroundColor: 'rgba(212,175,55,0.12)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, borderWidth: 0.5, borderColor: 'rgba(212,175,55,0.5)' }}>
+                                                <Text style={{ color: '#D4AF37', fontSize: 9, fontWeight: '900', letterSpacing: 1.5 }}>OPCIÓN A · RESCATE INMEDIATO</Text>
                                             </View>
-                                            <Text style={{ color: '#D4AF37', fontSize: 8, fontWeight: 'bold', marginTop: 10 }}>{airline.toUpperCase()} · IB-4022</Text>
+                                            <View style={{ backgroundColor: '#27C93F', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 }}>
+                                                <Text style={{ color: '#000', fontSize: 9, fontWeight: 'bold' }}>VIP LOCKED</Text>
+                                            </View>
                                         </View>
-                                        <View style={{ alignItems: 'center' }}>
-                                            <Text style={{ color: '#FFF', fontSize: 20, fontWeight: '900' }}>{arrIata}</Text>
-                                            <Text style={{ color: '#666', fontSize: 10, marginTop: 4 }}>{fmt(altArr)}</Text>
-                                        </View>
-                                    </View>
 
-                                    <TouchableOpacity onPress={() => setDetailView('flight')} style={{ backgroundColor: '#D4AF37', padding: 15, borderRadius: 14, alignItems: 'center' }}>
-                                        <Text style={{ color: '#000', fontWeight: '900', fontSize: 13, letterSpacing: 0.5 }}>COMPLETAR RESERVA VIP</Text>
-                                    </TouchableOpacity>
-                                </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, backgroundColor: '#050505', padding: 15, borderRadius: 12 }}>
+                                            <View style={{ alignItems: 'center' }}>
+                                                <Text style={{ color: '#FFF', fontSize: 20, fontWeight: '900' }}>{depIata}</Text>
+                                                <Text style={{ color: '#666', fontSize: 10, marginTop: 4 }}>{fmt(altDep)}</Text>
+                                            </View>
+                                            <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 10 }}>
+                                                <View style={{ height: 1, backgroundColor: '#333', width: '100%', position: 'relative' }}>
+                                                    <View style={{ position: 'absolute', top: -10, left: '42%' }}>
+                                                        <Text style={{ fontSize: 14 }}>✈️</Text>
+                                                    </View>
+                                                </View>
+                                                <Text style={{ color: '#D4AF37', fontSize: 8, fontWeight: 'bold', marginTop: 10 }}>{airline.toUpperCase()} · IB-4022</Text>
+                                            </View>
+                                            <View style={{ alignItems: 'center' }}>
+                                                <Text style={{ color: '#FFF', fontSize: 20, fontWeight: '900' }}>{arrIata}</Text>
+                                                <Text style={{ color: '#666', fontSize: 10, marginTop: 4 }}>{fmt(altArr)}</Text>
+                                            </View>
+                                        </View>
+
+                                        <TouchableOpacity onPress={() => setDetailView('flight')} style={{ backgroundColor: '#D4AF37', padding: 15, borderRadius: 14, alignItems: 'center' }}>
+                                            <Text style={{ color: '#000', fontWeight: '900', fontSize: 13, letterSpacing: 0.5 }}>COMPLETAR RESERVA VIP</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
 
                                 {/* ── SEPARATOR ── */}
-                                <Text style={{ color: '#444', fontSize: 10, fontWeight: '900', letterSpacing: 2, marginBottom: 14, marginTop: 6 }}>OTRAS VÍAS DISPONIBLES</Text>
+                                <Text style={{ color: '#444', fontSize: 10, fontWeight: '900', letterSpacing: 2, marginBottom: 14, marginTop: 6 }}>{isMajorIssue ? 'OTRAS VÍAS DISPONIBLES' : 'SERVICIOS DE CONFORT ACTIVOS'}</Text>
 
                                 {/* ── CARD 2: RECLAMACIÓN PREPARADA ── */}
-                                <TouchableOpacity
-                                    onPress={() => setDetailView('claim')}
-                                    activeOpacity={0.7}
-                                    style={{ backgroundColor: '#0F0F0F', borderRadius: 18, padding: 20, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: '#4CD964', borderWidth: 1, borderColor: '#1A1A1A' }}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                                        <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(76,217,100,0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                                            <Text style={{ fontSize: 20 }}>📋</Text>
+                                {isMajorIssue && (
+                                    <TouchableOpacity
+                                        onPress={() => setDetailView('claim')}
+                                        activeOpacity={0.7}
+                                        style={{ backgroundColor: '#0F0F0F', borderRadius: 18, padding: 20, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: '#4CD964', borderWidth: 1, borderColor: '#1A1A1A' }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                                            <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(76,217,100,0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                                                <Text style={{ fontSize: 20 }}>📋</Text>
+                                            </View>
+                                            <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '800', flex: 1 }}>Reclamación preparada</Text>
                                         </View>
-                                        <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '800', flex: 1 }}>Reclamación preparada</Text>
-                                    </View>
-                                    <Text style={{ color: '#888', fontSize: 12, lineHeight: 18, marginBottom: 14, marginLeft: 52 }}>
-                                        Tu incidencia ya está resumida para revisión y envío.
-                                    </Text>
-                                    <View style={{ marginLeft: 52 }}>
-                                        <View style={{ backgroundColor: 'rgba(76,217,100,0.12)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, alignSelf: 'flex-start' }}>
-                                            <Text style={{ color: '#4CD964', fontSize: 11, fontWeight: '900', letterSpacing: 0.5 }}>VER SIGUIENTES PASOS →</Text>
+                                        <Text style={{ color: '#888', fontSize: 12, lineHeight: 18, marginBottom: 14, marginLeft: 52 }}>
+                                            Tu incidencia ya está resumida para revisión y envío.
+                                        </Text>
+                                        <View style={{ marginLeft: 52 }}>
+                                            <View style={{ backgroundColor: 'rgba(76,217,100,0.12)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, alignSelf: 'flex-start' }}>
+                                                <Text style={{ color: '#4CD964', fontSize: 11, fontWeight: '900', letterSpacing: 0.5 }}>VER SIGUIENTES PASOS →</Text>
+                                            </View>
                                         </View>
-                                    </View>
-                                </TouchableOpacity>
+                                    </TouchableOpacity>
+                                )}
 
                                 {/* ── CARD 3: SALAS VIP Y CONFORT ── */}
                                 <TouchableOpacity
@@ -469,30 +478,32 @@ export default function VIPAlternatives({
                                 </TouchableOpacity>
 
                                 {/* ── CARD: RESERVA DE HOTEL DE URGENCIA (BOOKING AFFILIATE) ── */}
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        const destStr = flightData?.arrival?.city || flightData?.arrival?.airport || flightData?.arrival?.iata || 'aeropuerto cercano';
-                                        const affiliateId = "0000000"; // TODO: Reemplazar con ID de Booking Affiliate real
-                                        const { Linking } = require('react-native');
-                                        Linking.openURL(`https://www.booking.com/searchresults.es.html?ss=${encodeURIComponent(destStr)}&aid=${affiliateId}`);
-                                    }}
-                                    activeOpacity={0.7}
-                                    style={{ backgroundColor: '#0F0F0F', borderRadius: 18, padding: 20, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: '#007AFF', borderWidth: 1, borderColor: '#1A1A1A' }}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                                        <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(0,122,255,0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                                            <Text style={{ fontSize: 20 }}>🏨</Text>
+                                {isMajorIssue && (
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            const destStr = flightData?.arrival?.city || flightData?.arrival?.airport || flightData?.arrival?.iata || 'aeropuerto cercano';
+                                            const affiliateId = "0000000"; // TODO: Reemplazar con ID de Booking Affiliate real
+                                            const { Linking } = require('react-native');
+                                            Linking.openURL(`https://www.booking.com/searchresults.es.html?ss=${encodeURIComponent(destStr)}&aid=${affiliateId}`);
+                                        }}
+                                        activeOpacity={0.7}
+                                        style={{ backgroundColor: '#0F0F0F', borderRadius: 18, padding: 20, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: '#007AFF', borderWidth: 1, borderColor: '#1A1A1A' }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                                            <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(0,122,255,0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                                                <Text style={{ fontSize: 20 }}>🏨</Text>
+                                            </View>
+                                            <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '800', flex: 1 }}>Reservar Alojamiento de Urgencia</Text>
                                         </View>
-                                        <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '800', flex: 1 }}>Reservar Alojamiento de Urgencia</Text>
-                                    </View>
-                                    <Text style={{ color: '#888', fontSize: 12, lineHeight: 18, marginBottom: 14, marginLeft: 52 }}>
-                                        Las aerolíneas tardan horas en dar alojamiento. Reserva ahora y usa tu recibo para exigir el reembolso en tu reclamación.
-                                    </Text>
-                                    <View style={{ marginLeft: 52 }}>
-                                        <View style={{ backgroundColor: 'rgba(0,122,255,0.12)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, alignSelf: 'flex-start' }}>
-                                            <Text style={{ color: '#007AFF', fontSize: 11, fontWeight: '900', letterSpacing: 0.5 }}>ABRIR EN BOOKING.COM →</Text>
+                                        <Text style={{ color: '#888', fontSize: 12, lineHeight: 18, marginBottom: 14, marginLeft: 52 }}>
+                                            Las aerolíneas tardan horas en dar alojamiento. Reserva ahora y usa tu recibo para exigir el reembolso en tu reclamación.
+                                        </Text>
+                                        <View style={{ marginLeft: 52 }}>
+                                            <View style={{ backgroundColor: 'rgba(0,122,255,0.12)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, alignSelf: 'flex-start' }}>
+                                                <Text style={{ color: '#007AFF', fontSize: 11, fontWeight: '900', letterSpacing: 0.5 }}>ABRIR EN BOOKING.COM →</Text>
+                                            </View>
                                         </View>
-                                    </View>
-                                </TouchableOpacity>
+                                    </TouchableOpacity>
+                                )}
 
                                 {/* ── CARD 4: COBERTURA Y ASISTENCIA ── */}
                                 <TouchableOpacity

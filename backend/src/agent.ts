@@ -29,6 +29,7 @@ interface HotelBooking {
     address: string;
     cost_per_night: number;
     is_refundable: boolean;
+    phone?: string;
 }
 
 interface ConnectingFlight {
@@ -171,7 +172,6 @@ function getModel() {
 // ============================================================
 export async function checkFlightStatus(flightId: string): Promise<FlightContext> {
     const now = new Date();
-    const AVIATION_KEY = process.env.AVIATIONSTACK_API_KEY;
     const code = flightId.toUpperCase();
 
     // 🏆 SUITE DE PRUEBAS MAESTRA (DETERMINISTA)
@@ -201,6 +201,7 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
                 name: 'Hotel Palace Madrid', check_in_limit: '23:59',
                 check_in_limit_iso: new Date(now.toDateString() + ' 23:59').toISOString(),
                 address: 'Plaza de las Cortes 7, Madrid', cost_per_night: 400, is_refundable: false,
+                phone: '+34 600 000 000'
             },
             connecting_flight: null, ground_transport: null, isSimulation: true,
         };
@@ -221,6 +222,7 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
                 name: 'Pullman Paris Tour Eiffel', check_in_limit: '23:30',
                 check_in_limit_iso: new Date(now.toDateString() + ' 23:30').toISOString(),
                 address: '18 Avenue De Suffren, Paris', cost_per_night: 280, is_refundable: false,
+                phone: '+33 1 44 38 56 00'
             },
             connecting_flight: null, ground_transport: null, isSimulation: true,
         };
@@ -240,75 +242,66 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
                 name: 'Hotel Wellington', check_in_limit: '22:00',
                 check_in_limit_iso: new Date(now.toDateString() + ' 22:00').toISOString(),
                 address: 'Velázquez 8, Madrid', cost_per_night: 300, is_refundable: false,
+                phone: '+34 915 75 44 00'
             },
             connecting_flight: null, ground_transport: null, isSimulation: true,
         };
     }
 
     if (code === 'VUELO-OK') {
-        const originalArrival = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Mañana
+        const originalArrival = new Date(now.getTime() + 24 * 60 * 60 * 1000);
         return {
             flightId,
             flightNumber: 'VUELO-OK',
-            status: 'scheduled', // <--- CAMBIAR AQUÍ
-            delayMinutes: 0,     // <--- CAMBIAR AQUÍ
+            status: 'scheduled',
+            delayMinutes: 0,
             airline: 'Air Europa',
             departure: { iata: 'MEX', delay: 0, scheduled: now.toISOString(), terminal: 'T1', gate: '12' },
             arrival: { iata: 'MAD', scheduled: originalArrival.toISOString(), estimated: originalArrival.toISOString(), terminal: 'T4S', gate: 'S01' },
-            hotel_booking: null, // <--- PONER EN NULL
+            hotel_booking: null,
             connecting_flight: null,
             ground_transport: null,
             isSimulation: true,
         };
     }
 
-    if (code === 'RETRASO-VIP') { // <--- CAMBIAS EL NOMBRE AQUÍ
+    if (code === 'RETRASO-60') {
+        const originalArrival = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+        const delayMinutes = 60;
+        return {
+            flightId,
+            flightNumber: 'RETRASO-60',
+            status: 'delayed',
+            delayMinutes,
+            airline: 'Vueling',
+            departure: { iata: 'BCN', delay: delayMinutes, scheduled: now.toISOString(), terminal: 'T1', gate: 'B22' },
+            arrival: { iata: 'CDG', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), terminal: '2F', gate: 'F12' },
+            hotel_booking: null,
+            connecting_flight: null, ground_transport: null, isSimulation: true,
+        };
+    }
+
+    if (code === 'RETRASO-VIP') {
         const originalArrival = new Date(now.getTime() + 2 * 60 * 60 * 1000);
         const delayMinutes = 210;
         return {
             flightId,
-            flightNumber: 'RETRASO-VIP', // <--- CAMBIAS EL NOMBRE AQUÍ
+            flightNumber: 'RETRASO-VIP',
             status: 'delayed',
             delayMinutes,
             airline: 'British Airways',
             departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString(), terminal: 'T4', gate: 'K12' },
-            arrival: { iata: 'LHR', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), terminal: 'T5', gate: 'A10' },
+            arrival: { iata: 'IST', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), terminal: '1', gate: 'F4' },
             hotel_booking: {
                 name: 'The Ritz London', check_in_limit: '23:00',
                 check_in_limit_iso: new Date(now.toDateString() + ' 23:00').toISOString(),
                 address: '150 Piccadilly, London', cost_per_night: 450, is_refundable: false,
+                phone: '+44 20 7493 8181'
             },
             connecting_flight: null, ground_transport: null, isSimulation: true,
         };
     }
-            connecting_flight: null, ground_transport: null, isSimulation: true,
-        };
-    }
 
-    if (code === 'RETRASO-400') {
-        const originalArrival = new Date(now.getTime() + 10 * 60 * 60 * 1000);
-        const delayMinutes = 400;
-        return {
-            flightId, flightNumber: 'RETRASO-400', status: 'delayed', delayMinutes,
-            airline: 'Turkish Airlines',
-            departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString(), terminal: 'T1', gate: 'B12' },
-            arrival: { iata: 'IST', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), terminal: 'Intl', gate: '210' },
-            hotel_booking: null, connecting_flight: null, ground_transport: null, isSimulation: true,
-        };
-    }
-
-    if (code === 'RETRASO-60') {
-        const originalArrival = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-        const delayMinutes = 65;
-        return {
-            flightId, flightNumber: 'RETRASO-60', status: 'delayed', delayMinutes,
-            airline: 'Iberia',
-            departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString(), terminal: 'T4', gate: 'J14' },
-            arrival: { iata: 'CDG', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), terminal: '2F', gate: 'F10' },
-            hotel_booking: null, connecting_flight: null, ground_transport: null, isSimulation: true,
-        };
-    }
-    try {
     if (code === 'DESVIO-VLC') {
         return {
             flightId, flightNumber: 'DESVIO-VLC', status: 'diverted', delayMinutes: 120,
@@ -326,13 +319,13 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
             airline: 'Emirates',
             departure: { iata: 'MAD', delay: 600, scheduled: now.toISOString() },
             arrival: { iata: 'DXB', scheduled: now.toISOString(), estimated: now.toISOString() },
-            hotel_booking: { name: 'Burj Al Arab', check_in_limit: '23:59', check_in_limit_iso: now.toISOString(), address: 'Dubai', cost_per_night: 1500, is_refundable: false },
+            hotel_booking: { name: 'Burj Al Arab', check_in_limit: '23:59', check_in_limit_iso: now.toISOString(), address: 'Dubai', cost_per_night: 1500, is_refundable: false, phone: '+971 4 301 7777' },
             isSimulation: true, connecting_flight: null, ground_transport: null,
         };
     }
 
     if (code === 'VUELO-HISTORIAL') {
-        const landedTime = new Date(now.getTime() - 5 * 60 * 60 * 1000); // Aterrizó hace 5 horas
+        const landedTime = new Date(now.getTime() - 5 * 60 * 60 * 1000);
         return {
             flightId, flightNumber: 'VUELO-HISTORIAL', status: 'landed', delayMinutes: 210,
             airline: 'Lufthansa',
@@ -342,6 +335,7 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         };
     }
 
+    try {
         const osHeaders: Record<string, string> = { 'Accept': 'application/json' };
         const osUser = process.env.OPENSKY_USER || '';
         const osPass = process.env.OPENSKY_PASS || '';
@@ -355,7 +349,6 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         );
         const osData = osRes.ok ? await osRes.json() : null;
 
-        // Mapeo inteligente para encontrar el indicativo real en el radar
         const airlineMap: Record<string, string> = {
             'IB': 'IBE', 'JQ': 'JST', 'AA': 'AAL', 'BA': 'BAW', 'LH': 'DLH',
             'AF': 'AFR', 'UX': 'AEA', 'VY': 'VLG', 'FR': 'RYR', 'U2': 'EZY', 'RY': 'RYR'
@@ -367,28 +360,11 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         const state = osData?.states?.find((s: any[]) =>
             s[1] && callsignVariants.includes(s[1].trim())
         );
-        const data = state ? { data: [state] } : null;
 
-        if (data && data.data && data.data.length > 0) {
-            const flight = data.data[0];
-            const callsign = (flight[1] || code).trim();
-            const onGround = flight[8] === true;
-            // Forzar datos básicos para que no fallen las variables interconectadas
-            const depDelay = 0;
-            const arrDelay = 0;
-            const delayMinutes = 0;
-            const status = onGround ? 'landed' : 'active';
-
+        if (state) {
+            const callsign = (state[1] || code).trim();
+            const onGround = state[8] === true;
             const estimatedArrival = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-
-            const hotelBooking: HotelBooking = {
-                name: 'Hotel destino',
-                check_in_limit: '23:00',
-                check_in_limit_iso: new Date(now.toDateString() + ' 23:00').toISOString(),
-                address: flight.arrival?.airport || 'Aeropuerto destino',
-                cost_per_night: 150,
-                is_refundable: false,
-            };
 
             return {
                 flightId,
@@ -396,42 +372,27 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
                 status: onGround ? 'landed' : 'active',
                 delayMinutes: 0,
                 airline: callsign.substring(0, 3),
-                departure: {
-                    iata: 'N/A',
-                    delay: 0,
-                    scheduled: flight.departure?.scheduled || now.toISOString(),
-                    terminal: flight.departure?.terminal || '—',
-                    gate: flight.departure?.gate || '—'
-                },
-                arrival: {
-                    iata: 'N/A',
-                    scheduled: flight.arrival?.scheduled || now.toISOString(),
-                    estimated: estimatedArrival.toISOString(),
-                    terminal: flight.arrival?.terminal || '—',
-                    gate: flight.arrival?.gate || '—'
-                },
-                hotel_booking: hotelBooking,
+                departure: { iata: 'N/A', delay: 0, scheduled: now.toISOString() },
+                arrival: { iata: 'N/A', scheduled: estimatedArrival.toISOString(), estimated: estimatedArrival.toISOString() },
+                hotel_booking: null,
                 connecting_flight: null,
                 ground_transport: null,
             };
         }
     } catch (e) {
-        console.log('[AviationStack] Error, usando datos de fallback:', e);
+        console.log('[Radar] Error OpenSky:', e);
     }
 
-    // FALLBACK
+    // FALLBACK FINAL
     const originalArrival = new Date(now.getTime() + 1 * 60 * 60 * 1000);
-    const delayMinutes = 210;
-    const estimatedArrival = new Date(originalArrival.getTime() + delayMinutes * 60 * 1000);
-
     return {
         flightId,
         flightNumber: flightId,
         status: 'delayed',
-        delayMinutes,
+        delayMinutes: 210,
         airline: 'Generic Airlines Fallback',
-        departure: { iata: 'MAD', delay: delayMinutes, scheduled: now.toISOString() },
-        arrival: { iata: 'LHR', scheduled: originalArrival.toISOString(), estimated: estimatedArrival.toISOString() },
+        departure: { iata: 'MAD', delay: 210, scheduled: now.toISOString() },
+        arrival: { iata: 'LHR', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + 210 * 60 * 1000).toISOString() },
         hotel_booking: {
             name: 'The Ritz London',
             check_in_limit: '23:00',
@@ -440,15 +401,8 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
             cost_per_night: 450,
             is_refundable: false,
         },
-        connecting_flight: {
-            flightId: 'BA456',
-            boarding_closes_iso: new Date(now.getTime() + 2.5 * 60 * 60 * 1000).toISOString(),
-            min_transfer_minutes: 60,
-        },
-        ground_transport: {
-            type: 'TRAIN',
-            last_departure_iso: new Date(now.getTime() + 1.5 * 60 * 60 * 1000).toISOString(),
-        },
+        connecting_flight: null,
+        ground_transport: null,
     };
 }
 
@@ -502,6 +456,35 @@ export async function handleFlightMonitoring(flightId: string, travelProfile: st
         const isBalanced = travelProfile === 'balanced';
 
         const amount = impact.compensationAmount;
+
+        if (code === 'DESVIO-VLC') {
+            return {
+                options: [
+                    {
+                        type: 'RÁPIDO',
+                        title: 'BILLETE DE AVE AL DESTINO',
+                        description: `He localizado el próximo tren rápido desde Valencia hacia tu destino original. Adquiere el billete y sube tu recibo a DOCS para solicitar el reembolso automático a la aerolínea por ley EU261.`,
+                        estimatedCost: 45,
+                        actionType: 'transport'
+                    },
+                    {
+                        type: 'CONFORT',
+                        title: 'ASISTENCIA TRANPORTE PRIVADO',
+                        description: `Tienes derecho legal a traslado terrestre. Viaja en Taxi o VTC hasta tu destino final. Guarda la factura en tu Bóveda Segura para que gestione tu reembolso íntegro.`,
+                        estimatedCost: 180,
+                        actionType: 'transport'
+                    },
+                    {
+                        type: 'ECONÓMICO',
+                        title: 'HOTEL EN VALENCIA',
+                        description: `Si los enlaces terrestres han cerrado, la aerolínea debe pagar tu cama. Te he localizado estancias premium cerca de Manises. Presenta este expediente en el mostrador para exigir tu habitación.`,
+                        estimatedCost: amount || 250,
+                        actionType: 'hotel'
+                    }
+                ],
+                impact
+            };
+        }
 
         return {
             options: [

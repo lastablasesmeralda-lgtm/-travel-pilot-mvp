@@ -3,5 +3,4 @@ export const APP_NAME = 'Travel Pilot';
 export const DEFAULT_LANGUAGE = 'es';
 
 // export const BACKEND_URL = 'http://192.168.1.128:3000'; // Servidor local en tu PC
-// export const BACKEND_URL = 'http://192.168.1.128:3000'; // Redirigido a local para pruebas
 export const BACKEND_URL = 'https://travel-pilot-mvp-2.onrender.com'; // Servidor de producción en la nube

@@ -9,6 +9,8 @@ import VIPAlternatives from './components/VIPAlternatives';
 import CancellationProtocol from './components/CancellationProtocol';
 import PrivateVaultScreen from './screens/PrivateVaultScreen';
 import * as Notifications from 'expo-notifications';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 
 // Importar imágenes directamente para que siempre estén disponibles
 const DOC_IMAGES: Record<string, any> = {
@@ -132,16 +134,75 @@ export default function GlobalOverlays() {
         // Búsqueda robusta de estado cancelado
         const status = flightData.status?.toLowerCase() || '';
         const isCancelled = status.includes('cancel');
+        const isDiverted = status.includes('diverted') || status.includes('desvio');
         const isDelayed = (flightData.departure?.delay || 0) >= 60;
 
         // IMPORTANTE: Si flightData tiene la marca 'fromCache', no auto-disparamos el modal
         if (flightData.isFromCache) return;
 
-        if (isCancelled || isDelayed) {
+        if (isCancelled || isDiverted || isDelayed) {
+            const isMajorIssue = isCancelled || isDiverted || (flightData.departure?.delay || 0) >= 120;
+
             if (isCancelled) {
                 setShowSOS(false);
                 setShowVIPAlternatives(false);
                 setShowCancellation(true);
+            } else if (travelProfile !== 'premium' && !isMajorIssue) {
+                // BYPASS MODO ESTÁNDAR PARA RETRASOS LEVES:
+                const mockAssistancePlan = {
+                    type: 'ECONÓMICO',
+                    title: 'SOLICITUD DE ASISTENCIA EU261',
+                    description: 'Documento legal para reclamar vales de manutención y asistencia en tierra.',
+                    actionType: 'assistance',
+                    voiceScriptFinal: 'Retraso de sesenta minutos detectado. He generado tu certificado legal de asistencia. Enséñalo en el mostrador para tus vales de comida. Tienes el PDF listo en tu sección de documentos.'
+                };
+                setSelectedPlan(mockAssistancePlan);
+                setShowBrowser(true); // Abrimos directamente los logs de procesado
+                speak("Retraso detectado. Generando certificado oficial de asistencia. Un momento.");
+
+                // GENERACIÓN REAL DE PDF VÍA BACKEND
+                (async () => {
+                   try {
+                       const flightNum = flightData?.flightNumber || 'TP404';
+                       const response = await fetch(`${BACKEND_URL}/api/generateAssistanceCertificate`, {
+                           method: 'POST',
+                           headers: { 'Content-Type': 'application/json' },
+                           body: JSON.stringify({
+                               passengerName: user?.displayName || 'Pasajero Travel-Pilot',
+                               flightNumber: flightNum,
+                               airline: flightData?.airline || 'Aerolínea',
+                               departureAirport: flightData?.departure?.iata || 'AEP',
+                               arrivalAirport: flightData?.arrival?.iata || 'DEST',
+                               delayMinutes: (flightData?.departure?.delay || 0),
+                               flightDate: new Date().toLocaleDateString(),
+                               bookingRef: flightData?.bookingRef || 'TP-REF-DEMO',
+                               userEmail: user?.email || 'viajero@travelpilot.com'
+                           })
+                       });
+                       const data = await response.json();
+                       if (data.success && data.pdfBase64) {
+                           const fileUri = `${FileSystem.documentDirectory}Asistencia_${flightNum}.pdf`;
+                           await FileSystem.writeAsStringAsync(fileUri, data.pdfBase64, { encoding: FileSystem.EncodingType.Base64 });
+                           
+                           setExtraDocs((prev: any[]) => [
+                               {
+                                   id: `asist_pdf_${Date.now()}`,
+                                   t: 'CERTIFICADO DE ASISTENCIA EU261',
+                                   s: `Documento PDF // Vuelo ${flightNum}`,
+                                   i: fileUri,
+                                   source: 'SYSTEM',
+                                   icon: '⚖️',
+                                   verified: true,
+                                   isPdf: true
+                               },
+                               ...prev
+                           ]);
+                           setHasNewDoc(true);
+                       }
+                   } catch (e) {
+                       console.error("Error generando PDF asistencia:", e);
+                   }
+                })();
             } else {
                 showPlan();
             }
@@ -627,12 +688,17 @@ export default function GlobalOverlays() {
                                         ) : (
                                             <>
                                                 <Text style={{ fontSize: 40 }}>✅</Text>
-                                                <Text style={{ color: '#27C93F', marginTop: 15, fontWeight: 'bold', fontSize: 16 }}>ESTRATEGIA COMPLETADA</Text>
+                                                <Text style={{ color: '#27C93F', marginTop: 15, fontWeight: 'bold', fontSize: 16 }}>
+                                                    {((flightData?.delayMinutes || flightData?.departure?.delay || 0) < 120) && !flightData?.status?.includes('cancel') ? 'PROTOCOLO ACTIVADO' : 'ESTRATEGIA COMPLETADA'}
+                                                </Text>
                                                 <Text style={{ color: '#4CD964', marginTop: 5, fontSize: 13, textAlign: 'center', fontWeight: '500' }}>
                                                     {isExtracting ? 'He terminado de sincronizar tu cuenta. He localizado el documento y lo he guardado en tu Bóveda.' :
-                                                        travelProfile === 'premium' ? 'Estrategia de rescate generada. Tu expediente legal y las opciones de reubicación están listos en DOCS.' :
-                                                            selectedPlan?.type?.includes('ECONÓMIC') ? 'Documentación legal finalizada. Tu reclamación EU261 está lista en DOCS para ser firmada.' :
-                                                                'He terminado de analizar tus opciones. Tienes toda la información y planes de vuelo en tu sección de DOCS.'}
+                                                        travelProfile === 'premium' ?
+                                                            (((flightData?.delayMinutes || flightData?.departure?.delay || 0) < 120) && !flightData?.status?.includes('cancel')
+                                                                ? 'Protocolo de cortesía VIP activado. Tu acceso a la Sala VIP y los servicios de asistencia están listos en la sección de documentos.'
+                                                                : 'Estrategia de rescate generada. Tu expediente legal y las opciones de reubicación están listos en la sección de documentos.')
+                                                            : selectedPlan?.type?.includes('ECONÓMIC') ? 'Documentación legal finalizada. Tu reclamación EU261 está lista en la sección de documentos.' :
+                                                                'He terminado de analizar tus opciones. Tienes toda la información y planes de vuelo en tu sección de documentos.'}
                                                 </Text>
                                             </>
                                         )}
@@ -676,27 +742,31 @@ export default function GlobalOverlays() {
                                     if (selectedPlan.voiceScriptFinal) {
                                         speak(selectedPlan.voiceScriptFinal);
                                     } else {
+                                        const isMajorIssue = (flightData?.delayMinutes || flightData?.departure?.delay || 0) >= 120 || flightData?.status === 'cancelled';
                                         speak(
                                             isVip
-                                                ? 'Estrategia de rescate generada. He preparado tu expediente de reclamación y las opciones de reubicación. Tienes todo listo en DOCS.'
+                                                ? (isMajorIssue
+                                                    ? 'Estrategia de rescate generada. He preparado tu expediente de reclamación y las opciones de reubicación. Tienes todo listo en tu sección de documentos.'
+                                                    : 'He activado tu protocolo de cortesía VIP. Tienes tu acceso al Lounge y los servicios de asistencia listos en tu sección de documentos para una espera confortable.')
                                                 : isHotel
-                                                    ? 'He organizado tu plan de estancia. Tienes la información del hotel y los pasos a seguir en tu sección de DOCS.'
+                                                    ? 'He organizado tu plan de estancia. Tienes la información del hotel y los pasos a seguir en tu sección de documentos.'
                                                     : isEco
-                                                        ? 'Documentación legal finalizada. Tu reclamación EU261 está lista en DOCS para ser firmada y enviada.'
-                                                        : 'He terminado de analizar tus opciones. Tienes toda la información y planes de vuelo en tu sección de DOCS.'
+                                                        ? 'Documentación legal finalizada. Tu reclamación EU261 está lista en tu sección de documentos para ser firmada y enviada.'
+                                                        : 'He terminado de analizar tus opciones. Tienes toda la información y planes de vuelo en tu sección de documentos.'
                                         );
                                     }
 
+                                    const isMajorIssue = (flightData?.delayMinutes || flightData?.departure?.delay || 0) >= 120 || flightData?.status === 'cancelled';
                                     const newTicket = {
                                         id: `rescue_${Date.now()}`,
                                         t: isVip
-                                            ? `PROTOCOLO DE RESCATE PREMIUM (VIP)`
+                                            ? (isMajorIssue ? `PROTOCOLO DE RESCATE PREMIUM (VIP)` : `PROTOCOLO DE CORTESÍA VIP`)
                                             : (isHotel ? `PROPUESTA ALOJAMIENTO IA (PLAN ${isEco ? 'ECONÓMICO' : isRápido ? 'RÁPIDO' : 'EQUILIBRADO'})` :
                                                 `PROPUESTA RESCATE IA (${isEco ? 'ECONÓMICO' : isRápido ? 'RÁPIDO' : 'EQUILIBRADO'})`),
-                                        s: isVip ? 'Estrategia Integral Personalizada' : (isHotel ? `Alojamiento · ${selectedPlan.title}` : `Propuesta Vuelo · ${selectedPlan.title}`),
+                                        s: isVip ? (isMajorIssue ? 'Estrategia Integral Personalizada' : 'Privilegios y Confort Activados') : (isHotel ? `Alojamiento · ${selectedPlan.title}` : `Propuesta Vuelo · ${selectedPlan.title}`),
                                         i: imgRescate,
                                         source: 'TRAVEL-PILOT IA',
-                                        icon: isVip ? '💎' : (isHotel ? '🛌' : '🎟️'),
+                                        icon: isVip ? (isMajorIssue ? '💎' : '✨') : (isHotel ? '🛌' : '🎟️'),
                                         verified: true,
                                         isActionable: !isHotel,
                                         rescueData: {
@@ -706,8 +776,10 @@ export default function GlobalOverlays() {
                                             boardingTime: 'Inmediato'
                                         }
                                     };
-                                    setExtraDocs((prev: any) => [newTicket, ...prev]);
-                                    setHasNewDoc(true);
+                                    if (selectedPlan?.actionType !== 'assistance') {
+                                        setExtraDocs((prev: any) => [newTicket, ...prev]);
+                                        setHasNewDoc(true);
+                                    }
                                     setSelectedPlan(null);
                                 }
                             }}
@@ -733,7 +805,19 @@ export default function GlobalOverlays() {
                     <View style={[s.mc, { backgroundColor: '#000', padding: 0, overflow: 'hidden' }]}>
                         <View style={{ width: '100%', height: 300, backgroundColor: '#0A0A0A', position: 'relative' }}>
                             {(() => {
+                                const isPdf = viewDoc?.isPdf;
                                 const imgSource = DOC_IMAGES[viewDoc?.id] || (typeof viewDoc?.i === 'string' && DOC_IMAGES[viewDoc.i]) || (typeof viewDoc?.i === 'number' ? viewDoc.i : viewDoc?.i ? { uri: viewDoc.i } : null);
+                                
+                                if (isPdf) {
+                                    return (
+                                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111' }}>
+                                            <Text style={{ fontSize: 60, marginBottom: 15 }}>📄</Text>
+                                            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>DOCUMENTO PDF OFICIAL</Text>
+                                            <Text style={{ color: '#666', fontSize: 11, marginTop: 5 }}>Referencia: {viewDoc?.id}</Text>
+                                        </View>
+                                    );
+                                }
+
                                 return imgSource ? (
                                     <Image
                                         source={imgSource}
@@ -746,7 +830,11 @@ export default function GlobalOverlays() {
                                             opacity: isScanning ? 0.3 : 1
                                         }}
                                     />
-                                ) : null;
+                                ) : (
+                                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                        <Text style={{ color: '#444' }}>Vista previa no disponible</Text>
+                                    </View>
+                                );
                             })()}
                             {isScanning && <Animated.View style={[s.laser, { transform: [{ translateY: scanAnim }] }]} />}
                         </View>
@@ -754,13 +842,29 @@ export default function GlobalOverlays() {
                             <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14, textAlign: 'center' }}>
                                 {isScanning ? 'ESCANEANDO DOCUMENTO...' : `${viewDoc?.t || 'DOCUMENTO'} - VERIFICADO`}
                             </Text>
+                            
+                            {viewDoc?.isPdf && (
+                                <TouchableOpacity 
+                                    style={[s.bt, { backgroundColor: '#4CD964', marginTop: 15, borderRadius: 12, width: '100%' }]} 
+                                    onPress={async () => {
+                                        if (viewDoc.i && await Sharing.isAvailableAsync()) {
+                                            await Sharing.shareAsync(viewDoc.i);
+                                        } else {
+                                            Alert.alert('Error', 'No se puede compartir el archivo en este dispositivo.');
+                                        }
+                                    }}
+                                >
+                                    <Text style={{ color: '#000', fontWeight: 'bold' }}>📥 DESCARGAR / COMPARTIR PDF</Text>
+                                </TouchableOpacity>
+                            )}
+
                             {viewDoc?.isConfirmed && (
                                 <View style={{ backgroundColor: '#27C93F', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, marginTop: 12, borderWidth: 1, borderColor: '#FFF' }}>
                                     <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 10, letterSpacing: 1 }}>🛡️ CONFIRMADO POR AGENTE IA</Text>
                                 </View>
                             )}
-                            <TouchableOpacity style={[s.bt, { backgroundColor: '#AF52DE', marginTop: 15, borderRadius: 12 }]} onPress={() => setViewDoc(null)}>
-                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>CERRAR</Text>
+                            <TouchableOpacity style={[s.bt, { backgroundColor: '#222', marginTop: 15, borderRadius: 12, width: '100%' }]} onPress={() => setViewDoc(null)}>
+                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>CERRAR VISOR</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

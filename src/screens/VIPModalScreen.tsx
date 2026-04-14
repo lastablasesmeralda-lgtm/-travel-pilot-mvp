@@ -101,10 +101,20 @@ export default function VIPModalScreen({ onClose, onActivate }: VIPModalScreenPr
                     }}
                 >
                     <Text style={[styles.subscribeText, travelProfile === 'premium' && { color: '#D4AF37' }]}>
-                        {travelProfile === 'premium' ? 'ESTOY PROTEGIDO (ENTENDIDO)' : 'ACTIVA TU STATUS VIP — 4.99€/mes'}
+                        {travelProfile === 'premium' ? 'ESTOY PROTEGIDO (VOLVER)' : 'ACTIVAR STATUS VIP'}
                     </Text>
                 </TouchableOpacity>
-                <Text style={styles.legalText}>Cancela en cualquier momento. Sujeto a términos y condiciones.</Text>
+
+                {travelProfile !== 'premium' && (
+                    <Text style={[styles.legalText, { marginTop: 15, fontSize: 11, lineHeight: 16, color: '#FFFFFF' }]}>
+                        Suscripción por <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>7,99€ / mes</Text> o <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>59,99€ / año</Text>.{"\n"}
+                        Cancela en cualquier momento.
+                    </Text>
+                )}
+                
+                <Text style={[styles.legalText, travelProfile === 'premium' ? { marginTop: 15 } : { marginTop: 6, opacity: 0.5 }]}>
+                    Sujeto a términos y condiciones.
+                </Text>
             </View>
         </ScrollView>
     );

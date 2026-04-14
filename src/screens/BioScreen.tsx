@@ -16,9 +16,10 @@ export default function BioScreen() {
     const [showGuide, setShowGuide] = useState(false);
     const [showVip, setShowVip] = useState(false);
 
-    // Estados locales para el formulario de perfil
-    const [fullName, setFullName] = useState(user?.displayName || '');
-    const [idNumber, setIdNumber] = useState('');
+    // Estados locales para el formulario de perfil (Pre-rellenados para Demo)
+    const [fullName, setFullName] = useState('Juan García López');
+    const [idNumber, setIdNumber] = useState('12345678X');
+    const [demoPhone, setDemoPhone] = useState('+34 600 000 000');
 
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 100, paddingBottom: 120 }}>
@@ -86,35 +87,48 @@ export default function BioScreen() {
                     </View>
                 </View>
 
-                {/* ——— DATOS DE SEGURIDAD ——— */}
-                <Text style={[s.b, { marginTop: 30, marginBottom: 15 }]}>INFORMACIÓN DE SEGURIDAD</Text>
+                {/* ——— INFORMACIÓN DE SEGURIDAD ——— */}
+                <Text style={[s.b, { marginTop: 10, marginBottom: 15 }]}>INFORMACIÓN DE SEGURIDAD</Text>
                 <View style={[s.statsCard, { flexDirection: 'column' }]}>
+                    <View style={{ width: '100%', marginBottom: 15 }}>
+                        <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold', marginBottom: 5 }}>NOMBRE</Text>
+                        <TextInput
+                            value={fullName}
+                            onChangeText={setFullName}
+                            placeholder="Ej: Juan García López"
+                            placeholderTextColor="#444"
+                            style={{ backgroundColor: '#1A1A1A', color: '#FFF', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#333' }}
+                        />
+                    </View>
+
                     <View style={{ width: '100%', marginBottom: 15 }}>
                         <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold', marginBottom: 5 }}>DNI / PASAPORTE</Text>
                         <TextInput
-                            style={{ backgroundColor: '#1A1A1A', color: '#FFF', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#333' }}
-                            placeholder="Número de identidad"
-                            placeholderTextColor="#444"
                             value={idNumber}
                             onChangeText={setIdNumber}
+                            placeholder="Ej: 12345678X"
+                            placeholderTextColor="#444"
+                            style={{ backgroundColor: '#1A1A1A', color: '#FFF', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#333' }}
                         />
                     </View>
+
                     <View style={{ width: '100%', marginBottom: 15 }}>
-                        <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold', marginBottom: 5 }}>TELÉFONO DE ASISTENCIA</Text>
+                        <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold', marginBottom: 5 }}>TELÉFONO</Text>
                         <TextInput
-                            style={{ backgroundColor: '#1A1A1A', color: '#FFF', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#333' }}
-                            placeholder="+34 600 000 000"
+                            value={demoPhone}
+                            onChangeText={setDemoPhone}
+                            placeholder="Ej: +34 600 000 000"
                             placeholderTextColor="#444"
                             keyboardType="phone-pad"
-                            value={userPhone}
-                            onChangeText={setUserPhone}
+                            style={{ backgroundColor: '#1A1A1A', color: '#FFF', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#333' }}
                         />
                     </View>
+
                     <TouchableOpacity
-                        onPress={() => Alert.alert('Éxito', 'Información actualizada y encriptada.')}
-                        style={{ backgroundColor: '#4CD964', borderRadius: 12, paddingVertical: 12, alignItems: 'center' }}
+                         onPress={() => Alert.alert('Éxito', 'Información actualizada y encriptada.')}
+                         style={{ backgroundColor: '#4CD964', borderRadius: 12, paddingVertical: 12, alignItems: 'center' }}
                     >
-                        <Text style={{ color: '#000', fontWeight: 'bold' }}>GUARDAR CAMBIOS</Text>
+                         <Text style={{ color: '#000', fontWeight: 'bold' }}>GUARDAR CAMBIOS</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -201,17 +215,17 @@ export default function BioScreen() {
                                     <TouchableOpacity
                                         key={v.identifier || i}
                                         style={[
-                                            s.voiceBtn, 
+                                            s.voiceBtn,
                                             selectedVoice === v.identifier && s.voiceBtnSelected,
                                             isLocked && { opacity: 0.6, borderColor: '#555' }
                                         ]}
-                                        onPress={() => { 
+                                        onPress={() => {
                                             if (isLocked) {
                                                 Alert.alert('Acceso Premium', 'Las voces de Marco y Clara son exclusivas para usuarios VIP. Mejora tu plan para desbloquearlas.');
                                                 return;
                                             }
-                                            setSelectedVoice(v.identifier); 
-                                            speak('Hola, soy tu asistente de viaje inteligente.', v.identifier); 
+                                            setSelectedVoice(v.identifier);
+                                            speak('Hola, soy tu asistente de viaje inteligente.', v.identifier);
                                         }}
                                     >
                                         <Text style={{ color: selectedVoice === v.identifier ? '#000' : '#AF52DE', fontSize: 10, fontWeight: 'bold' }}>
@@ -316,15 +330,15 @@ export default function BioScreen() {
                         </Text>
 
                         {[
-                            { id: '1', t: 'Organizador de Viajes', d: 'Crea tu ruta en la pestaña VIAJE. Nuestra IA analiza el clima y horarios en tiempo real para que siempre sepas qué esperar en tu destino.', icon: '🏢' },
-                            { id: '2', t: 'Rastreador de Vuelos', d: 'Guarda tu número en VUELOS. Activamos una vigilancia constante que te avisará de cualquier cambio, retraso o cancelación al instante.', icon: '📡' },
-                            { id: '3', t: 'Avisos Inteligentes', d: 'Sin ruidos innecesarios. Solo te notificamos si hay un riesgo real. La vibración táctica te avisará discretamente en tu bolsillo.', icon: '🚨' },
-                            { id: '4', t: 'Gestión de Reembolsos', d: 'Si el retraso supera las 3h, organizamos la información necesaria para que puedas reclamar hasta 600€. Te guiamos en cada paso del trámite.', icon: '🛡️' },
-                            { id: '5', t: 'Ayuda en Emergencias', d: 'Si algo sale mal, la IA puede coordinar avisos automáticos a hoteles para informar de tu retraso y proteger tus reservas de alojamiento.', icon: '🆘' },
-                            { id: '6', t: 'Soluciones de Ruta', d: 'Ante un imprevisto, te damos 3 opciones claras: la más rápida para llegar, la más económica o la más cómoda con hotel. Tú tienes el control.', icon: '⚡' },
-                            { id: '7', t: 'Asistente en Segundo Plano', d: 'Deja que la IA haga el trabajo pesado de buscar vuelos y plazas disponibles mientras tú descansas o te mueves por el aeropuerto.', icon: '🤖' },
-                            { id: '8', t: 'Conversación con tu IA', d: 'Habla con tu asistente por voz o texto. Conoce tu itinerario y te dará consejos expertos y apoyo para resolver cualquier duda en el momento.', icon: '🎙️' },
-                            { id: '9', t: 'Privacidad Total', d: 'Tus datos son sagrados. Pasaportes y billetes se guardan encriptados solo en tu teléfono y nunca se comparten sin tu permiso.', icon: '🔐' },
+                            { id: '1', t: 'Organizador de Viajes', d: 'Registra tu viaje en la pestaña INICIO para activar tu escudo de protección. Al hacerlo, vinculas tu vuelo con tu alojamiento y permites que nuestra IA gestione cruzadamente el clima, los horarios y tu seguridad hotelera en tiempo real.', icon: '🗺️' },
+                            { id: '2', t: 'Rastreador de Vuelos', d: 'Introduce tu código en la pestaña VUELOS. Activamos una vigilancia satelital 24/7 mediante IA que te notificará cualquier alteración o cambio de última hora en el acto.', icon: '🛰️' },
+                            { id: '3', t: 'Avisos Inteligentes', d: 'Cero SPAM. Nuestro algoritmo solo genera notificaciones críticas cuando detecta un riesgo real para tu itinerario, permitiéndote disfrutar del viaje sin ruido innecesario pero con seguridad total.', icon: '🔔' },
+                            { id: '4', t: 'Gestión de Reembolsos', d: 'Detectamos automáticamente retrasos de +3h y cancelaciones para generar tu reclamación legal de hasta 600€. Podrás revisar, firmar digitalmente tu demanda y exportarla en PDF en segundos desde la propia App.', icon: '🛡️' },
+                            { id: '5', t: 'Ayuda en Emergencias', d: 'Ante una crisis grave, tu asistente activa una llamada de voz inteligente para avisar directamente a tu hotel de tu retraso. Protegemos tu alojamiento sin que tú tengas que realizar ninguna llamada internacional.', icon: '🆘' },
+                            { id: '6', t: 'Soluciones de Ruta', d: 'No pierdas el tiempo decidiendo. Nuestra IA calcula al instante 3 protocolos de rescate personalizados: el más Rápido (Vuelo), el más Económico (Reclamación) o el de máximo Confort (Hotel). Tú eliges con un solo toque.', icon: '⚡' },
+                            { id: '7', t: 'Copiloto 24/7', d: 'Tu asistente nunca duerme. Mientras tú descansas o te desplazas, nuestra IA trabaja en segundo plano rastreando plazas libres y alternativas de transporte para adelantarse a cualquier problema.', icon: '🤖' },
+                            { id: '8', t: 'Agente Conversacional', d: 'Comunícate con tu asistente inteligente mediante voz o texto. Nuestra IA conoce cada detalle de tu viaje y está lista para resolver dudas complejas, traducir frases de emergencia o coordinar transporte en cualquier ciudad.', icon: '🎙️' },
+                            { id: '9', t: 'Privacidad Total', d: 'Tus datos son sagrados. Pasaportes, billetes y reclamaciones se guardan bajo máxima encriptación en tu propia Bóveda Blindada, garantizando que tu información personal nunca se comparta sin tu permiso explícito.', icon: '🔐' },
                         ].map((p, i) => (
                             <View key={i} style={{ backgroundColor: '#111', padding: 20, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#222' }}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>

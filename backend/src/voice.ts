@@ -19,6 +19,13 @@ const client = (accountSid && authToken) ? twilio(accountSid, authToken) : null;
  * @param passengerPhone The contact number of the passenger
  */
 export async function notifyHotelOfDelay(hotelPhoneNumber: string, passengerName: string, delayMinutes: number, passengerPhone: string = "No registrado") {
+    let formattedPhone = hotelPhoneNumber.replace(/\s+/g, '');
+    if (/^[67]\d{8}$/.test(formattedPhone)) {
+        formattedPhone = '+34' + formattedPhone;
+    } else if (!formattedPhone.startsWith('+')) {
+        formattedPhone = '+' + formattedPhone;
+    }
+
     if (!client) {
         console.warn("[Voice API] Twilio credentials not fully set. Mocking voice call.");
         return "mock_call_sid_12345";
@@ -42,7 +49,7 @@ export async function notifyHotelOfDelay(hotelPhoneNumber: string, passengerName
 
         const call = await client.calls.create({
             twiml: twimlMessage,
-            to: hotelPhoneNumber,
+            to: formattedPhone,
             from: twilioPhoneNumber!
         });
 
