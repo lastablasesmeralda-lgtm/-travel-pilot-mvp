@@ -63,7 +63,7 @@ export const AppProvider = ({ children }) => {
   ]);
   const [inputText, setInputText] = useState('');
   const [messages, setMessages] = useState<any[]>([
-    { id: '1', text: 'TRAVEL-PILOT CONECTADO. Hola, soy tu asistente. ¿En qué te puedo ayudar hoy?', isUser: false }
+    { id: '1', text: 'TRAVEL-PILOT CONECTADO. Hola, soy tu asistente de viaje. Estoy vigilando tus vuelos para protegerte. ¿En qué puedo ayudarte?', isUser: false }
   ]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const waveAnim = useRef(new Animated.Value(0)).current;
@@ -135,6 +135,8 @@ export const AppProvider = ({ children }) => {
   const [chatOrigin, setChatOrigin] = useState<'global' | 'vip' | null>(null);
   const [pendingVIPScroll, setPendingVIPScroll] = useState(false);
   const [showVIPAlternatives, setShowVIPAlternatives] = useState(false);
+  const [showSignature, setShowSignature] = useState(false);
+  const [currentClaimForSig, setCurrentClaimForSig] = useState<any>(null);
 
   // Limpieza inicial para Beta (si no hay ahorros guardados, forzar 0)
   const [savedTime, setSavedTime] = useState(0);
@@ -693,7 +695,7 @@ export const AppProvider = ({ children }) => {
         setExtraDocs(demoItems);
         setAgentLogs([]);
         const firstName = (user?.displayName || user?.email || 'Viajero').trim().split(/[.\s_-]+/)[0];
-        setMessages([{ id: '1', text: `MODO ELITE ACTIVADO. Hola ${firstName}, soy tu asistente inteligente de Travel-Pilot. ¿En qué puedo ayudarte hoy?`, isUser: false }]);
+        setMessages([{ id: '1', text: `PROTOCOLOS ACTIVADOS. Hola ${firstName}, soy tu asistente de Travel-Pilot. Mi radar está activo para proteger tu viaje. ¿Necesitas algo?`, isUser: false }]);
         setApiPlan(null);
         setFlightData(null);
         setFlightInput('');
@@ -1954,7 +1956,9 @@ export const AppProvider = ({ children }) => {
     vaultPin, setVaultPin,
     extraDocs, setExtraDocs,
     isExtracting, simulateGmailSync,
-    lastSearchId
+    lastSearchId,
+    showSignature, setShowSignature,
+    currentClaimForSig, setCurrentClaimForSig
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

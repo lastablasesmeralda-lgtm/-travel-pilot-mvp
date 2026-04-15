@@ -82,7 +82,6 @@ export default function GlobalOverlays() {
         setCompBannerDismissed,
         chatOrigin,
         setChatOrigin,
-        setShowChat,
         showPlan,
         showVIPAlternatives,
         setShowVIPAlternatives,
@@ -90,7 +89,14 @@ export default function GlobalOverlays() {
         showCancellation,
         setShowCancellation,
         lastSearchId,
-        myTrips
+        myTrips,
+        setFlightInput,
+        setIsSearching,
+        setShowChat,
+        handleSendMessage,
+        setClaims,
+        setShowSignature,
+        setCurrentClaimForSig
     } = useAppContext();
 
     const navigation = useNavigation<any>();
@@ -162,46 +168,46 @@ export default function GlobalOverlays() {
 
                 // GENERACIÓN REAL DE PDF VÍA BACKEND
                 (async () => {
-                   try {
-                       const flightNum = flightData?.flightNumber || 'TP404';
-                       const response = await fetch(`${BACKEND_URL}/api/generateAssistanceCertificate`, {
-                           method: 'POST',
-                           headers: { 'Content-Type': 'application/json' },
-                           body: JSON.stringify({
-                               passengerName: user?.displayName || 'Pasajero Travel-Pilot',
-                               flightNumber: flightNum,
-                               airline: flightData?.airline || 'Aerolínea',
-                               departureAirport: flightData?.departure?.iata || 'AEP',
-                               arrivalAirport: flightData?.arrival?.iata || 'DEST',
-                               delayMinutes: (flightData?.departure?.delay || 0),
-                               flightDate: new Date().toLocaleDateString(),
-                               bookingRef: flightData?.bookingRef || 'TP-REF-DEMO',
-                               userEmail: user?.email || 'viajero@travelpilot.com'
-                           })
-                       });
-                       const data = await response.json();
-                       if (data.success && data.pdfBase64) {
-                           const fileUri = `${FileSystem.documentDirectory}Asistencia_${flightNum}.pdf`;
-                           await FileSystem.writeAsStringAsync(fileUri, data.pdfBase64, { encoding: FileSystem.EncodingType.Base64 });
-                           
-                           setExtraDocs((prev: any[]) => [
-                               {
-                                   id: `asist_pdf_${Date.now()}`,
-                                   t: 'CERTIFICADO DE ASISTENCIA EU261',
-                                   s: `Documento PDF // Vuelo ${flightNum}`,
-                                   i: fileUri,
-                                   source: 'SYSTEM',
-                                   icon: '⚖️',
-                                   verified: true,
-                                   isPdf: true
-                               },
-                               ...prev
-                           ]);
-                           setHasNewDoc(true);
-                       }
-                   } catch (e) {
-                       console.error("Error generando PDF asistencia:", e);
-                   }
+                    try {
+                        const flightNum = flightData?.flightNumber || 'TP404';
+                        const response = await fetch(`${BACKEND_URL}/api/generateAssistanceCertificate`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                passengerName: user?.displayName || 'Pasajero Travel-Pilot',
+                                flightNumber: flightNum,
+                                airline: flightData?.airline || 'Aerolínea',
+                                departureAirport: flightData?.departure?.iata || 'AEP',
+                                arrivalAirport: flightData?.arrival?.iata || 'DEST',
+                                delayMinutes: (flightData?.departure?.delay || 0),
+                                flightDate: new Date().toLocaleDateString(),
+                                bookingRef: flightData?.bookingRef || 'TP-REF-DEMO',
+                                userEmail: user?.email || 'viajero@travelpilot.com'
+                            })
+                        });
+                        const data = await response.json();
+                        if (data.success && data.pdfBase64) {
+                            const fileUri = `${FileSystem.documentDirectory}Asistencia_${flightNum}.pdf`;
+                            await FileSystem.writeAsStringAsync(fileUri, data.pdfBase64, { encoding: FileSystem.EncodingType.Base64 });
+
+                            setExtraDocs((prev: any[]) => [
+                                {
+                                    id: `asist_pdf_${Date.now()}`,
+                                    t: 'CERTIFICADO DE ASISTENCIA EU261',
+                                    s: `Documento PDF // Vuelo ${flightNum}`,
+                                    i: fileUri,
+                                    source: 'SYSTEM',
+                                    icon: '⚖️',
+                                    verified: true,
+                                    isPdf: true
+                                },
+                                ...prev
+                            ]);
+                            setHasNewDoc(true);
+                        }
+                    } catch (e) {
+                        console.error("Error generando PDF asistencia:", e);
+                    }
                 })();
             } else {
                 showPlan();
@@ -807,7 +813,7 @@ export default function GlobalOverlays() {
                             {(() => {
                                 const isPdf = viewDoc?.isPdf;
                                 const imgSource = DOC_IMAGES[viewDoc?.id] || (typeof viewDoc?.i === 'string' && DOC_IMAGES[viewDoc.i]) || (typeof viewDoc?.i === 'number' ? viewDoc.i : viewDoc?.i ? { uri: viewDoc.i } : null);
-                                
+
                                 if (isPdf) {
                                     return (
                                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111' }}>
@@ -842,11 +848,11 @@ export default function GlobalOverlays() {
                             <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14, textAlign: 'center' }}>
                                 {isScanning ? 'ESCANEANDO DOCUMENTO...' : `${viewDoc?.t || 'DOCUMENTO'} - VERIFICADO`}
                             </Text>
-                            
+
                             {viewDoc?.t?.includes('GESTIÓN DE REUBICACIÓN') ? (
                                 <View style={{ width: '100%', marginTop: 10 }}>
                                     {/* BOTÓN 1: TRANSPORTE */}
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         style={[s.bt, { backgroundColor: '#AF52DE', borderRadius: 12, marginBottom: 10 }]}
                                         onPress={() => {
                                             Alert.alert(
@@ -859,34 +865,47 @@ export default function GlobalOverlays() {
                                     </TouchableOpacity>
 
                                     {/* BOTÓN 2: ALOJAMIENTO (CHAT) */}
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         style={[s.bt, { backgroundColor: '#007AFF', borderRadius: 12, marginBottom: 10 }]}
                                         onPress={() => {
                                             setViewDoc(null);
-                                            // Activar el chat con mensaje pregrabado
-                                            setTab('Intel');
-                                            // Pequeño delay para que el teclado/pantalla carguen
-                                            setTimeout(() => {
-                                                setFlightInput("Necesito asistencia con el alojamiento en Valencia");
-                                                // Simulamos el inicio de búsqueda con ese texto
-                                                setIsSearching(true);
-                                                setTimeout(() => setIsSearching(false), 2000);
-                                            }, 500);
+                                            setShowChat(true);
+                                            // Mandamos el mensaje directo al motor de IA
+                                            handleSendMessage("Necesito asistencia con el alojamiento en Valencia");
                                         }}
                                     >
                                         <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🏨 2. GESTIONAR ALOJAMIENTO (CHAT)</Text>
                                     </TouchableOpacity>
 
                                     {/* BOTÓN 3: INDEMNIZACIÓN */}
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         style={[s.bt, { backgroundColor: '#4CD964', borderRadius: 12 }]}
                                         onPress={() => {
                                             setViewDoc(null);
-                                            // Simular navegación al área legal/firma
-                                            Alert.alert("⚖️ ÁREA LEGAL", "Iniciando generación de reclamación oficial por 250€. Un momento...");
+                                            // 1. Buscamos o creamos la reclamación para este vuelo
+                                            const claimId = `CLAIM-${flightData?.flightNumber || 'DFLT'}`;
+                                            const newClaim = {
+                                                id: claimId,
+                                                aerolinea: flightData?.airline || 'Aerolínea',
+                                                vuelo: flightData?.flightNumber || '---',
+                                                ruta: `${flightData?.departure?.iata || 'MAD'} > ${flightData?.arrival?.iata || 'VLC'}`,
+                                                estado: 'PENDIENTE DE FIRMA',
+                                                compensacion: '250',
+                                                isDynamic: true
+                                            };
+
+                                            // 2. La inyectamos y activamos firma
+                                            setClaims((prev: any) => {
+                                                const exists = prev.find((c: any) => c.id === claimId);
+                                                if (exists) return prev;
+                                                return [newClaim, ...prev];
+                                            });
+                                            setCurrentClaimForSig(newClaim);
+                                            setTab('Vault');
                                             setTimeout(() => {
-                                                setShowCancellation(true);
-                                            }, 1000);
+                                                setShowSignature(true);
+                                                speak("He preparado tu reclamación de 250 euros. Introduce tu DNI y firma para finalizar.");
+                                            }, 500);
                                         }}
                                     >
                                         <Text style={{ color: '#000', fontWeight: 'bold' }}>⚖️ 3. SOLICITAR INDEMNIZACIÓN</Text>
@@ -895,8 +914,8 @@ export default function GlobalOverlays() {
                             ) : (
                                 <>
                                     {viewDoc?.isPdf && (
-                                        <TouchableOpacity 
-                                            style={[s.bt, { backgroundColor: '#4CD964', marginTop: 15, borderRadius: 12, width: '100%' }]} 
+                                        <TouchableOpacity
+                                            style={[s.bt, { backgroundColor: '#4CD964', marginTop: 15, borderRadius: 12, width: '100%' }]}
                                             onPress={async () => {
                                                 if (viewDoc.i && await Sharing.isAvailableAsync()) {
                                                     await Sharing.shareAsync(viewDoc.i);
@@ -916,7 +935,7 @@ export default function GlobalOverlays() {
                                     )}
                                 </>
                             )}
-                            
+
                             <TouchableOpacity style={[s.bt, { backgroundColor: '#222', marginTop: 15, borderRadius: 12, width: '100%' }]} onPress={() => setViewDoc(null)}>
                                 <Text style={{ color: '#FFF', fontWeight: 'bold' }}>CERRAR VISOR</Text>
                             </TouchableOpacity>

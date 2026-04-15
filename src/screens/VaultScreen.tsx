@@ -16,7 +16,8 @@ export default function VaultScreen() {
         compensationEligible, extraDocs, setExtraDocs, isExtracting, simulateGmailSync, user,
         removeExtraDoc, setHasNewDoc, setRecoveredMoney, setShowChat,
         showVIPAlternatives, setShowVIPAlternatives, pendingVIPScroll, setPendingVIPScroll,
-        setShowPrivateVault, setTab, confirmFlightRescue, speak
+        setShowPrivateVault, setTab, confirmFlightRescue, speak,
+        showSignature, setShowSignature, currentClaimForSig, setCurrentClaimForSig
     } = useAppContext();
 
     React.useEffect(() => {
@@ -32,12 +33,10 @@ export default function VaultScreen() {
     const [uploadingDoc, setUploadingDoc] = useState(false);
     const [generatingPdf, setGeneratingPdf] = useState(false);
     const [showRights, setShowRights] = useState(false);
-    const [showSignature, setShowSignature] = useState(false);
     const [hasSigned, setHasSigned] = useState(false);
     const [signedClaimId, setSignedClaimId] = useState<string | null>(null);
     const [capturedSignature, setCapturedSignature] = useState<string | null>(null);
     const [pendingDoc, setPendingDoc] = useState<{ uri: string, type: string } | null>(null);
-    const [currentClaimForSig, setCurrentClaimForSig] = useState<any>(null);
     const [showActionModal, setShowActionModal] = useState(false);
     const [currentActionDoc, setCurrentActionDoc] = useState<any>(null);
     const [isRescuing, setIsRescuing] = useState(false);
@@ -167,10 +166,12 @@ export default function VaultScreen() {
                 body: JSON.stringify({
                     flightNumber: currentClaimForSig?.vuelo,
                     airline: currentClaimForSig?.aerolinea,
-                    delayMinutes: currentClaimForSig?.delayActual || 0,
-                    status: currentClaimForSig?.status || 'delayed',
-                    departureAirport: currentClaimForSig?.ruta?.split('>')[0]?.trim() || 'Desconocido',
-                    arrivalAirport: currentClaimForSig?.ruta?.split('>')[1]?.trim() || 'Desconocido',
+                    // Si es la demo (isDynamic), forzamos datos para PDF bonito. Si no, datos reales.
+                    delayMinutes: currentClaimForSig?.isDynamic ? 240 : (currentClaimForSig?.delayActual || 0),
+                    status: currentClaimForSig?.isDynamic ? 'delayed' : (currentClaimForSig?.status || 'delayed'),
+                    departureAirport: currentClaimForSig?.ruta?.split('>')[0]?.trim() || 'MAD',
+                    arrivalAirport: currentClaimForSig?.ruta?.split('>')[1]?.trim() || 'VLC',
+                    amount: currentClaimForSig?.isDynamic ? '250' : (currentClaimForSig?.compensacion || '0'),
                     userEmail: user?.email || 'pasajero@travel-pilot.com',
                     signatureBase64: sig,
                     // Datos del pasajero extraídos del contexto
@@ -320,7 +321,7 @@ export default function VaultScreen() {
                                         });
                                         setCurrentActionDoc(d);
                                         setShowVIPAlternatives(true);
-                                    } 
+                                    }
                                     // 2. CASO PROPUESTA: Abrir ventana de acción detallada para planes de alojamiento/vuelo
                                     else if (d.t?.includes('PROPUESTA') || d.t?.includes('ALOJAMIENTO')) {
                                         setCurrentActionDoc(d);
@@ -536,8 +537,8 @@ export default function VaultScreen() {
                                         <Text style={{ color: c.isDynamic ? '#FF9500' : '#27C93F', fontSize: 11, fontWeight: 'bold' }}>{c.estado}</Text>
                                     </View>
                                 </View>
-                                <TouchableOpacity 
-                                    onPress={(e) => { e.stopPropagation(); removeClaim(c.id); }} 
+                                <TouchableOpacity
+                                    onPress={(e) => { e.stopPropagation(); removeClaim(c.id); }}
                                     style={{ padding: 5, paddingLeft: 15, zIndex: 10 }}
                                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                                 >
@@ -616,61 +617,61 @@ export default function VaultScreen() {
                     </View>
                 </Modal>
 
-            {/* MODAL CONOCE TUS DERECHOS (PROTOCOLO EU261) */}
-            <Modal visible={showRights} animationType="slide" transparent>
-                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.98)', paddingTop: 60 }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, marginBottom: 20 }}>
-                        <Text style={{ color: '#FFF', fontSize: 20, fontWeight: '900' }}>PROTOCOLO LEGAL EU261</Text>
-                        <TouchableOpacity onPress={() => setShowRights(false)} style={{ backgroundColor: '#222', padding: 8, borderRadius: 15, width: 40, alignItems: 'center' }}>
-                            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>✕</Text>
-                        </TouchableOpacity>
+                {/* MODAL CONOCE TUS DERECHOS (PROTOCOLO EU261) */}
+                <Modal visible={showRights} animationType="slide" transparent>
+                    <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.98)', paddingTop: 60 }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, marginBottom: 20 }}>
+                            <Text style={{ color: '#FFF', fontSize: 20, fontWeight: '900' }}>PROTOCOLO LEGAL EU261</Text>
+                            <TouchableOpacity onPress={() => setShowRights(false)} style={{ backgroundColor: '#222', padding: 8, borderRadius: 15, width: 40, alignItems: 'center' }}>
+                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView contentContainerStyle={{ padding: 25, paddingBottom: 100 }}>
+                            <Text style={{ color: '#AF52DE', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 10 }}>TABLA DE INDEMNIZACIONES 💶</Text>
+                            <Text style={{ color: '#B0B0B0', fontSize: 14, lineHeight: 20, marginBottom: 20 }}>
+                                El reglamento europeo te protege en caso de incidentes graves. Estos son los importes que puedes reclamar por pasajero:
+                            </Text>
+
+                            <View style={{ backgroundColor: '#111', padding: 20, borderRadius: 20, marginBottom: 10, borderWidth: 1, borderColor: '#222' }}>
+                                <Text style={{ color: '#FFF', fontSize: 18, fontWeight: 'bold' }}>250€</Text>
+                                <Text style={{ color: '#888', fontSize: 12 }}>Vuelos cortos (hasta 1.500 km)</Text>
+                            </View>
+                            <View style={{ backgroundColor: '#111', padding: 20, borderRadius: 20, marginBottom: 10, borderWidth: 1, borderColor: '#222' }}>
+                                <Text style={{ color: '#FFF', fontSize: 18, fontWeight: 'bold' }}>400€</Text>
+                                <Text style={{ color: '#888', fontSize: 12 }}>Vuelos medios (1.500 - 3.500 km)</Text>
+                            </View>
+                            <View style={{ backgroundColor: '#111', padding: 20, borderRadius: 20, marginBottom: 30, borderWidth: 1, borderColor: '#222' }}>
+                                <Text style={{ color: '#FFF', fontSize: 18, fontWeight: 'bold' }}>600€</Text>
+                                <Text style={{ color: '#888', fontSize: 12 }}>Vuelos largos (más de 3.500 km)</Text>
+                            </View>
+
+                            <Text style={{ color: '#AF52DE', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 10 }}>REGLAS DE ORO ⚖️</Text>
+                            <View style={{ gap: 15, marginBottom: 30 }}>
+                                <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18 }}>• <Text style={{ color: '#FFF', fontWeight: 'bold' }}>RETRASO:</Text> Tienes derecho a indemnización si llegas a tu destino final con más de 3 horas de retraso.</Text>
+                                <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18 }}>• <Text style={{ color: '#FFF', fontWeight: 'bold' }}>CANCELACIÓN:</Text> Si te avisan con menos de 14 días. Tienes derecho a reembolso O transporte alternativo.</Text>
+                                <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18 }}>• <Text style={{ color: '#FFF', fontWeight: 'bold' }}>OVERBOOKING:</Text> Si se te deniega el embarque contra tu voluntad, la reclamación es inmediata.</Text>
+                            </View>
+
+                            <Text style={{ color: '#AF52DE', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 10 }}>ASISTENCIA INMEDIATA 🍔</Text>
+                            <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18, marginBottom: 30 }}>
+                                A partir de las 2h de retraso, la aerolínea DEBE proporcionarte comida, bebida y dos medios de comunicación. Si la salida es al día siguiente, deben pagar el hotel y el trasporte.
+                            </Text>
+
+                            <Text style={{ color: '#FF3B30', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 10 }}>EXCEPCIONES (SIN COBRO) ⚠️</Text>
+                            <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18, marginBottom: 40 }}>
+                                No hay indemnización económica si el problema fue causado por "Circunstancias Extraordinarias": cierres de espacio aéreo, meteorología extrema, inestabilidad política o huelgas de control aéreo.
+                            </Text>
+
+                            <TouchableOpacity
+                                onPress={() => setShowRights(false)}
+                                style={{ backgroundColor: '#AF52DE', padding: 18, borderRadius: 15, alignItems: 'center' }}
+                            >
+                                <Text style={{ color: '#FFF', fontWeight: 'bold', letterSpacing: 1 }}>ENTENDIDО</Text>
+                            </TouchableOpacity>
+                        </ScrollView>
                     </View>
-
-                    <ScrollView contentContainerStyle={{ padding: 25, paddingBottom: 100 }}>
-                        <Text style={{ color: '#AF52DE', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 10 }}>TABLA DE INDEMNIZACIONES 💶</Text>
-                        <Text style={{ color: '#B0B0B0', fontSize: 14, lineHeight: 20, marginBottom: 20 }}>
-                            El reglamento europeo te protege en caso de incidentes graves. Estos son los importes que puedes reclamar por pasajero:
-                        </Text>
-
-                        <View style={{ backgroundColor: '#111', padding: 20, borderRadius: 20, marginBottom: 10, borderWidth: 1, borderColor: '#222' }}>
-                            <Text style={{ color: '#FFF', fontSize: 18, fontWeight: 'bold' }}>250€</Text>
-                            <Text style={{ color: '#888', fontSize: 12 }}>Vuelos cortos (hasta 1.500 km)</Text>
-                        </View>
-                        <View style={{ backgroundColor: '#111', padding: 20, borderRadius: 20, marginBottom: 10, borderWidth: 1, borderColor: '#222' }}>
-                            <Text style={{ color: '#FFF', fontSize: 18, fontWeight: 'bold' }}>400€</Text>
-                            <Text style={{ color: '#888', fontSize: 12 }}>Vuelos medios (1.500 - 3.500 km)</Text>
-                        </View>
-                        <View style={{ backgroundColor: '#111', padding: 20, borderRadius: 20, marginBottom: 30, borderWidth: 1, borderColor: '#222' }}>
-                            <Text style={{ color: '#FFF', fontSize: 18, fontWeight: 'bold' }}>600€</Text>
-                            <Text style={{ color: '#888', fontSize: 12 }}>Vuelos largos (más de 3.500 km)</Text>
-                        </View>
-
-                        <Text style={{ color: '#AF52DE', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 10 }}>REGLAS DE ORO ⚖️</Text>
-                        <View style={{ gap: 15, marginBottom: 30 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18 }}>• <Text style={{ color: '#FFF', fontWeight: 'bold' }}>RETRASO:</Text> Tienes derecho a indemnización si llegas a tu destino final con más de 3 horas de retraso.</Text>
-                            <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18 }}>• <Text style={{ color: '#FFF', fontWeight: 'bold' }}>CANCELACIÓN:</Text> Si te avisan con menos de 14 días. Tienes derecho a reembolso O transporte alternativo.</Text>
-                            <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18 }}>• <Text style={{ color: '#FFF', fontWeight: 'bold' }}>OVERBOOKING:</Text> Si se te deniega el embarque contra tu voluntad, la reclamación es inmediata.</Text>
-                        </View>
-
-                        <Text style={{ color: '#AF52DE', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 10 }}>ASISTENCIA INMEDIATA 🍔</Text>
-                        <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18, marginBottom: 30 }}>
-                            A partir de las 2h de retraso, la aerolínea DEBE proporcionarte comida, bebida y dos medios de comunicación. Si la salida es al día siguiente, deben pagar el hotel y el trasporte.
-                        </Text>
-
-                        <Text style={{ color: '#FF3B30', fontSize: 13, fontWeight: 'bold', letterSpacing: 1.5, marginBottom: 10 }}>EXCEPCIONES (SIN COBRO) ⚠️</Text>
-                        <Text style={{ color: '#B0B0B0', fontSize: 13, lineHeight: 18, marginBottom: 40 }}>
-                            No hay indemnización económica si el problema fue causado por "Circunstancias Extraordinarias": cierres de espacio aéreo, meteorología extrema, inestabilidad política o huelgas de control aéreo.
-                        </Text>
-
-                        <TouchableOpacity
-                            onPress={() => setShowRights(false)}
-                            style={{ backgroundColor: '#AF52DE', padding: 18, borderRadius: 15, alignItems: 'center' }}
-                        >
-                            <Text style={{ color: '#FFF', fontWeight: 'bold', letterSpacing: 1 }}>ENTENDIDО</Text>
-                        </TouchableOpacity>
-                    </ScrollView>
-                </View>
-            </Modal>
+                </Modal>
             </ScrollView>
 
             {/* MODAL FIRMA */}
@@ -678,7 +679,7 @@ export default function VaultScreen() {
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', padding: 25 }}>
                     <View style={{ backgroundColor: '#111', borderRadius: 24, padding: 25, borderWidth: 1, borderColor: '#333' }}>
                         <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '900', textAlign: 'center', marginBottom: 20 }}>🖊️ FIRMA DE AUTORIZACIÓN</Text>
-                        
+
                         <View style={{ marginBottom: 20 }}>
                             <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', marginBottom: 8, letterSpacing: 1 }}>DNI / PASAPORTE DEL RECLAMANTE</Text>
                             <TextInput
@@ -687,12 +688,12 @@ export default function VaultScreen() {
                                 placeholder="Ej: 12345678X"
                                 placeholderTextColor="#444"
                                 autoCapitalize="characters"
-                                style={{ 
-                                    backgroundColor: '#000', 
-                                    borderWidth: 1, 
-                                    borderColor: '#333', 
-                                    borderRadius: 12, 
-                                    padding: 14, 
+                                style={{
+                                    backgroundColor: '#000',
+                                    borderWidth: 1,
+                                    borderColor: '#333',
+                                    borderRadius: 12,
+                                    padding: 14,
                                     color: '#FFF',
                                     fontSize: 15,
                                     fontWeight: 'bold'
