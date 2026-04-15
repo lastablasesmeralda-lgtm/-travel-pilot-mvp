@@ -1005,9 +1005,9 @@ export const AppProvider = ({ children }) => {
     try {
       const isSpeakingNow = await Speech.isSpeakingAsync();
       if (isSpeakingNow) {
-        Speech.stop();
-        // Pequeño delay en Android para que el stop() asíncrono no cancele el nuevo speak()
-        if (Platform.OS === 'android') await new Promise(r => setTimeout(r, 100));
+        await Speech.stop();
+        // Aumentamos a 300ms para asegurar que Android limpie el buffer
+        if (Platform.OS === 'android') await new Promise(r => setTimeout(r, 300));
       }
     } catch (e) { }
 

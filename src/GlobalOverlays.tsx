@@ -268,7 +268,8 @@ export default function GlobalOverlays() {
 
                                     if (travelProfile === 'premium') {
                                         // ══ VIP: Gestión automática vía Twilio ══
-                                        speak(`Contactando con tu hotel para avisarles de tu retraso de ${realDelay} minutos en el vuelo ${flightNum}. Un momento.`);
+                                        stopSpeak();
+                                        speak(`Avisando al hotel.`);
                                         setTimeout(() => {
                                             (async () => {
                                                 try {
@@ -287,7 +288,8 @@ export default function GlobalOverlays() {
                                                     });
                                                     clearTimeout(timeoutId);
                                                     if (res.ok) {
-                                                        speak('Estancia protegida. El hotel ha sido notificado de tu llegada tardía.');
+                                                        stopSpeak();
+                                                        speak('Estancia protegida.');
                                                         Alert.alert(
                                                             '✅ ESTANCIA PROTEGIDA',
                                                             `He notificado al hotel tu retraso de ${realDelay} min (vuelo ${flightNum}). Tu reserva está asegurada.`,

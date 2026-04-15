@@ -31,18 +31,27 @@ export async function notifyHotelOfDelay(hotelPhoneNumber: string, passengerName
         return "mock_call_sid_12345";
     }
 
-    console.log(`[Voice API] Initiating call to hotel ${hotelPhoneNumber} for passenger ${passengerName} (${passengerPhone})...`);
+    console.log(`[Voice API] Preparando llamada al número: ${formattedPhone} (Original: ${hotelPhoneNumber})`);
 
     try {
-        // TwiML (Twilio Markup Language) to dictate what the voice bot says
+        // Volvemos a la voz 'alice' que es la más compatible en todas las cuentas de Twilio
+        // Pero mantenemos las pausas para que el mensaje sea elegante y profesional.
         const twimlMessage = `
             <Response>
                 <Say voice="alice" language="es-ES">
-                    Hola. Esta es una llamada automatizada de Travel Pilot en nombre de su huésped, ${passengerName}.
-                    Su vuelo se ha retrasado ${delayMinutes} minutos. 
-                    Aún llegarán esta noche, por favor mantengan su reserva activa. 
-                    Si necesitan contactar con el pasajero, su número es: ${passengerPhone.split('').join(' ')}.
-                    Gracias. Hasta luego.
+                    Hola. <Pause length="1"/> 
+                    Esta es una llamada automatizada de emergencia de su asistente Travel Pilot. 
+                    <Pause length="1"/>
+                    Estamos llamando en nombre de su huésped, ${passengerName}. 
+                    <Pause length="1"/>
+                    Su vuelo ha sufrido un retraso de ${delayMinutes} minutos. 
+                    <Pause length="1"/>
+                    El pasajero llegará más tarde de lo previsto, pero confirma que mantiene su reserva activa. 
+                    <Pause length="1"/>
+                    Si necesitan contactar con el huésped para cualquier detalle de la llegada, su número directo de contacto es: ${passengerPhone.split('').join(' ')}. 
+                    <Pause length="2"/>
+                    Gracias por su atención. Su asistente Travel Pilot ha registrado esta notificación. 
+                    Hasta luego.
                 </Say>
             </Response>
         `;
@@ -53,11 +62,17 @@ export async function notifyHotelOfDelay(hotelPhoneNumber: string, passengerName
             from: twilioPhoneNumber!
         });
 
-        console.log(`[Voice API] Call initiated successfully. Call SID: ${call.sid}`);
+        console.log(`[Voice API] ✅ Llamada REAL iniciada con éxito. SID: ${call.sid}`);
         return call.sid;
 
-    } catch (error) {
-        console.error(`[Voice API] Failed to initiate call:`, error);
+    } catch (error: any) {
+        console.error(`[Voice API] ❌ Error crítico al lanzar llamada:`, error.message);
+        
+        // Información de ayuda según el error de Twilio
+        if (error.code === 21211) console.error("   └─ Ayuda: El número de destino no es válido.");
+        if (error.code === 21608) console.error("   └─ Ayuda: El número de destino no está verificado en tu cuenta Twilio Trial.");
+        if (error.code === 20003) console.error("   └─ Ayuda: Credenciales de Twilio (SID/Token) incorrectas.");
+        
         throw error;
     }
 }
