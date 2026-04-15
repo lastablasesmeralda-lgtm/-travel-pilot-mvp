@@ -475,7 +475,6 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         isSimulation: false, // Lo marcamos como no-simulación para que sea tratado como real
     };
 }
-}
 
 // ============================================================
 export async function handleFlightMonitoring(flightId: string, travelProfile: string = 'balanced') {
