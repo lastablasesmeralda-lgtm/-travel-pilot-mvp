@@ -1269,8 +1269,18 @@ export const AppProvider = ({ children }) => {
           : 'Retraso detectado. Si supera las 2 horas, solicita tus vales de comida. Sigo vigilando tu vuelo.';
       }
 
+      if (data.status === 'active' && delay < 60) {
+        finalSpeech = travelProfile === 'premium'
+          ? `Tu vuelo ${data.flightNumber} está actualmente en el aire. Todo progresa según lo previsto y sigo monitorizando tu llegada a ${data.arrival?.iata || 'destino'}.`
+          : `El vuelo ${data.flightNumber} está en curso y puntual. Buen viaje.`;
+      } else if (data.status === 'scheduled' && delay < 60) {
+        finalSpeech = travelProfile === 'premium'
+          ? `He verificado tu vuelo ${data.flightNumber}. Está programado y puntual. Mi radar seguirá activo hasta que aterrices.`
+          : `Tu vuelo está programado correctamente y sin retrasos detectados.`;
+      }
+
       if (!finalSpeech) {
-        finalSpeech = 'He detectado una incidencia en tu vuelo. Abre el chat con tu asistente para que analice tu situación específica.'
+        finalSpeech = 'He detectado una situación especial en tu vuelo. Abre el chat con tu asistente para que analice los detalles por ti.'
       }
       if (finalSpeech) speak(finalSpeech, selectedVoice)
 
