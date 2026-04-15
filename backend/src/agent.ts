@@ -228,7 +228,7 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         return {
             flightId, flightNumber: 'RETRASO-60', status: 'delayed', delayMinutes: 65,
             airline: 'Air Europa',
-            version: '2.7.2',
+            departure: { iata: 'MAD', delay: 65, scheduled: now.toISOString() },
             arrival: { iata: 'LIS', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + 65 * 60 * 1000).toISOString() },
             hotel_booking: null, connecting_flight: null, ground_transport: null, isSimulation: true,
         };
