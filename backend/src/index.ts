@@ -40,7 +40,7 @@ fastify.register(multipart, {
 });
 
 fastify.get('/api/health', async () => {
-    return { status: 'ok', version: '2.7.1', timestamp: new Date().toISOString() };
+    return { status: 'ok', version: '2.7.2', timestamp: new Date().toISOString() };
 });
 
 const expo = new Expo();

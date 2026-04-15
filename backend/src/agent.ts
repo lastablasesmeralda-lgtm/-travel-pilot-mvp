@@ -174,13 +174,61 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
     const now = new Date();
     const code = flightId.toUpperCase();
 
+    // 📡 PRIORIDAD 1: AERORED (AeroDataBox via RapidAPI - Mayor cuota de créditos)
+    try {
+        const rapidKey = process.env.RAPIDAPI_KEY;
+        if (rapidKey) {
+            console.log(`[Radar] 🔍 Consultando AERORED para ${code}...`);
+            const adbRes = await fetch(
+                `https://aerodatabox.p.rapidapi.com/flights/number/${code}`,
+                { 
+                    headers: {
+                        'X-RapidAPI-Key': rapidKey,
+                        'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com'
+                    },
+                    signal: AbortSignal.timeout(7000) 
+                }
+            );
+            
+            if (adbRes.ok) {
+                const adbData = await adbRes.json();
+                if (Array.isArray(adbData) && adbData.length > 0) {
+                    const f = adbData[0];
+                    console.log(`[Radar] ✅ AERORED localizó: ${f.status}`);
+                    return {
+                        flightId,
+                        flightNumber: code,
+                        status: f.status.toLowerCase().includes('active') || f.status.toLowerCase().includes('flight') ? 'active' : (f.status.toLowerCase().includes('cancelled') ? 'cancelled' : 'delayed'),
+                        delayMinutes: 0,
+                        airline: f.airline?.name || code.substring(0, 2),
+                        departure: { 
+                            iata: f.departure?.airport?.iata || 'N/A', 
+                            delay: 0, 
+                            scheduled: f.departure?.scheduledTimeLocal || now.toISOString(),
+                        },
+                        arrival: { 
+                            iata: f.arrival?.airport?.iata || 'N/A', 
+                            scheduled: f.arrival?.scheduledTimeLocal || now.toISOString(),
+                            estimated: f.arrival?.scheduledTimeLocal || now.toISOString(),
+                        },
+                        hotel_booking: null,
+                        connecting_flight: null,
+                        ground_transport: null,
+                    };
+                }
+            }
+        }
+    } catch (e) {
+        console.log('[Radar] Error AERORED:', e);
+    }
+
     // 🏆 SUITE DE PRUEBAS MAESTRA (DETERMINISTA)
     if (code === 'RETRASO-60') {
         const originalArrival = new Date(now.getTime() + 1 * 60 * 60 * 1000);
         return {
             flightId, flightNumber: 'RETRASO-60', status: 'delayed', delayMinutes: 65,
             airline: 'Air Europa',
-            departure: { iata: 'MAD', delay: 65, scheduled: now.toISOString() },
+            version: '2.7.2',
             arrival: { iata: 'LIS', scheduled: originalArrival.toISOString(), estimated: new Date(originalArrival.getTime() + 65 * 60 * 1000).toISOString() },
             hotel_booking: null, connecting_flight: null, ground_transport: null, isSimulation: true,
         };
@@ -335,11 +383,59 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         };
     }
 
-    // 📡 PRIORIDAD 1: AviationStack (La más fiable para vuelos comerciales)
+    // 📡 PRIORIDAD 1: AERORED (AeroDataBox via RapidAPI - Mayor cuota de créditos)
+    try {
+        const rapidKey = process.env.RAPIDAPI_KEY;
+        if (rapidKey) {
+            console.log(`[Radar] 🔍 Consultando AERORED para ${code}...`);
+            const adbRes = await fetch(
+                `https://aerodatabox.p.rapidapi.com/flights/number/${code}`,
+                { 
+                    headers: {
+                        'X-RapidAPI-Key': rapidKey,
+                        'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com'
+                    },
+                    signal: AbortSignal.timeout(7000) 
+                }
+            );
+            
+            if (adbRes.ok) {
+                const adbData = await adbRes.json();
+                if (Array.isArray(adbData) && adbData.length > 0) {
+                    const f = adbData[0];
+                    console.log(`[Radar] ✅ AERORED localizó: ${f.status}`);
+                    return {
+                        flightId,
+                        flightNumber: code,
+                        status: f.status.toLowerCase().includes('active') || f.status.toLowerCase().includes('flight') ? 'active' : (f.status.toLowerCase().includes('cancelled') ? 'cancelled' : 'delayed'),
+                        delayMinutes: 0,
+                        airline: f.airline?.name || code.substring(0, 2),
+                        departure: { 
+                            iata: f.departure?.airport?.iata || 'N/A', 
+                            delay: 0, 
+                            scheduled: f.departure?.scheduledTimeLocal || now.toISOString(),
+                        },
+                        arrival: { 
+                            iata: f.arrival?.airport?.iata || 'N/A', 
+                            scheduled: f.arrival?.scheduledTimeLocal || now.toISOString(),
+                            estimated: f.arrival?.scheduledTimeLocal || now.toISOString(),
+                        },
+                        hotel_booking: null,
+                        connecting_flight: null,
+                        ground_transport: null,
+                    };
+                }
+            }
+        }
+    } catch (e) {
+        console.log('[Radar] Error AERORED:', e);
+    }
+
+    // 📡 PRIORIDAD 2: AviationStack (Backup secundario)
     try {
         const aviationKey = process.env.AVIATIONSTACK_API_KEY;
         if (aviationKey) {
-            console.log(`[Radar] 📡 Consultando AviationStack para ${code}...`);
+            console.log(`[Radar] 📡 Consultando AviationStack de respaldo para ${code}...`);
             const avRes = await fetch(
                 `http://api.aviationstack.com/v1/flights?access_key=${aviationKey}&flight_iata=${code}`,
                 { signal: AbortSignal.timeout(7000) }
@@ -384,53 +480,6 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         }
     } catch (e) {
         console.log('[Radar] Error AviationStack:', e);
-    }
-
-    // 📡 PRIORIDAD 2: AeroDataBox (Profesional via RapidAPI)
-    try {
-        const rapidKey = process.env.RAPIDAPI_KEY;
-        if (rapidKey) {
-            console.log(`[Radar] 🔍 Consultando AeroDataBox para ${code}...`);
-            const adbRes = await fetch(
-                `https://aerodatabox.p.rapidapi.com/flights/number/${code}`,
-                { 
-                    headers: {
-                        'X-RapidAPI-Key': rapidKey,
-                        'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com'
-                    },
-                    signal: AbortSignal.timeout(7000) 
-                }
-            );
-            
-            if (adbRes.ok) {
-                const adbData = await adbRes.json();
-                if (Array.isArray(adbData) && adbData.length > 0) {
-                    const f = adbData[0];
-                    return {
-                        flightId,
-                        flightNumber: code,
-                        status: f.status.toLowerCase().includes('active') || f.status.toLowerCase().includes('flight') ? 'active' : (f.status.toLowerCase().includes('cancelled') ? 'cancelled' : 'delayed'),
-                        delayMinutes: 0,
-                        airline: f.airline?.name || code.substring(0, 2),
-                        departure: { 
-                            iata: f.departure?.airport?.iata || 'N/A', 
-                            delay: 0, 
-                            scheduled: f.departure?.scheduledTimeLocal || now.toISOString(),
-                        },
-                        arrival: { 
-                            iata: f.arrival?.airport?.iata || 'N/A', 
-                            scheduled: f.arrival?.scheduledTimeLocal || now.toISOString(),
-                            estimated: f.arrival?.scheduledTimeLocal || now.toISOString(),
-                        },
-                        hotel_booking: null,
-                        connecting_flight: null,
-                        ground_transport: null,
-                    };
-                }
-            }
-        }
-    } catch (e) {
-        console.log('[Radar] Error AeroDataBox:', e);
     }
 
     // 📡 PRIORIDAD 3: OpenSky (Seguimiento satelital)
