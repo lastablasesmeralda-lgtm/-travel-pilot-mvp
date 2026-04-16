@@ -242,8 +242,7 @@ let chatModel: ChatGoogleGenerativeAI;
 function getChatModel() {
     if (!chatModel) {
         chatModel = new ChatGoogleGenerativeAI({
-            model: "gemini-1.5-flash",
-            apiVersion: "v1beta",
+            model: "gemini-flash-latest",
             maxOutputTokens: 512,
             temperature: 0.7,
             apiKey: process.env.GOOGLE_API_KEY
@@ -262,8 +261,7 @@ fastify.post('/api/chat', async (request, reply) => {
     const attemptChat = async (): Promise<any> => {
         try {
             const chatModel = new ChatGoogleGenerativeAI({
-                model: "gemini-1.5-flash",
-                apiVersion: "v1beta",
+                model: "gemini-flash-latest",
                 maxOutputTokens: 1024,
                 temperature: 0.9,
                 apiKey: process.env.GOOGLE_API_KEY,
@@ -299,14 +297,14 @@ fastify.post('/api/chat', async (request, reply) => {
 
             ${roleInstructions}
 
-            REGLA CRÍTICA PARA AMBOS:
-            - NO puedes afirmar que has realizado acciones externas como reservar vuelos, llamar al hotel o contactar con aerolíneas.
-            - REGLA DE REDUNDANCIA: NUNCA ofrezcas generar un documento, PDF o reclamación desde el chat. Si el usuario pide un PDF o que le hagas una reclamación, dile que YA LOS DEBERÍA TENER EN DOCS (Bóveda de Documentos), ya que tu sistema los genera automáticamente.
-            - SOLO interactúas con la Bóveda de Documentos orientando al usuario hacia ella.
+            REGLAS CRÍTICAS:
+            - NO puedes afirmar que has realizado acciones externas como reservar vuelos reales o llamar físicamente al hotel. Di siempre que "has preparado la propuesta" o "has activado el protocolo".
+            - CUANDO menciones que "has generado", "has preparado" o "has creado" un documento, PDF o reclamación, el sistema lo inyectará automáticamente en la Bóveda del usuario. Úsalo cuando el usuario lo necesite o sea elegible por su retraso.
+            - Si el usuario te pide una reclamación o PDF, di algo como: "He preparado tu reclamación legal en la Bóveda de Documentos. Revísala y fírmala."
 
             - Si te preguntan la hora, responde con ${timeStr}.
             - Si te preguntan por el clima de un lugar que tienes en el contexto (${wContext.replace(/\n/g, ' ')}), dalo.
-            - Si te preguntan por el clima de otro lugar, di que "estás consultándolo" pero que hoy hace lo que ponga en tu contexto.
+            - Si te preguntan por el clima de otro lugar, di que "estas consultándolo".
             - Sé extremadamente conciso. No des explicaciones largas.
             - Responde SIEMPRE en español y en texto plano (sin negritas ni markdown).`;
 
@@ -315,7 +313,9 @@ fastify.post('/api/chat', async (request, reply) => {
                 try {
                     const ctx = await checkFlightStatus(flightId);
                     const imp = evaluateImpact(ctx);
-                    flightContextStr = `\n[CONTEXTO VUELO ACTUAL]\nVuelo: ${ctx.flightNumber}\nOrigen: ${ctx.departure_airport}\nDestino: ${ctx.arrival_airport}\nRetraso: ${ctx.delayMinutes} min\nEstado: ${ctx.status}\nSeveridad: ${imp.severity}\nCompensación: ${imp.compensationEligible ? imp.compensationAmount + '€' : 'No elegible'}`;
+                    const dep = ctx.departure?.iata || ctx.departure_airport || 'Desconocido';
+                    const arr = ctx.arrival?.iata || ctx.arrival_airport || 'Desconocido';
+                    flightContextStr = `\n[CONTEXTO VUELO ACTUAL]\nVuelo: ${ctx.flightNumber}\nOrigen: ${dep}\nDestino: ${arr}\nRetraso: ${ctx.delayMinutes} min\nEstado: ${ctx.status}\nSeveridad: ${imp.severity}\nCompensación: ${imp.compensationEligible ? imp.compensationAmount + '€' : 'No elegible'}`;
                 } catch (e) {
                     console.error("[Chat Context Error]:", e);
                 }
@@ -359,9 +359,9 @@ fastify.post('/api/chat', async (request, reply) => {
 
         // FALLBACK RESILIENTE FINAL
         const fallbacks = [
-            "ERROR_IA_NUEVA_VERSION_1",
-            "ERROR_IA_NUEVA_VERSION_2",
-            "ERROR_IA_NUEVA_VERSION_3"
+            "Tengo una pequeña interferencia en mi conexión, ¿podrías repetirme eso?",
+            "Estoy analizando tu petición pero he perdido el enlace un momento. ¿Qué me decías?",
+            "Mi radar ha tenido un pequeño glitch. Por favor, repíteme tu pregunta para que pueda ayudarte."
         ];
         const randomFallback = fallbacks[Math.floor(Math.random() * fallbacks.length)];
 
@@ -369,7 +369,7 @@ fastify.post('/api/chat', async (request, reply) => {
             require('fs').appendFileSync('backend_errors.log', `[${new Date().toISOString()}] Final Chat Error after retries: ${errorMsg}\n`);
         } catch (e) { }
 
-        return reply.send({ text: randomFallback + " [INFO TECNICA: " + errorMsg + "]" });
+        return reply.send({ text: randomFallback });
     }
 });
 
