@@ -272,8 +272,22 @@ fastify.post('/api/chat', async (request, reply) => {
             const dateStr = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
 
-            // Se remueve la llamada a localhost para evitar timeouts en Railway
+            // Lógica de clima integrada
             let wContext = "";
+            let destinationCity = "";
+            
+            if (flightId) {
+                try {
+                    const ctx = await checkFlightStatus(flightId);
+                    destinationCity = ctx.arrival?.airport || ctx.arrival_airport || "";
+                    if (destinationCity) {
+                        const wData = await getWeatherData(destinationCity);
+                        wContext = `\n[CLIMA EN DESTINO (${destinationCity})]\nTemperatura: ${wData.temp}°C\nCondición: ${wData.condition} ${wData.icon}`;
+                    }
+                } catch (e) {
+                    console.error("[Chat Weather Error]:", e);
+                }
+            }
 
             let roleInstructions = "";
             if (travelProfile === 'premium') {
@@ -889,150 +903,69 @@ fastify.delete('/api/trips', async (request, reply) => {
     }
 });
 
-// ============================================================
-// ENDPOINT 14: CLIMA REAL — Obtener clima de un destino o ubicación
-// ============================================================
-fastify.get('/api/weather', async (request, reply) => {
-    const { location } = request.query as { location: string };
-    const target = location || 'London';
-
+// LÓGICA DE CLIMA COMPARTIDA (Versión Robusta para Railway)
+async function getWeatherData(target: string) {
     try {
-        console.log(`[Weather] 🌤️ Consultando clima para: ${target}`);
+        const cleanTarget = (target || '').replace(/,/, ' ').trim();
+        if (!cleanTarget) return { temp: "--", condition: "Sin datos", icon: "❓", city: "Desconocido" };
 
-        // Debugging for production logs
-        console.log(`[Weather-Debug] Request headers: ${JSON.stringify(request.headers)}`);
-
-        // Paso 1: Geocodificar con soporte para múltiples resultados y filtrado por país
-        const cleanTarget = target.replace(/,/, ' ').trim();
         const parts = cleanTarget.split(' ');
         const mainQuery = parts[0];
         const countryHint = parts.length > 1 ? parts.slice(1).join(' ').toLowerCase() : null;
 
-        console.log(`[Weather] 🔍 Buscando: ${mainQuery}${countryHint ? ' con pista de país: ' + countryHint : ''}`);
+        console.log(`[Weather] 🔍 Buscando clima para: ${mainQuery}`);
 
         let geoRes;
         try {
-            geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(mainQuery)}&count=10&language=es`);
+            geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(mainQuery)}&count=5&language=es`);
         } catch (fetchErr: any) {
-            console.error(`[Weather] ❌ Fallo crítico en fetch geocoding:`, fetchErr.message);
-            // Registro de error en log persistente para Antigravity
-            try { require('fs').appendFileSync('backend_errors.log', `[${new Date().toISOString()}] Weather Geo Error: ${fetchErr.message}\n`); } catch (e) { }
-
-            // Fallback manual extendido para ciudades frecuentes
+            console.error(`[Weather] Geo-Fetch falló, usando fallbacks.`);
             const fallbacks: any = {
-                'madrid': { latitude: 40.4165, longitude: -3.70266, name: 'Madrid' },
-                'barcelona': { latitude: 41.38879, longitude: 2.15899, name: 'Barcelona' },
-                'londres': { latitude: 51.50853, longitude: -0.12574, name: 'Londres' },
-                'london': { latitude: 51.50853, longitude: -0.12574, name: 'London' },
-                'parís': { latitude: 48.85341, longitude: 2.3488, name: 'París' },
-                'paris': { latitude: 48.85341, longitude: 2.3488, name: 'Paris' },
-                'lisboa': { latitude: 38.71667, longitude: -9.13333, name: 'Lisboa' },
-                'lisbon': { latitude: 38.71667, longitude: -9.13333, name: 'Lisbon' },
-                'roma': { latitude: 41.89193, longitude: 12.51133, name: 'Roma' },
-                'rome': { latitude: 41.89193, longitude: 12.51133, name: 'Rome' },
-                'berlín': { latitude: 52.52437, longitude: 13.40615, name: 'Berlín' },
-                'berlin': { latitude: 52.52437, longitude: 13.40615, name: 'Berlin' },
-                'ámsterdam': { latitude: 52.37403, longitude: 4.88969, name: 'Ámsterdam' },
-                'amsterdam': { latitude: 52.37403, longitude: 4.88969, name: 'Amsterdam' },
-                'nueva york': { latitude: 40.71427, longitude: -74.00597, name: 'Nueva York' },
-                'new york': { latitude: 40.71427, longitude: -74.00597, name: 'New York' },
-                'tokio': { latitude: 35.6895, longitude: 139.6917, name: 'Tokio' },
-                'tokyo': { latitude: 35.6895, longitude: 139.6917, name: 'Tokyo' },
-                'bora bora': { latitude: -16.5004, longitude: -151.7415, name: 'Bora Bora' }
+                'madrid': { latitude: 40.41, longitude: -3.70, name: 'Madrid' },
+                'barcelona': { latitude: 41.38, longitude: 2.17, name: 'Barcelona' },
+                'londres': { latitude: 51.50, longitude: -0.12, name: 'Londres' },
+                'london': { latitude: 51.50, longitude: -0.12, name: 'London' },
+                'parís': { latitude: 48.85, longitude: 2.34, name: 'París' },
+                'bora bora': { latitude: -16.50, longitude: -151.74, name: 'Bora Bora' }
             };
-            const lowerQuery = mainQuery.toLowerCase();
-            if (fallbacks[lowerQuery]) {
-                console.log(`[Weather] 🛡️ Usando fallback manual para ${lowerQuery}`);
-                geoRes = { json: () => Promise.resolve({ results: [fallbacks[lowerQuery]] }) };
-            } else {
-                throw fetchErr;
-            }
+            const lower = mainQuery.toLowerCase();
+            if (fallbacks[lower]) {
+                geoRes = { json: () => Promise.resolve({ results: [fallbacks[lower]] }) };
+            } else throw fetchErr;
         }
 
-        let geoData: any = await geoRes.json();
+        const geoData: any = await geoRes.json();
+        if (!geoData.results || geoData.results.length === 0) throw new Error("Ciudad no hallada");
 
-        if (!geoData.results || geoData.results.length === 0) {
-            throw new Error(`Ciudad "${target}" no encontrada en el geocodificador`);
-        }
-
-        // Buscar el mejor resultado basado en el país proporcionado
-        let bestMatch = geoData.results[0];
-        if (countryHint) {
-            const match = geoData.results.find((r: any) =>
-                (r.country && r.country.toLowerCase().includes(countryHint)) ||
-                (r.country_code && r.country_code.toLowerCase() === countryHint) ||
-                (r.admin1 && r.admin1.toLowerCase().includes(countryHint))
-            );
-            if (match) {
-                bestMatch = match;
-                console.log(`[Weather] 🎯 Match encontrado por país: ${bestMatch.name}, ${bestMatch.country}`);
-            }
-        }
-
-        const { latitude, longitude, name: cityName } = bestMatch;
-
-        // Paso 2: Obtener clima real con Open-Meteo
-        const weatherRes = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`
-        );
+        const { latitude, longitude, name: cityName } = geoData.results[0];
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`);
         const weatherData: any = await weatherRes.json();
 
-        if (!weatherData.current_weather) throw new Error("Sin datos de clima");
-
+        if (!weatherData.current_weather) throw new Error("Sin datos actuales");
         const cw = weatherData.current_weather;
         const tempC = Math.round(cw.temperature);
-
-        // Mapear código WMO a descripción e icono (MÁS GRANULAR)
-        const wmoCode = cw.weathercode;
+        
         let condition = 'Despejado';
         let icon = '☀️';
+        const code = cw.weathercode;
+        if (code >= 1 && code <= 3) { condition = 'Nublado'; icon = '☁️'; }
+        else if (code >= 51 && code <= 67) { condition = 'Lluvia'; icon = '🌧️'; }
+        else if (code >= 95) { condition = 'Tormenta'; icon = '⛈️'; }
+        else if (code >= 71 && code <= 77) { condition = 'Nieve'; icon = '❄️'; }
 
-        switch (wmoCode) {
-            case 0: condition = 'Despejado'; icon = '☀️'; break;
-            case 1: condition = 'Mayormente despejado'; icon = '🌤️'; break;
-            case 2: condition = 'Parcialmente nublado'; icon = '⛅'; break;
-            case 3: condition = 'Nublado'; icon = '☁️'; break;
-            case 45:
-            case 48: condition = 'Niebla'; icon = '🌫️'; break;
-            case 51:
-            case 53:
-            case 55: condition = 'Llovizna'; icon = '🌦️'; break;
-            case 61:
-            case 63:
-            case 65: condition = 'Lluvia'; icon = '🌧️'; break;
-            case 71:
-            case 73:
-            case 75: condition = 'Nieve'; icon = '❄️'; break;
-            case 77: condition = 'Granizo'; icon = '🌨️'; break;
-            case 80:
-            case 81:
-            case 82: condition = 'Chubascos'; icon = '⛈️'; break;
-            case 85:
-            case 86: condition = 'Nevada fuerte'; icon = '🌨️'; break;
-            case 95:
-            case 96:
-            case 99: condition = 'Tormenta'; icon = '⛈️'; break;
-            default: condition = 'Despejado'; icon = '☀️';
-        }
-
-        const result = {
-            temp: String(tempC),
-            condition,
-            icon,
-            city: cityName
-        };
-
-        console.log(`[Weather] ✅ ${cityName}: ${tempC}°C, ${condition} ${icon}`);
-        return reply.send(result);
+        return { temp: String(tempC), condition, icon, city: cityName };
     } catch (e: any) {
-        console.error("[Weather] ❌ Error:", e.message);
-        return reply.send({
-            temp: "--",
-            condition: "Sin datos",
-            icon: "❓",
-            city: target
-        });
+        console.error(`[Weather-Logic] Error: ${e.message}`);
+        return { temp: "--", condition: "Sin datos", icon: "❓", city: target };
     }
+}
+
+// ENDPOINT: CLIMA REAL (Soporta location y target)
+fastify.get('/api/weather', async (request, reply) => {
+    const { location, target } = request.query as any;
+    const finalCity = location || target || 'Madrid';
+    const data = await getWeatherData(finalCity);
+    return reply.send(data);
 });
 
 // ============================================================
