@@ -46,7 +46,7 @@ const SLIDES = [
         id: '6',
         image: require('../../assets/onboarding5.jpg'), // Placeholder
         title: 'GUÍA DE INICIO RÁPIDO',
-        subtitle: '1️⃣ PERFIL 👤\nElige tu Nivel. (VIP: La AI avisa automáticamente al hotel, redacta reclamaciones y asiste tus reubicaciones).\n\n2️⃣ DOCS 🔐\nPulsa "ACTUALIZAR CON MIS CORREOS" para importar reservas y billetes.\n\n3️⃣ SIMULACIÓN DE VUELOS 🚀\n¿Quieres ver el potencial total? En la pestaña VUELOS, pulsa el botón naranja y elige uno de los 9 escenarios de crisis para ver a la IA en acción.',
+        subtitle: '1️⃣ PERFIL 👤\nElige tu Nivel. (Estandar: Guía de viaje y herramientas de asistencia básica. (VIP: La IA avisa automáticamente al hotel, redacta reclamaciones y asiste tus reubicaciones).\n\n2️⃣ DOCS 🔐\nPulsa "ACTUALIZAR CON MIS CORREOS" para importar reservas y billetes.\n\n3️⃣ SIMULACIÓN DE VUELOS 🚀\n¿Quieres ver el potencial total? En la pestaña VUELOS, pulsa el botón naranja y elige uno de los 6 escenarios de crisis para ver a la IA en acción.',
         accent: '#10B981', // Verde Esmeralda
     },
 ];

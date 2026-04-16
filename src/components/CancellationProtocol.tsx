@@ -84,7 +84,7 @@ export default function CancellationProtocol({
                                 onOpenVIP('flight');
                             }, true)}
 
-                            {renderAction('🥂', 'Salas VIP y Confort', 'Acceso a lounges y servicios de estancia Premium', () => {
+                            {renderAction('🥂', 'Salas VIP y Confort', 'Acceso a Salas VIP y servicios de estancia Premium', () => {
                                 onOpenVIP('lounge');
                             })}
 

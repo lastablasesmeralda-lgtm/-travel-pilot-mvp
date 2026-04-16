@@ -19,7 +19,8 @@ const { width, height } = Dimensions.get('window');
 export default function PrivateVaultScreen() {
     const { 
         showPrivateVault, setShowPrivateVault, extraDocs, setExtraDocs, 
-        removeExtraDoc, user, vaultPin, setVaultPin, setViewDoc
+        removeExtraDoc, user, vaultPin, setVaultPin, setViewDoc,
+        unvaultExtraDoc
     } = useAppContext();
 
     const [stage, setStage] = useState<'SETUP' | 'CONFIRM' | 'PIN' | 'OPEN'>('PIN');
@@ -230,7 +231,7 @@ export default function PrivateVaultScreen() {
     );
 
     const renderContent = () => {
-        const docs = extraDocs; 
+        const docs = extraDocs.filter((d: any) => d.source === 'DOCS'); 
         return (
             <View style={{ flex: 1 }}>
                 <View style={styles.header}>
@@ -397,6 +398,26 @@ export default function PrivateVaultScreen() {
                                 >
                                     {isSending ? <ActivityIndicator color="#FFF" size="small" style={{ marginRight: 15 }} /> : <Text style={{ fontSize: 20, marginRight: 15 }}>🔗</Text>}
                                     <Text style={{ color: '#FFF', fontWeight: 'bold' }}>COMPARTIR CON TERCEROS</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity 
+                                    onPress={() => {
+                                        Alert.alert(
+                                            "¿SACAR DE LA BÓVEDA?",
+                                            "Este documento volverá a ser visible en la zona pública y dejará de estar bajo PIN.",
+                                            [
+                                                { text: "CANCELAR", style: "cancel" },
+                                                { text: "HACER PÚBLICO", onPress: () => {
+                                                    unvaultExtraDoc(selectedFile.id);
+                                                    setShowFileMenu(false);
+                                                }}
+                                            ]
+                                        );
+                                    }}
+                                    style={{ backgroundColor: '#1A1A1A', padding: 18, borderRadius: 16, marginBottom: 25, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#444' }}
+                                >
+                                    <Text style={{ fontSize: 20, marginRight: 15 }}>🔓</Text>
+                                    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>SACAR DE LA BÓVEDA (RE-ACTIVAR)</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity onPress={() => setShowFileMenu(false)} style={{ padding: 10, alignItems: 'center' }}>

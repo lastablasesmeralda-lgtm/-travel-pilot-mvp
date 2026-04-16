@@ -17,7 +17,8 @@ export default function VaultScreen() {
         removeExtraDoc, setHasNewDoc, setRecoveredMoney, setShowChat,
         showVIPAlternatives, setShowVIPAlternatives, pendingVIPScroll, setPendingVIPScroll,
         setShowPrivateVault, setTab, confirmFlightRescue, speak,
-        showSignature, setShowSignature, currentClaimForSig, setCurrentClaimForSig
+        showSignature, setShowSignature, currentClaimForSig, setCurrentClaimForSig,
+        moveExtraDocToVault
     } = useAppContext();
 
     React.useEffect(() => {
@@ -352,7 +353,26 @@ export default function VaultScreen() {
                                     <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 3 }}>{d.s || 'Generado por IA'}</Text>
                                 </View>
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={() => handleDelete(d.id, d.t)} style={{ padding: 20, borderLeftWidth: 1, borderLeftColor: '#222' }}>
+                            <TouchableOpacity 
+                                onPress={() => {
+                                    Alert.alert(
+                                        "¿MOVER A BÓVEDA PRIVADA?",
+                                        "Este documento dejará de ser visible en la zona pública y pasará a tu archivo encriptado bajo PIN.",
+                                        [
+                                            { text: "CANCELAR", style: "cancel" },
+                                            { text: "MOVER AHORA", onPress: () => moveExtraDocToVault(d.id) }
+                                        ]
+                                    );
+                                }} 
+                                style={{ padding: 20, borderLeftWidth: 1, borderLeftColor: '#222' }}
+                            >
+                                <Text style={{ color: '#D4AF37', fontSize: 18 }}>🔒</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity 
+                                onPress={() => handleDelete(d.id, d.t)} 
+                                style={{ padding: 20, borderLeftWidth: 1, borderLeftColor: '#222' }}
+                            >
                                 <Text style={{ color: '#FF3B30', fontSize: 18 }}>✕</Text>
                             </TouchableOpacity>
                         </View>

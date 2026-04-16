@@ -247,8 +247,7 @@ export default function VIPAlternatives({
         </Modal>
     );
 
-    // ─── LOUNGE DETAIL ───
-    const renderLoungeDetail = () => (
+    const renderSalaVIPDetail = () => (
         <Modal visible={detailView === 'lounge'} transparent animationType="fade">
             <View style={{ flex: 1, backgroundColor: '#050505', justifyContent: 'center', padding: 20 }}>
                 <View style={{ backgroundColor: '#0A0A0A', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#AF52DE' }}>
@@ -545,7 +544,7 @@ export default function VIPAlternatives({
             </Modal>
 
             {renderFlightDetail()}
-            {renderLoungeDetail()}
+            {renderSalaVIPDetail()}
             {renderClaimDraft()}
             {renderPlanB()}
         </>

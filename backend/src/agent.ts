@@ -181,15 +181,15 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
             console.log(`[Radar] 🔍 Consultando AERORED para ${code}...`);
             const adbRes = await fetch(
                 `https://aerodatabox.p.rapidapi.com/flights/number/${code}`,
-                { 
+                {
                     headers: {
                         'X-RapidAPI-Key': rapidKey,
                         'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com'
                     },
-                    signal: AbortSignal.timeout(7000) 
+                    signal: AbortSignal.timeout(7000)
                 }
             );
-            
+
             if (adbRes.ok) {
                 const adbData = await adbRes.json();
                 if (Array.isArray(adbData) && adbData.length > 0) {
@@ -201,13 +201,13 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
                         status: f.status.toLowerCase().includes('active') || f.status.toLowerCase().includes('flight') ? 'active' : (f.status.toLowerCase().includes('cancelled') ? 'cancelled' : 'delayed'),
                         delayMinutes: 0,
                         airline: f.airline?.name || code.substring(0, 2),
-                        departure: { 
-                            iata: f.departure?.airport?.iata || 'N/A', 
-                            delay: 0, 
+                        departure: {
+                            iata: f.departure?.airport?.iata || 'N/A',
+                            delay: 0,
                             scheduled: f.departure?.scheduledTimeLocal || now.toISOString(),
                         },
-                        arrival: { 
-                            iata: f.arrival?.airport?.iata || 'N/A', 
+                        arrival: {
+                            iata: f.arrival?.airport?.iata || 'N/A',
                             scheduled: f.arrival?.scheduledTimeLocal || now.toISOString(),
                             estimated: f.arrival?.scheduledTimeLocal || now.toISOString(),
                         },
@@ -390,15 +390,15 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
             console.log(`[Radar] 🔍 Consultando AERORED para ${code}...`);
             const adbRes = await fetch(
                 `https://aerodatabox.p.rapidapi.com/flights/number/${code}`,
-                { 
+                {
                     headers: {
                         'X-RapidAPI-Key': rapidKey,
                         'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com'
                     },
-                    signal: AbortSignal.timeout(7000) 
+                    signal: AbortSignal.timeout(7000)
                 }
             );
-            
+
             if (adbRes.ok) {
                 const adbData = await adbRes.json();
                 if (Array.isArray(adbData) && adbData.length > 0) {
@@ -410,13 +410,13 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
                         status: f.status.toLowerCase().includes('active') || f.status.toLowerCase().includes('flight') ? 'active' : (f.status.toLowerCase().includes('cancelled') ? 'cancelled' : 'delayed'),
                         delayMinutes: 0,
                         airline: f.airline?.name || code.substring(0, 2),
-                        departure: { 
-                            iata: f.departure?.airport?.iata || 'N/A', 
-                            delay: 0, 
+                        departure: {
+                            iata: f.departure?.airport?.iata || 'N/A',
+                            delay: 0,
                             scheduled: f.departure?.scheduledTimeLocal || now.toISOString(),
                         },
-                        arrival: { 
-                            iata: f.arrival?.airport?.iata || 'N/A', 
+                        arrival: {
+                            iata: f.arrival?.airport?.iata || 'N/A',
                             scheduled: f.arrival?.scheduledTimeLocal || now.toISOString(),
                             estimated: f.arrival?.scheduledTimeLocal || now.toISOString(),
                         },
@@ -440,13 +440,13 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
                 `http://api.aviationstack.com/v1/flights?access_key=${aviationKey}&flight_iata=${code}`,
                 { signal: AbortSignal.timeout(7000) }
             );
-            
+
             if (avRes.ok) {
                 const avData = await avRes.json();
                 if (avData.data && avData.data.length > 0) {
                     const f = avData.data[0];
                     console.log(`[Radar] ✅ AviationStack localizó: ${f.flight_status}`);
-                    
+
                     const depDelay = f.departure?.delay || 0;
                     const arrDelay = f.arrival?.delay || 0;
                     const status = f.flight_status === 'active' ? 'active' : (f.flight_status === 'scheduled' && depDelay > 15 ? 'delayed' : f.flight_status);
@@ -457,15 +457,15 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
                         status: status || 'scheduled',
                         delayMinutes: depDelay || arrDelay || 0,
                         airline: f.airline?.name || code.substring(0, 2),
-                        departure: { 
-                            iata: f.departure?.iata || 'N/A', 
-                            delay: depDelay, 
+                        departure: {
+                            iata: f.departure?.iata || 'N/A',
+                            delay: depDelay,
                             scheduled: f.departure?.scheduled || now.toISOString(),
                             terminal: f.departure?.terminal,
                             gate: f.departure?.gate
                         },
-                        arrival: { 
-                            iata: f.arrival?.iata || 'N/A', 
+                        arrival: {
+                            iata: f.arrival?.iata || 'N/A',
                             scheduled: f.arrival?.scheduled || now.toISOString(),
                             estimated: f.arrival?.estimated || f.arrival?.scheduled || now.toISOString(),
                             terminal: f.arrival?.terminal,
@@ -509,7 +509,7 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
     const isIberia = code.startsWith('IB');
     const isVueling = code.startsWith('VY');
     const airlineName = isIberia ? 'Iberia' : (isVueling ? 'Vueling' : 'Compañía Aérea');
-    
+
     return {
         flightId,
         flightNumber: code,

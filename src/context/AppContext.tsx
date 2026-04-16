@@ -135,6 +135,7 @@ export const AppProvider = ({ children }) => {
   const [chatOrigin, setChatOrigin] = useState<'global' | 'vip' | null>(null);
   const [pendingVIPScroll, setPendingVIPScroll] = useState(false);
   const [showVIPAlternatives, setShowVIPAlternatives] = useState(false);
+  const [vaultPin, setVaultPin] = useState(''); // PIN de la bóveda privada
   const [showSignature, setShowSignature] = useState(false);
   const [currentClaimForSig, setCurrentClaimForSig] = useState<any>(null);
 
@@ -142,7 +143,23 @@ export const AppProvider = ({ children }) => {
   const [savedTime, setSavedTime] = useState(0);
   const [recoveredMoney, setRecoveredMoney] = useState(0);
   const [showPrivateVault, setShowPrivateVault] = useState(false);
-  const [vaultPin, setVaultPin] = useState(''); // PIN de la bóveda privada
+
+  // FUNCIÓN PARA MOVER DOCUMENTOS A LA BÓVEDA PRIVADA (ALTERNATIVA 3)
+  const moveExtraDocToVault = (id: string) => {
+    setExtraDocs((prev: any[]) => prev.map(doc => 
+      doc.id === id ? { ...doc, source: 'DOCS' } : doc
+    ));
+    Vibration.vibrate(10);
+    console.log(`🔒 [AppContext] Documento ${id} movido a la Bóveda Privada.`);
+  };
+
+  const unvaultExtraDoc = (id: string) => {
+    setExtraDocs((prev: any[]) => prev.map(doc => 
+      doc.id === id ? { ...doc, source: undefined } : doc
+    ));
+    Vibration.vibrate(10);
+    console.log(`🔓 [AppContext] Documento ${id} devuelto a la zona pública.`);
+  };
 
   // EFECTOS INICIALES / WAKE UP BACKEND
   useEffect(() => {
@@ -1965,6 +1982,8 @@ export const AppProvider = ({ children }) => {
     showPrivateVault, setShowPrivateVault,
     vaultPin, setVaultPin,
     extraDocs, setExtraDocs,
+    moveExtraDocToVault,
+    unvaultExtraDoc,
     isExtracting, simulateGmailSync,
     lastSearchId,
     showSignature, setShowSignature,

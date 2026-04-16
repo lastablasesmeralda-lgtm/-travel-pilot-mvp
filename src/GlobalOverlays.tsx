@@ -320,7 +320,16 @@ export default function GlobalOverlays() {
                                             `Tu vuelo ${flightNum} lleva ${realDelay} min de retraso. Llama al hotel al ${realHotelPhone} para avisar de tu llegada tardía.\n\n💡 Con el plan VIP, el asistente avisa automáticamente por ti.`,
                                             [
                                                 { text: 'CANCELAR', style: 'cancel' },
-                                                { text: 'LLAMAR AHORA', onPress: () => Linking.openURL(`tel:${realHotelPhone}`) }
+                                                {
+                                                    text: 'LLAMAR AHORA',
+                                                    onPress: () => {
+                                                        Alert.alert(
+                                                            'PRÓXIMAMENTE ⏳',
+                                                            'Estamos desarrollando la nueva centralita. Esta función estará disponible muy pronto para todos los usuarios.',
+                                                            [{ text: 'ENTENDIDO' }]
+                                                        );
+                                                    }
+                                                }
                                             ]
                                         );
                                     }
@@ -755,7 +764,7 @@ export default function GlobalOverlays() {
                                             isVip
                                                 ? (isMajorIssue
                                                     ? 'Estrategia de rescate generada. He preparado tu expediente de reclamación y las opciones de reubicación. Tienes todo listo en tu sección de documentos.'
-                                                    : 'He activado tu protocolo de cortesía VIP. Tienes tu acceso al Lounge y los servicios de asistencia listos en tu sección de documentos para una espera confortable.')
+                                                    : 'He activado tu protocolo de cortesía VIP. Tienes tu acceso a la Sala VIP y los servicios de asistencia listos en tu sección de documentos para una espera confortable.')
                                                 : isHotel
                                                     ? 'He organizado tu plan de estancia. Tienes la información del hotel y los pasos a seguir en tu sección de documentos.'
                                                     : isEco
@@ -853,39 +862,34 @@ export default function GlobalOverlays() {
 
                             {viewDoc?.t?.includes('GESTIÓN DE REUBICACIÓN') ? (
                                 <View style={{ width: '100%', marginTop: 10 }}>
-                                    {/* BOTÓN 1: TRANSPORTE */}
                                     <TouchableOpacity
                                         style={[s.bt, { backgroundColor: '#AF52DE', borderRadius: 12, marginBottom: 10 }]}
                                         onPress={() => {
                                             Alert.alert(
                                                 "🚅 ESTRATEGIA DE TRANSPORTE",
                                                 "Tienes derecho legal a un Tren (AVE) o Autobús gratuito para llegar a tu destino original. \n\nPASOS A SEGUIR:\n1. Dirígete ahora mismo al mostrador de la aerolínea.\n2. Muestra este ticket y exige tu traslado bajo la ley EU261.\n3. Si no te dan solución, adquiere el billete de AVE y guarda el recibo para el reembolso total."
-                                            );
+                                            )
                                         }}
                                     >
                                         <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🚅 1. VER TRANSPORTE ALTERNATIVO</Text>
                                     </TouchableOpacity>
 
-                                    {/* BOTÓN 2: ALOJAMIENTO (CHAT) */}
                                     <TouchableOpacity
                                         style={[s.bt, { backgroundColor: '#007AFF', borderRadius: 12, marginBottom: 10 }]}
                                         onPress={() => {
-                                            setViewDoc(null);
-                                            setShowChat(true);
-                                            // Mandamos el mensaje directo al motor de IA
-                                            handleSendMessage("Necesito asistencia con el alojamiento en Valencia");
+                                            setViewDoc(null)
+                                            setShowChat(true)
+                                            handleSendMessage("Necesito asistencia con el alojamiento en Valencia")
                                         }}
                                     >
                                         <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🏨 2. GESTIONAR ALOJAMIENTO (CHAT)</Text>
                                     </TouchableOpacity>
 
-                                    {/* BOTÓN 3: INDEMNIZACIÓN */}
                                     <TouchableOpacity
                                         style={[s.bt, { backgroundColor: '#4CD964', borderRadius: 12 }]}
                                         onPress={() => {
-                                            setViewDoc(null);
-                                            // 1. Buscamos o creamos la reclamación para este vuelo
-                                            const claimId = `CLAIM-${flightData?.flightNumber || 'DFLT'}`;
+                                            setViewDoc(null)
+                                            const claimId = `CLAIM-${flightData?.flightNumber || 'DFLT'}`
                                             const newClaim = {
                                                 id: claimId,
                                                 aerolinea: flightData?.airline || 'Aerolínea',
@@ -894,20 +898,19 @@ export default function GlobalOverlays() {
                                                 estado: 'PENDIENTE DE FIRMA',
                                                 compensacion: '250',
                                                 isDynamic: true
-                                            };
+                                            }
 
-                                            // 2. La inyectamos y activamos firma
                                             setClaims((prev: any) => {
-                                                const exists = prev.find((c: any) => c.id === claimId);
-                                                if (exists) return prev;
-                                                return [newClaim, ...prev];
-                                            });
-                                            setCurrentClaimForSig(newClaim);
-                                            setTab('Vault');
+                                                const exists = prev.find((c: any) => c.id === claimId)
+                                                if (exists) return prev
+                                                return [newClaim, ...prev]
+                                            })
+                                            setCurrentClaimForSig(newClaim)
+                                            setTab('Vault')
                                             setTimeout(() => {
-                                                setShowSignature(true);
-                                                speak("He preparado tu reclamación de 250 euros. Introduce tu DNI y firma para finalizar.");
-                                            }, 500);
+                                                setShowSignature(true)
+                                                speak("He preparado tu reclamación de 250 euros. Introduce tu DNI y firma para finalizar.")
+                                            }, 500)
                                         }}
                                     >
                                         <Text style={{ color: '#000', fontWeight: 'bold' }}>⚖️ 3. SOLICITAR INDEMNIZACIÓN</Text>
@@ -920,9 +923,9 @@ export default function GlobalOverlays() {
                                             style={[s.bt, { backgroundColor: '#4CD964', marginTop: 15, borderRadius: 12, width: '100%' }]}
                                             onPress={async () => {
                                                 if (viewDoc.i && await Sharing.isAvailableAsync()) {
-                                                    await Sharing.shareAsync(viewDoc.i);
+                                                    await Sharing.shareAsync(viewDoc.i)
                                                 } else {
-                                                    Alert.alert('Error', 'No se puede compartir el archivo en este dispositivo.');
+                                                    Alert.alert('Error', 'No se puede compartir el archivo en este dispositivo.')
                                                 }
                                             }}
                                         >

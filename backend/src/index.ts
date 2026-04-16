@@ -242,7 +242,7 @@ let chatModel: ChatGoogleGenerativeAI;
 function getChatModel() {
     if (!chatModel) {
         chatModel = new ChatGoogleGenerativeAI({
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash",
             apiVersion: "v1beta",
             maxOutputTokens: 512,
             temperature: 0.7,
@@ -262,7 +262,7 @@ fastify.post('/api/chat', async (request, reply) => {
     const attemptChat = async (): Promise<any> => {
         try {
             const chatModel = new ChatGoogleGenerativeAI({
-                model: "gemini-2.5-flash",
+                model: "gemini-1.5-flash",
                 apiVersion: "v1beta",
                 maxOutputTokens: 1024,
                 temperature: 0.9,
@@ -274,20 +274,8 @@ fastify.post('/api/chat', async (request, reply) => {
             const dateStr = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
 
-            // Contexto inteligente de clima: buscar Madrid por defecto + el destino del vuelo si existe
+            // Se remueve la llamada a localhost para evitar timeouts en Railway
             let wContext = "";
-            try {
-                const locations = ['Madrid'];
-                if (flightId) locations.push(flightId.substring(0, 3)); // Intento con código de aeropuerto
-
-                for (const loc of locations) {
-                    const wRes = await fetch(`http://localhost:${process.env.PORT || 3000}/api/weather?location=${encodeURIComponent(loc)}`);
-                    if (wRes.ok) {
-                        const wData = await wRes.json();
-                        wContext += `\n[Clima en ${wData.city || loc}]: ${wData.temp}°C, ${wData.condition} ${wData.icon}`;
-                    }
-                }
-            } catch (e) { }
 
             let roleInstructions = "";
             if (travelProfile === 'premium') {
@@ -381,7 +369,7 @@ fastify.post('/api/chat', async (request, reply) => {
             require('fs').appendFileSync('backend_errors.log', `[${new Date().toISOString()}] Final Chat Error after retries: ${errorMsg}\n`);
         } catch (e) { }
 
-        return reply.send({ text: randomFallback });
+        return reply.send({ text: randomFallback + " [INFO TECNICA: " + errorMsg + "]" });
     }
 });
 
