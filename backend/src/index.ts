@@ -359,9 +359,9 @@ fastify.post('/api/chat', async (request, reply) => {
 
         // FALLBACK RESILIENTE FINAL
         const fallbacks = [
-            "Entendido. Estoy procesando tu solicitud con prioridad. ¿En qué más puedo ayudarte con tu viaje?",
-            "Recibido. Mis sistemas están algo saturados pero sigo aquí para proteger tu vuelo. ¿Necesitas que revise algo específico?",
-            "Vale, tomo nota. Cuéntame más sobre lo que necesitas para tu viaje y buscaré la mejor solución."
+            "ERROR_IA_NUEVA_VERSION_1",
+            "ERROR_IA_NUEVA_VERSION_2",
+            "ERROR_IA_NUEVA_VERSION_3"
         ];
         const randomFallback = fallbacks[Math.floor(Math.random() * fallbacks.length)];
 
