@@ -701,8 +701,10 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 .hero-showcase {
     flex: 1;
     position: relative;
-    max-width: 320px;
-    margin: -60px auto 0 auto; /* Recuperamos el margen negativo para subir el bloque */
+    max-width: 240px; /* Más estrechas como antes */
+    margin: -120px auto 0 auto; /* Mucho más arriba para compensar el formulario */
+    align-self: flex-start; /* Forzamos a que empiece arriba */
+    padding-top: 50px;
 }
 
 .mockup-main {
@@ -714,12 +716,13 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 
 .overlay-card {
     position: absolute;
-    width: 85%;
-    top: 20%; /* Volvemos a posicionar arriba para el solapado clásico */
-    right: -15%;
+    width: 80%;
+    top: 30%;
+    right: -25%;
     border-radius: 20px;
     border: 2px solid var(--primary);
     box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    z-index: 10;
 }
 
 .floating {
