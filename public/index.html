@@ -91,15 +91,9 @@
                         </div>
                     </div>
 
-                    <div class="hero-status">
-                        <h3>ACCESO EXCLUSIVO BETA</h3>
-                        <p>Estamos finalizando el desarrollo del primer sistema de inteligencia artificial dedicado
-                            exclusivamente a la protección del viajero exigente. Al unirte hoy a nuestra fase beta,
-                            obtendrás acceso prioritario a la protección inteligente de tus vuelos.</p>
-                    </div>
-
                     <div class="hero-actions">
                         <div class="hero-registration-grid" id="beta-form">
+                            <!-- Columna izquierda: Formulario -->
                             <div class="terminal-portal">
                                 <div class="terminal-header">SOLICITAR ACCESO</div>
                                     <div class="terminal-field">
@@ -146,13 +140,14 @@
                                         <span class="t-number" id="global-counter">--</span>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="beta-notice-box">
-                                <strong>¡AVISO DE FASE BETA:</strong>
-                                <p>Travel-Pilot ya monitoriza tus vuelos y te ofrece asistencia inteligente durante la
-                                    fase beta. Algunas automatizaciones avanzadas, como ciertas gestiones con hoteles o
-                                    proveedores, se están desplegando progresivamente.</p>
+                            
+                            <!-- Columna derecha: Información integrada -->
+                            <div class="beta-info-column" style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+                                <div class="hero-status" style="margin-bottom: 0;">
+                                    <h3>ACCESO EXCLUSIVO BETA</h3>
+                                    <p>Estamos finalizando el desarrollo del primer sistema de inteligencia artificial dedicado exclusivamente a la protección del viajero exigente. Al unirte hoy a nuestra fase beta, obtendrás acceso prioritario a la protección inteligente de tus vuelos.</p>
+                                    <p style="margin-top: 15px; color: rgba(175, 82, 222, 0.8);">Travel-Pilot ya monitoriza tus vuelos y te ofrece asistencia inteligente durante la fase beta. Algunas automatizaciones avanzadas se están desplegando progresivamente.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -429,8 +424,10 @@
 
     <footer>
         <div class="container footer-content">
-            <p>&copy; 2026 TRAVEL-PILOT &nbsp;·&nbsp; <a href="#">Política de Privacidad</a> &nbsp;·&nbsp; <a
-                    href="#">Términos de Uso</a> &nbsp;·&nbsp; <a href="#">Contacto</a></p>
+            <p>&copy; 2026 TRAVEL-PILOT &nbsp;·&nbsp; 
+                <a href="#" onclick="alert('POLÍTICA DE PRIVACIDAD: En Travel-Pilot protegemos tus datos bajo el estándar EU-GDPR. No compartimos información con terceros sin tu consentimiento explícito.')">Política de Privacidad</a> &nbsp;·&nbsp; 
+                <a href="#" onclick="alert('TÉRMINOS DE USO: El uso de la plataforma en fase beta es gratuito y está sujeto a disponibilidad tecnológica. Las compensaciones legales se gestionan bajo normativa EU261.')">Términos de Uso</a> &nbsp;·&nbsp; 
+                <a href="mailto:beta@travel-pilot.com">Contacto</a></p>
             <p class="beta-disclaimer">ACCESO BETA RESTRINGIDO — SISTEMA DE ASISTENCIA INTELIGENTE v1.0</p>
         </div>
     </footer>

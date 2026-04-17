@@ -1460,21 +1460,20 @@ footer {
 /* --- REGISTRATION GRID --- */
 .hero-registration-grid {
     display: flex;
-    gap: 12px;
-    align-items: stretch;
-    margin-top: 30px;
-    margin-left: 40px;
+    gap: 40px;
+    align-items: flex-start;
+    margin-top: 50px;
+    flex-wrap: wrap;
+}
+
+.beta-info-column {
+    flex: 1;
+    min-width: 320px;
 }
 
 .hero-registration-grid .terminal-portal {
     margin: 0;
-    flex: 1;
-}
-
-.hero-registration-grid .beta-notice-box {
-    margin: 0;
-    flex: 1.2;
-    max-width: none;
+    flex: 1.2; /* El formulario un poco más ancho */
 }
 
 /* --- BETA NOTICE BOX --- */
