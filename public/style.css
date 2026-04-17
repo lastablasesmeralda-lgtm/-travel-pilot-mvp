@@ -34,7 +34,7 @@ h1, h2, h3, .logo-text {
 }
 
 .hero-status-section .hero-status {
-    max-width: 850px; /* Sincronizado con el nuevo ancho del texto */
+    max-width: 900px;
     margin: 0;
     text-align: left;
 }
@@ -221,8 +221,8 @@ header nav {
 }
 
 .hero-text {
-    width: 72%; /* Ampliamos el texto para que no se vea tan contraído */
-    max-width: 850px;
+    width: 78%; /* Máximo espacio para el texto */
+    max-width: 900px;
 }
 
 .badge {
@@ -708,7 +708,7 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 .hero-showcase {
     position: absolute;
     top: 380px; 
-    right: 60px; /* Desplazamos más a la derecha para dar aire al texto */
+    right: 20px; /* Casi al borde para maximizar espacio */
     width: 280px;
     z-index: 5;
 }
