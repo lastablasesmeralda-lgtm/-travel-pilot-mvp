@@ -713,35 +713,39 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 }
 
 .hero-showcase {
-    width: 280px; /* Tamaño blindado */
+    width: 420px; /* Ancho real para que quepan los dos móviles solapados */
     flex-shrink: 0;
-    position: relative; /* Ya no es absoluto, ahora tiene su sitio real */
+    position: relative;
     top: 50px;
     z-index: 10;
+}
+
+.mockup-main {
+    width: 280px;
+    border-radius: 40px;
+    border: 4px solid var(--border);
+    box-shadow: 0 50px 100px rgba(0,0,0,0.5);
+    display: block;
+}
+
+.overlay-card {
+    position: absolute;
+    width: 260px;
+    bottom: -30px;
+    right: 20px; /* Sueldos de nuevo uno encima del otro */
+    border-radius: 30px;
+    border: 2px solid var(--primary);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.8);
+    z-index: 11;
 }
 
 @media (max-width: 1100px) {
     .hero-content { display: flex; flex-direction: column; align-items: center; }
     .hero-text { width: 100%; max-width: none; }
-    .hero-showcase { position: relative; top: 0; margin-top: 40px; width: 100%; max-width: 320px; }
+    .hero-showcase { width: 100%; max-width: 320px; margin-top: 50px; }
 }
 
-.mockup-main {
-    width: 100%;
-    border-radius: 40px;
-    border: 4px solid var(--border);
-    box-shadow: 0 50px 100px rgba(0,0,0,0.5);
-}
 
-.overlay-card {
-    position: absolute;
-    width: 75%;
-    bottom: -30px;
-    right: -60px;
-    border-radius: 20px;
-    border: 2px solid var(--primary);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-}
 
 .floating {
     animation: float 6s ease-in-out infinite;
