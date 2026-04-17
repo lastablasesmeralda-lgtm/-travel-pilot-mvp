@@ -1472,9 +1472,13 @@ footer {
 }
 
 .beta-info-column {
-    flex: 2; /* Le doy más peso para que se estire hacia la derecha */
-    min-width: 400px;
+    flex: 3; /* Ocupa todo el espacio restante con prioridad */
+    min-width: 300px;
     padding-bottom: 25px;
+}
+
+.beta-info-column p {
+    max-width: none; /* Aseguramos que el párrafo use todo el ancho de su columna */
 }
 
 .hero-registration-grid .terminal-portal {
