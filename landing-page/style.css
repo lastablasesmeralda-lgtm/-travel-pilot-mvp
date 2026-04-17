@@ -1469,6 +1469,7 @@ footer {
 .beta-info-column {
     flex: 1;
     min-width: 320px;
+    padding-top: 50px; /* Bajamos el texto para que no quede tan arriba */
 }
 
 .hero-registration-grid .terminal-portal {
