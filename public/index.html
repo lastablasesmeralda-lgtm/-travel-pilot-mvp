@@ -519,7 +519,7 @@
             try {
                 // Contamos filas en la tabla 'users' o la que elijas para beta
                 const { count, error } = await _supabase
-                    .from('users')
+                    .from('beta_signups')
                     .select('*', { count: 'exact', head: true });
 
                 if (!error) {
@@ -671,7 +671,7 @@
                 if (response.ok) {
                     // Intentar guardar también en Supabase para el contador real
                     try {
-                        await _supabase.from('users').insert([{
+                        const { error } = await _supabase.from('beta_signups').insert([{
                             email: emailInput.value,
                             name: 'Beta User',
                             metadata: {
@@ -686,7 +686,7 @@
                     status.style.color = '#27ae60';
                     btn.innerText = 'REGISTRADO';
                     btn.classList.add('success');
-                    input.value = ''; // Limpiar el campo tras el éxito
+                    emailInput.value = ''; // Limpiar el campo tras el éxito
                 } else {
                     const errorData = await response.json().catch(() => ({}));
                     status.innerText = `ERROR_SERVIDOR: STATUS_${response.status} [${errorData.message || 'DESCONOCIDO'}]`;
