@@ -2,6 +2,7 @@
   "expo": {
     "name": "Travel-Pilot",
     "slug": "travel-pilot-v2",
+    "privacy": "public",
     "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/logo_premium.jpg",
@@ -17,6 +18,7 @@
     "android": {
       "package": "com.travelpilot.app",
       "permissions": [
+        "INTERNET",
         "INTERNET"
       ],
       "softwareKeyboardLayoutMode": "resize",
@@ -32,6 +34,12 @@
     },
     "plugins": [
       "expo-mail-composer"
-    ]
+    ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/88820597-7206-4c1a-a3b3-85758a658316"
+    }
   }
 }
