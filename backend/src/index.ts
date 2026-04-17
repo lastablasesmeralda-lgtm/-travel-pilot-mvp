@@ -279,7 +279,7 @@ fastify.post('/api/chat', async (request, reply) => {
             if (flightId) {
                 try {
                     const ctx = await checkFlightStatus(flightId);
-                    destinationCity = ctx.arrival?.airport || ctx.arrival_airport || "";
+                    destinationCity = ctx.arrival?.iata || ctx.arrival_airport || "";
                     if (destinationCity) {
                         const wData = await getWeatherData(destinationCity);
                         wContext = `\n[CLIMA EN DESTINO (${destinationCity})]\nTemperatura: ${wData.temp}°C\nCondición: ${wData.condition} ${wData.icon}`;
