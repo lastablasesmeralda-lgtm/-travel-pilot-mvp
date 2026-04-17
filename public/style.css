@@ -707,9 +707,9 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 
 .hero-showcase {
     position: absolute;
-    top: 180px; /* Bajamos un poco para alinear con Asistencia Inteligente según tu flecha */
-    right: 0;
-    width: 380px; /* Un poco más grandes para que se vean bien */
+    top: 280px; /* Bajamos un poco más para que no queden tan arriba */
+    right: 40px; /* Separamos del borde derecho para que respiren */
+    width: 360px;
     z-index: 5;
 }
 
