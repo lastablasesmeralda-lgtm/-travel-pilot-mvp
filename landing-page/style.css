@@ -215,17 +215,14 @@ header nav {
 }
 
 .hero-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 60px;
+    display: block; /* Volvemos a block para que el texto ocupe todo el ancho */
     position: relative;
-    z-index: 10;
+    min-height: 500px;
 }
 
 .hero-text {
-    flex: 1; /* Ocupa todo el espacio de la izquierda */
-    min-width: 0; /* Evita que el flexbox se rompa con contenidos anchos */
+    width: 100%;
+    max-width: 1250px; /* Ancho completo liberado */
 }
 
 .badge {
@@ -709,12 +706,12 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 }
 
 .hero-showcase {
-    width: 320px;
-    flex-shrink: 0;
-    position: sticky;
-    top: 120px;
-    margin-top: 50px;
-    z-index: 5;
+    position: absolute;
+    top: 350px;
+    right: -180px; /* Mandamos los móviles muy a la derecha para que no molesten */
+    width: 280px;
+    z-index: 1;
+    pointer-events: none; /* Que no interfieran con clics en el texto */
 }
 
 @media (max-width: 1100px) {
