@@ -145,9 +145,9 @@
                                 </div>
                             </div>
 
-                            <div class="beta-info-column"
-                                style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
-                                <div class="hero-status" style="margin-bottom: 0;">
+                            <!-- Columna derecha: El espacio azul que marcaste -->
+                            <div class="beta-info-column" style="flex: 2; padding-top: 150px;">
+                                <div class="hero-status">
                                     <h3>ACCESO EXCLUSIVO BETA</h3>
                                     <p>Estamos ultimando el primer sistema de inteligencia artificial dedicado a proteger al viajero exigente. Al unirte hoy a la fase beta, tendrás acceso prioritario a la protección inteligente de tus vuelos mientras activamos progresivamente las automatizaciones avanzadas.</p>
                                 </div>
@@ -444,23 +444,62 @@
     <footer>
         <div class="container footer-content">
             <p>&copy; 2026 TRAVEL-PILOT &nbsp;·&nbsp;
-                <a href="#"
-                    onclick="alert('POLÍTICA DE PRIVACIDAD: En Travel-Pilot protegemos tus datos bajo el estándar EU-GDPR. No compartimos información con terceros sin tu consentimiento explícito.')">Política
-                    de Privacidad</a> &nbsp;·&nbsp;
-                <a href="#"
-                    onclick="alert('TÉRMINOS DE USO: El uso de la plataforma en fase beta es gratuito y está sujeto a disponibilidad tecnológica. Las compensaciones legales se gestionan bajo normativa EU261.')">Términos
-                    de Uso</a> &nbsp;·&nbsp;
+                <a href="javascript:void(0)" onclick="openModal('privacy')">Política de Privacidad</a> &nbsp;·&nbsp;
+                <a href="javascript:void(0)" onclick="openModal('terms')">Términos de Uso</a> &nbsp;·&nbsp;
                 <a href="mailto:beta@travel-pilot.com">Contacto</a>
             </p>
             <p class="beta-disclaimer">ACCESO BETA RESTRINGIDO — SISTEMA DE ASISTENCIA INTELIGENTE v1.0</p>
         </div>
     </footer>
+
+    <!-- MODAL INFRASTRUCTURE -->
+    <div id="modal-overlay" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div id="modal-content">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // CONFIGURACIÓN TÁCTICA
         const FORMSPARK_ACTION_URL = "https://submit-form.com/sbubR96H7";
-        const SB_URL = 'https://bmhrkootluunvoscnwdu.supabase.co';
+        const SB_URL = "https://rntqfyzvytaslypccqre.supabase.co";
         // NOTA: Para producción, esta key debe ser la anon_public de tu panel de Supabase
         const SB_KEY = 'sb_publishable_KFGJJOZU4m44eX8v0dFaUw_oNMAB5UV';
+
+        // --- MODAL SYSTEM ---
+        const modalData = {
+            privacy: {
+                title: 'POLÍTICA DE PRIVACIDAD',
+                text: 'En Travel-Pilot tratamos tu privacidad como una prioridad de máxima categoría. Todos los datos de viaje y personales se procesan bajo el estándar EU-GDPR. No compartimos información con socios comerciales ni terceros sin tu consentimiento explícito y solo los utilizamos para ofrecerte asistencia en tiempo real.'
+            },
+            terms: {
+                title: 'TÉRMINOS DE USO',
+                text: 'El uso de la plataforma Travel-Pilot durante su fase beta es gratuito y está sujeto a disponibilidad tecnológica. Las gestiones de compensación por retrasos o cancelaciones se rigen por la normativa EU261. El usuario acepta que algunas funciones de automatización premium se están activando de forma progresiva.'
+            }
+        };
+
+        function openModal(type) {
+            const content = modalData[type];
+            if (!content) return;
+            
+            document.getElementById('modal-content').innerHTML = `
+                <h2>${content.title}</h2>
+                <p>${content.text}</p>
+                <div style="text-align: right;">
+                    <button class="terminal-btn" onclick="closeModal()">ENTENDIDO</button>
+                </div>
+            `;
+            document.getElementById('modal-overlay').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('active');
+        }
+
+        // --- SUPABASE & BETA COUNTER ---
         const _supabase = supabase.createClient(SB_URL, SB_KEY);
         const BASE_COUNT = 57; // Número inicial marcado
 
