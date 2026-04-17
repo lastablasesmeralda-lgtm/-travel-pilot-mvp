@@ -210,7 +210,7 @@ header nav {
 
 .hero-content {
     display: flex;
-    align-items: center;
+    align-items: flex-start; /* Alineamos arriba para que el formulario no hunda las fotos */
     gap: 60px;
 }
 
@@ -701,10 +701,9 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 .hero-showcase {
     flex: 1;
     position: relative;
-    max-width: 240px; /* Más estrechas como antes */
-    margin: -120px auto 0 auto; /* Mucho más arriba para compensar el formulario */
-    align-self: flex-start; /* Forzamos a que empiece arriba */
-    padding-top: 50px;
+    max-width: 250px; /* Estrecho como antes */
+    margin: 40px auto 0 auto; /* Margin positivo porque ahora el contenedor está arriba */
+    z-index: 5;
 }
 
 .mockup-main {
@@ -716,12 +715,12 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 
 .overlay-card {
     position: absolute;
-    width: 80%;
-    top: 30%;
-    right: -25%;
+    width: 90%;
+    top: 20%; /* Solapado superior */
+    right: -20%;
     border-radius: 20px;
     border: 2px solid var(--primary);
-    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.8);
     z-index: 10;
 }
 
