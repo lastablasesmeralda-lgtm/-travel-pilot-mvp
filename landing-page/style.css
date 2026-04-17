@@ -231,8 +231,8 @@ header nav {
 }
 
 .hero h1 {
-    font-size: 4.2rem;
-    line-height: 0.9;
+    font-size: 3.5rem;
+    line-height: 1;
     margin-bottom: 25px;
     color: var(--text);
     font-weight: 800;
