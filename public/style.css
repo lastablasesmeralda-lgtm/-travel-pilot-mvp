@@ -1641,6 +1641,33 @@ footer {
     margin: 0;
 }
 
+/* --- TERMINAL COUNTER STYLES --- */
+.terminal-counter-box {
+    margin-top: 20px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.terminal-counter-box .t-label {
+    color: #666;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.terminal-counter-box .t-number {
+    color: #00FF88;
+    font-size: 1.1rem;
+    font-weight: 800;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }

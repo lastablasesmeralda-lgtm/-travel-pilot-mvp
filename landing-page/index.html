@@ -538,6 +538,8 @@
 
         // Cargar al inicio
         window.onload = () => {
+            // Mostrar valor base inmediatamente para evitar el '--'
+            document.getElementById('global-counter').innerText = BASE_COUNT.toLocaleString();
             refreshCounter();
             window.speechSynthesis.getVoices();
         };
