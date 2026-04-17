@@ -248,20 +248,21 @@ header nav {
     margin-bottom: 25px;
     color: var(--text);
     font-weight: 800;
-    max-width: 800px; /* Evitamos que choque con los móviles arriba */
+    max-width: 700px; /* Reducido para total seguridad */
 }
 
 .hero-subtitle {
-    font-size: 1.5rem;
+    font-size: 1.1rem; /* Un poco más elegante */
     color: var(--gold);
     margin-bottom: 40px;
     font-weight: 300;
-    line-height: 1.2;
-    max-width: 750px;
+    line-height: 1.5;
+    max-width: 650px; /* Forzamos el salto de línea mucho antes */
 }
 
 .hero-description, .hero-target, .hero-status {
     margin-bottom: 30px;
+    max-width: 650px; /* Blindamos la lista de características para que no la tapen los móviles */
 }
 
 .hero-description h3, .hero-target h3, .hero-status h3 {
