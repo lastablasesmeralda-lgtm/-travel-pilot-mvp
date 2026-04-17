@@ -548,30 +548,63 @@ header nav {
 }
 
 .modalidades-vip {
-    margin-top: 15px;
+    margin-top: 20px;
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
+    justify-content: center;
     border-top: 1px solid rgba(155, 48, 255, 0.1);
-    padding-top: 10px;
+    padding-top: 20px;
     width: 100%;
 }
 
 .modalidades-vip .mod-item {
+    background: rgba(155, 48, 255, 0.05);
+    border: 1px solid rgba(155, 48, 255, 0.1);
+    border-radius: 16px;
+    padding: 15px;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 220px;
+    flex: 1;
+    max-width: 280px;
+    transition: all 0.3s ease;
 }
 
-.modalidades-vip span {
-    font-size: 0.75rem;
+.modalidades-vip .mod-item:hover {
+    background: rgba(155, 48, 255, 0.1);
+    border-color: rgba(155, 48, 255, 0.3);
+    transform: translateY(-5px);
+}
+
+.modalidades-vip .mod-price {
+    font-size: 1rem;
+    color: white;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+.modalidades-vip .mod-price-annual {
+    font-size: 0.7rem;
     color: #AAA;
-    font-weight: 400;
+    margin-bottom: 8px;
 }
 
 .modalidades-vip strong {
     color: var(--primary);
-    font-size: 0.8rem;
-    font-weight: 700;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.modalidades-vip span {
+    font-size: 0.7rem;
+    color: #CCC;
+    line-height: 1.3;
 }
 
 .check { color: #00FF88; font-weight: bold; }
