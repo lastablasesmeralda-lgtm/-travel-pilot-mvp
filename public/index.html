@@ -31,7 +31,7 @@
                 <li><a href="#simulator">Simulador</a></li>
                 <li><a href="#pricing">Planes</a></li>
                 <li><a href="#faq">FAQ</a></li>
-                <li><a href="#beta-form" class="nav-cta">Beta</a></li>
+                <li><a href="#hero" class="nav-cta">Beta</a></li>
             </ul>
             <div class="status-indicator">
                 <span class="status-dot"></span> ACCESO BETA ELITE
@@ -102,13 +102,42 @@
                         <div class="hero-registration-grid">
                             <div class="terminal-portal">
                                 <div class="terminal-header">SOLICITAR ACCESO</div>
-                                <div class="terminal-body">
-                                    <div class="terminal-input-group">
-                                        <span class="terminal-prompt">></span>
-                                        <input type="email" id="hero-email" class="terminal-input"
-                                            placeholder="TU_CORREO_ELECTRÓNICO...">
-                                        <button onclick="registerBeta('hero-email')"
-                                            class="terminal-btn">UNIRSE</button>
+                                    <div class="terminal-field">
+                                        <label for="hero-type" class="terminal-label">TIPO_DE_VIAJERO:</label>
+                                        <div class="terminal-input-group">
+                                            <span class="terminal-prompt">></span>
+                                            <select id="hero-type" class="terminal-input">
+                                                <option value="Particular">Particular</option>
+                                                <option value="Viajero frecuente">Viajero frecuente</option>
+                                                <option value="Profesional / ejecutivo">Profesional / ejecutivo</option>
+                                                <option value="Empresa / equipo">Empresa / equipo</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="terminal-field" style="margin-top: 15px;">
+                                        <label for="hero-goal" class="terminal-label">OBJETIVO_PRINCIPAL:</label>
+                                        <div class="terminal-input-group">
+                                            <span class="terminal-prompt">></span>
+                                            <select id="hero-goal" class="terminal-input">
+                                                <option value="Retrasos y cancelaciones">Retrasos y cancelaciones</option>
+                                                <option value="Compensaciones por incidencias">Compensaciones por incidencias</option>
+                                                <option value="Alternativas de hotel o transporte">Alternativas de hotel o transporte</option>
+                                                <option value="Organización y seguimiento del viaje">Organización y seguimiento del viaje</option>
+                                                <option value="Asistencia premium durante el viaje">Asistencia premium durante el viaje</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="terminal-field" style="margin-top: 15px;">
+                                        <label for="hero-email" class="terminal-label">CORREO_ELECTRÓNICO:</label>
+                                        <div class="terminal-input-group">
+                                            <span class="terminal-prompt">></span>
+                                            <input type="email" id="hero-email" class="terminal-input"
+                                                placeholder="TU_CORREO_ELECTRÓNICO...">
+                                            <button onclick="registerBeta('hero-email')"
+                                                class="terminal-btn">UNIRSE</button>
+                                        </div>
                                     </div>
                                     <div id="hero-email-status" class="terminal-status">✔ PLAZAS DISPONIBLES — ACCESO
                                         GRATUITO DURANTE LA BETA</div>
@@ -373,14 +402,16 @@
                     </div>
                     <div class="faq-item">
                         <h3>¿Qué aerolíneas y países cubre?</h3>
-                        <p>Travel-Pilot cubre todos los vuelos comerciales a nivel mundial. La gestión automática de
-                            compensaciones está optimizada para vuelos bajo el Reglamento EU261/2004 (Europa) y el
-                            Convenio de Montreal (internacional).</p>
+                        <p>Travel-Pilot monitoriza vuelos comerciales internacionales y amplía progresivamente su
+                            cobertura operativa y sus automatizaciones según mercado y proveedor. La gestión de
+                            compensaciones está especialmente orientada a marcos como EU261/2004 y otros supuestos
+                            internacionales donde puede aportar más valor.</p>
                     </div>
                     <div class="faq-item">
                         <h3>¿Cómo gestiona Travel-Pilot mis datos personales?</h3>
-                        <p>Tus documentos se cifran con AES-256 y nunca se comparten con terceros sin tu autorización.
-                            Cumplimos íntegramente con el RGPD europeo.</p>
+                        <p>Protegemos tu información con medidas de seguridad y privacidad alineadas con buenas
+                            prácticas del sector. Además, estamos construyendo la plataforma conforme a los requisitos
+                            aplicables de protección de datos, con especial atención al marco europeo.</p>
                     </div>
                 </div>
             </div>
@@ -399,7 +430,7 @@
         const FORMSPARK_ACTION_URL = "https://submit-form.com/sbubR96H7";
         const SB_URL = 'https://bmhrkootluunvoscnwdu.supabase.co';
         // NOTA: Para producción, esta key debe ser la anon_public de tu panel de Supabase
-        const SB_KEY = 'sb_publishable_KFGJJOZU4m44eX8v0dFaUw_oNMAB5UV'; 
+        const SB_KEY = 'sb_publishable_KFGJJOZU4m44eX8v0dFaUw_oNMAB5UV';
         const _supabase = supabase.createClient(SB_URL, SB_KEY);
         const BASE_COUNT = 57; // Número inicial marcado
 
@@ -413,12 +444,12 @@
                 const { count, error } = await _supabase
                     .from('users')
                     .select('*', { count: 'exact', head: true });
-                
+
                 if (!error) {
                     const total = BASE_COUNT + (count || 0);
                     const formatted = total.toLocaleString();
                     document.getElementById('global-counter').innerText = formatted;
-                    if(document.getElementById('footer-counter')) {
+                    if (document.getElementById('footer-counter')) {
                         document.getElementById('footer-counter').innerText = formatted;
                     }
                 }
@@ -529,24 +560,22 @@
         window.speechSynthesis.getVoices();
 
         async function registerBeta(inputId) {
-            const input = document.getElementById(inputId);
+            const emailInput = document.getElementById(inputId);
+            const typeInput = document.getElementById('hero-type');
+            const goalInput = document.getElementById('hero-goal');
             const status = document.getElementById(inputId + '-status');
-            const btn = input.nextElementSibling;
+            const btn = emailInput.nextElementSibling;
 
-            if (!input.value || !input.value.includes('@')) {
-                status.innerText = 'ERROR: CREDENCIAL_INVÁLIDA. VERIFIQUE FORMATO.';
-                status.style.color = '#e74c3c';
+            if (!emailInput.value || !emailInput.value.includes('@')) {
+                status.innerText = 'ERROR: CORREO INVÁLIDO';
+                status.style.color = '#ff4b2b';
                 return;
             }
 
-            // Inicio de transmisión
-            status.innerText = 'TRANSMITIENDO_DATOS...';
-            status.style.color = '#AF52DE';
+            btn.innerText = 'PROCESANDO...';
             btn.disabled = true;
-            input.disabled = true;
 
             try {
-                // Envío real con reporte detallado
                 const response = await fetch(FORMSPARK_ACTION_URL, {
                     method: "POST",
                     headers: {
@@ -554,19 +583,25 @@
                         Accept: "application/json",
                     },
                     body: JSON.stringify({
-                        email: input.value,
-                        _subject: 'NUEVO USUARIO: Registro en Travel-Pilot Beta',
-                        _source: 'Landing Page (' + inputId + ')',
-                        detalle: 'Un nuevo usuario ha solicitado acceso a la fase Beta desde la web.'
+                        email: emailInput.value,
+                        traveler_type: typeInput ? typeInput.value : 'N/A',
+                        goal: goalInput ? goalInput.value : 'N/A'
                     }),
                 });
 
                 if (response.ok) {
                     // Intentar guardar también en Supabase para el contador real
                     try {
-                        await _supabase.from('users').insert([{ email: input.value, name: 'Beta User' }]);
+                        await _supabase.from('users').insert([{ 
+                            email: emailInput.value, 
+                            name: 'Beta User',
+                            metadata: {
+                                traveler_type: typeInput ? typeInput.value : 'N/A',
+                                goal: goalInput ? goalInput.value : 'N/A'
+                            }
+                        }]);
                         refreshCounter(); // Actualizar contador tras registro
-                    } catch(e) { console.log("DB Sync fallback"); }
+                    } catch (e) { console.log("DB Sync fallback"); }
 
                     status.innerText = 'ÉXITO: REGISTRO COMPLETADO. REVISE SU EMAIL PRÓXIMAMENTE.';
                     status.style.color = '#27ae60';
