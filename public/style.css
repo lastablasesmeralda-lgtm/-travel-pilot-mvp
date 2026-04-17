@@ -728,7 +728,7 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
     position: absolute;
     width: 260px;
     top: 180px; 
-    right: 5px; /* RE-ANCLADO: Más a la derecha para no tapar nada */
+    right: -60px; /* DESPLAZADO: Ahora deja ver mucho más del móvil de debajo */
     border-radius: 30px;
     border: 2px solid var(--primary);
     box-shadow: 0 40px 80px rgba(0,0,0,0.8);
