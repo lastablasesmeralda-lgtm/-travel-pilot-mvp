@@ -248,16 +248,17 @@ header nav {
     margin-bottom: 25px;
     color: var(--text);
     font-weight: 800;
-    max-width: 700px; /* Reducido para total seguridad */
+    max-width: none; /* Título en una sola línea imponente */
+    width: 100%;
 }
 
 .hero-subtitle {
-    font-size: 1.1rem; /* Un poco más elegante */
+    font-size: 1.1rem;
     color: var(--gold);
     margin-bottom: 40px;
     font-weight: 300;
     line-height: 1.5;
-    max-width: 650px; /* Forzamos el salto de línea mucho antes */
+    max-width: 650px; /* Seguimos protegiendo el subtítulo */
 }
 
 .hero-description, .hero-target, .hero-status {
@@ -714,8 +715,8 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 
 .hero-showcase {
     position: absolute;
-    top: 20px; /* SUBIDO AL CIELO */
-    right: 0; /* DENTRO DE LOS 1200PX PARA QUE NO SE CORTE */
+    top: 180px; /* BAJADOS para dejar paso al título largo */
+    right: 0;
     width: 320px;
     z-index: 10;
 }
