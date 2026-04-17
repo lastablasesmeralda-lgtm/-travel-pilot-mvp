@@ -209,13 +209,15 @@ header nav {
 }
 
 .hero-content {
-    display: flex;
-    align-items: flex-start; /* Alineamos arriba para que el formulario no hunda las fotos */
-    gap: 60px;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr; /* Proporción para que las fotos tengan su espacio */
+    align-items: start;
+    gap: 40px;
+    position: relative;
 }
 
 .hero-text {
-    flex: 2;
+    flex: 1.2;
 }
 
 .badge {
@@ -699,11 +701,12 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 }
 
 .hero-showcase {
-    flex: 1;
-    position: relative;
-    max-width: 250px; /* Estrecho como antes */
-    margin: 40px auto 0 auto; /* Margin positivo porque ahora el contenedor está arriba */
+    position: sticky;
+    top: 180px; /* Alineado con el inicio del texto principal */
+    max-width: 280px;
+    margin-left: auto;
     z-index: 5;
+    height: fit-content;
 }
 
 .mockup-main {
