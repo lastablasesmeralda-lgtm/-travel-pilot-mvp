@@ -210,15 +210,12 @@ header nav {
 
 .hero-content {
     display: flex;
-    align-items: flex-start; /* Alineamos al inicio */
-    gap: 40px;
-    position: relative;
+    align-items: center;
+    gap: 60px;
 }
 
 .hero-text {
-    flex: 2; /* Más peso al texto */
-    max-width: 700px;
-    padding-right: 50px; /* Hueco para las fotos */
+    flex: 2;
 }
 
 .badge {
@@ -261,17 +258,16 @@ header nav {
     text-transform: uppercase;
     letter-spacing: 1px;
 }
+
 .features-list-simple {
     list-style: none;
     color: #AAA;
-    margin-bottom: 25px;
 }
 
 .features-list-simple li {
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     padding-left: 20px;
     position: relative;
-    font-size: 0.95rem;
 }
 
 .features-list-simple li::before {
@@ -703,21 +699,10 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 }
 
 .hero-showcase {
-    position: absolute;
-    top: 50px; /* Encajado arriba */
-    right: 0;
-    width: 380px;
-    z-index: 5;
-}
-
-@media (max-width: 1000px) {
-    .hero-showcase {
-        position: relative;
-        top: 0;
-        margin: 40px auto;
-        width: 100%;
-        max-width: 300px;
-    }
+    flex: 1;
+    position: relative;
+    max-width: 260px;
+    margin: 0 auto;
 }
 
 .mockup-main {
@@ -729,13 +714,12 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 
 .overlay-card {
     position: absolute;
-    width: 90%;
-    top: 20%; /* Solapado superior */
-    right: -20%;
+    width: 75%;
+    bottom: -30px;
+    right: -60px;
     border-radius: 20px;
     border: 2px solid var(--primary);
-    box-shadow: 0 40px 80px rgba(0,0,0,0.8);
-    z-index: 10;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.8);
 }
 
 .floating {
@@ -1455,17 +1439,8 @@ footer {
     color: rgba(212, 175, 55, 0.9) !important;
 }
 
-.hero-status-section {
-    padding: 60px 0;
-    background: rgba(175, 82, 222, 0.02);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-}
-
-.hero-status-section .hero-status {
-    max-width: 800px;
-    margin: 0 auto;
-    text-align: center;
+.coming-soon strong {
+    color: var(--gold);
 }
 
 /* --- REGISTRATION GRID --- */
@@ -1474,6 +1449,7 @@ footer {
     gap: 12px;
     align-items: stretch;
     margin-top: 30px;
+    margin-left: 40px;
 }
 
 .hero-registration-grid .terminal-portal {
