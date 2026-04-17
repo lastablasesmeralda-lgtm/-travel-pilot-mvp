@@ -708,9 +708,9 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 .hero-showcase {
     position: absolute;
     top: 320px; /* Un poco más arriba */
-    right: 5px;   /* Un poco más a la derecha */
+    right: -100px;  /* Desplazado a la derecha para no tapar texto */
     width: 280px;
-    z-index: 5;
+    z-index: 1; /* Por debajo de cualquier interacción de texto si fuera necesario */
 }
 
 @media (max-width: 1100px) {
