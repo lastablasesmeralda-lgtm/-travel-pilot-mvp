@@ -727,8 +727,8 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 .overlay-card {
     position: absolute;
     width: 260px;
-    top: 140px; /* SUBIDO */
-    right: -100px; /* MÁS A LA DERECHA */
+    top: 100px; /* MÁS ARRIBA TODAVÍA */
+    right: -140px; /* MÁS A LA DERECHA TODAVÍA */
     border-radius: 30px;
     border: 2px solid var(--primary);
     box-shadow: 0 40px 80px rgba(0,0,0,0.8);
