@@ -215,7 +215,7 @@ header nav {
 }
 
 .hero-text {
-    flex: 1;
+    flex: 2;
 }
 
 .badge {
@@ -236,6 +236,7 @@ header nav {
     margin-bottom: 25px;
     color: var(--text);
     font-weight: 800;
+    white-space: nowrap;
 }
 
 .hero-subtitle {
