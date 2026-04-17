@@ -713,10 +713,11 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 }
 
 .hero-showcase {
-    width: 420px; /* Ancho real para que quepan los dos móviles solapados */
+    width: 400px;
+    height: 600px; /* Altura fija para contener ambos sin desviaciones */
     flex-shrink: 0;
     position: relative;
-    top: 50px;
+    top: 20px;
     z-index: 10;
 }
 
@@ -725,14 +726,13 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
     border-radius: 40px;
     border: 4px solid var(--border);
     box-shadow: 0 50px 100px rgba(0,0,0,0.5);
-    display: block;
 }
 
 .overlay-card {
     position: absolute;
     width: 260px;
-    bottom: -30px;
-    right: 20px; /* Sueldos de nuevo uno encima del otro */
+    top: 180px; /* ANCLAJE SUPERIOR FIJO */
+    right: 20px;
     border-radius: 30px;
     border: 2px solid var(--primary);
     box-shadow: 0 40px 80px rgba(0,0,0,0.8);
