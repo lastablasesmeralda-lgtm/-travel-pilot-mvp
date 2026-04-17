@@ -209,11 +209,9 @@ header nav {
 }
 
 .hero-content {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr; /* Proporción para que las fotos tengan su espacio */
-    align-items: start;
+    display: flex;
+    align-items: center; /* Volvemos al centro para equilibrio visual */
     gap: 40px;
-    position: relative;
 }
 
 .hero-text {
@@ -701,12 +699,10 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 }
 
 .hero-showcase {
-    position: sticky;
-    top: 180px; /* Alineado con el inicio del texto principal */
-    max-width: 280px;
-    margin-left: auto;
-    z-index: 5;
-    height: fit-content;
+    flex: 1;
+    position: relative;
+    max-width: 320px; /* Tamaño ideal para estar al lado del texto */
+    margin: 0;
 }
 
 .mockup-main {
@@ -1444,8 +1440,17 @@ footer {
     color: rgba(212, 175, 55, 0.9) !important;
 }
 
-.coming-soon strong {
-    color: var(--gold);
+.hero-status-section {
+    padding: 60px 0;
+    background: rgba(175, 82, 222, 0.02);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.hero-status-section .hero-status {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
 }
 
 /* --- REGISTRATION GRID --- */
@@ -1454,7 +1459,6 @@ footer {
     gap: 12px;
     align-items: stretch;
     margin-top: 30px;
-    margin-left: 40px;
 }
 
 .hero-registration-grid .terminal-portal {
