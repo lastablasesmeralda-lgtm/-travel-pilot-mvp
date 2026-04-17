@@ -222,7 +222,7 @@ header nav {
 
 .hero-text {
     width: 100%;
-    max-width: 820px; /* Ajustado para dejar espacio al showcase de la derecha */
+    max-width: 1250px; /* Liberamos el ancho para que el texto no se vea apretado */
 }
 
 .badge {
@@ -1460,18 +1460,17 @@ footer {
 /* --- REGISTRATION GRID --- */
 .hero-registration-grid {
     display: flex;
-    gap: 30px; /* Espacio más ajustado */
-    align-items: flex-end; /* ALINEADO A LA DERECHA ABAJO */
+    gap: 50px; /* Espacio cómodo entre elementos */
+    align-items: flex-end;
     margin-top: 50px;
-    flex-wrap: nowrap; /* Forzamos que se mantengan juntos en escritorio */
-    max-width: 1200px;
+    flex-wrap: nowrap;
     width: 100%;
 }
 
 .beta-info-column {
-    flex: 1;
-    min-width: 280px; /* Un poco más estrecho para que quepa */
-    padding-bottom: 20px; /* Margen para que no toque el suelo exacto */
+    flex: 2; /* Le doy más peso para que se estire hacia la derecha */
+    min-width: 400px;
+    padding-bottom: 25px;
 }
 
 .hero-registration-grid .terminal-portal {
