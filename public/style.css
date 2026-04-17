@@ -221,8 +221,8 @@ header nav {
 }
 
 .hero-text {
-    width: 78%; /* Máximo espacio para el texto */
-    max-width: 900px;
+    width: 100%; /* Máximo espacio para el texto */
+    max-width: 1100px;
 }
 
 .badge {
