@@ -96,57 +96,67 @@
                             <!-- Columna izquierda: Formulario -->
                             <div class="terminal-portal">
                                 <div class="terminal-header">SOLICITAR ACCESO</div>
-                                    <div class="terminal-field">
-                                        <label for="hero-type" class="terminal-label">TIPO_DE_VIAJERO:</label>
-                                        <div class="terminal-input-group">
-                                            <span class="terminal-prompt">></span>
-                                            <select id="hero-type" class="terminal-input">
-                                                <option value="Particular">Particular</option>
-                                                <option value="Viajero frecuente">Viajero frecuente</option>
-                                                <option value="Profesional / ejecutivo">Profesional / ejecutivo</option>
-                                                <option value="Empresa / equipo">Empresa / equipo</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="terminal-field" style="margin-top: 15px;">
-                                        <label for="hero-goal" class="terminal-label">OBJETIVO_PRINCIPAL:</label>
-                                        <div class="terminal-input-group">
-                                            <span class="terminal-prompt">></span>
-                                            <select id="hero-goal" class="terminal-input">
-                                                <option value="Retrasos y cancelaciones">Retrasos y cancelaciones</option>
-                                                <option value="Compensaciones por incidencias">Compensaciones por incidencias</option>
-                                                <option value="Alternativas de hotel o transporte">Alternativas de hotel o transporte</option>
-                                                <option value="Organización y seguimiento del viaje">Organización y seguimiento del viaje</option>
-                                                <option value="Asistencia premium durante el viaje">Asistencia premium durante el viaje</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="terminal-field" style="margin-top: 15px;">
-                                        <label for="hero-email" class="terminal-label">CORREO_ELECTRÓNICO:</label>
-                                        <div class="terminal-input-group">
-                                            <span class="terminal-prompt">></span>
-                                            <input type="email" id="hero-email" class="terminal-input"
-                                                placeholder="TU_CORREO_ELECTRÓNICO...">
-                                            <button onclick="registerBeta('hero-email')"
-                                                class="terminal-btn">UNIRSE</button>
-                                        </div>
-                                    </div>
-                                    <div id="hero-email-status" class="terminal-status">✔ PLAZAS DISPONIBLES — ACCESO
-                                        GRATUITO DURANTE LA BETA</div>
-                                    <div class="terminal-counter-box">
-                                        <span class="t-label">SOLICITUDES_ACTUALES:</span>
-                                        <span class="t-number" id="global-counter">--</span>
+                                <div class="terminal-field">
+                                    <label for="hero-type" class="terminal-label">TIPO_DE_VIAJERO:</label>
+                                    <div class="terminal-input-group">
+                                        <span class="terminal-prompt">></span>
+                                        <select id="hero-type" class="terminal-input">
+                                            <option value="Particular">Particular</option>
+                                            <option value="Viajero frecuente">Viajero frecuente</option>
+                                            <option value="Profesional / ejecutivo">Profesional / ejecutivo</option>
+                                            <option value="Empresa / equipo">Empresa / equipo</option>
+                                        </select>
                                     </div>
                                 </div>
-                            
+
+                                <div class="terminal-field" style="margin-top: 15px;">
+                                    <label for="hero-goal" class="terminal-label">OBJETIVO_PRINCIPAL:</label>
+                                    <div class="terminal-input-group">
+                                        <span class="terminal-prompt">></span>
+                                        <select id="hero-goal" class="terminal-input">
+                                            <option value="Retrasos y cancelaciones">Retrasos y cancelaciones</option>
+                                            <option value="Compensaciones por incidencias">Compensaciones por
+                                                incidencias</option>
+                                            <option value="Alternativas de hotel o transporte">Alternativas de hotel o
+                                                transporte</option>
+                                            <option value="Organización y seguimiento del viaje">Organización y
+                                                seguimiento del viaje</option>
+                                            <option value="Asistencia premium durante el viaje">Asistencia premium
+                                                durante el viaje</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="terminal-field" style="margin-top: 15px;">
+                                    <label for="hero-email" class="terminal-label">CORREO_ELECTRÓNICO:</label>
+                                    <div class="terminal-input-group">
+                                        <span class="terminal-prompt">></span>
+                                        <input type="email" id="hero-email" class="terminal-input"
+                                            placeholder="TU_CORREO_ELECTRÓNICO...">
+                                        <button onclick="registerBeta('hero-email')"
+                                            class="terminal-btn">UNIRSE</button>
+                                    </div>
+                                </div>
+                                <div id="hero-email-status" class="terminal-status">✔ PLAZAS DISPONIBLES — ACCESO
+                                    GRATUITO DURANTE LA BETA</div>
+                                <div class="terminal-counter-box">
+                                    <span class="t-label">SOLICITUDES_ACTUALES:</span>
+                                    <span class="t-number" id="global-counter">--</span>
+                                </div>
+                            </div>
+
                             <!-- Columna derecha: Información integrada -->
-                            <div class="beta-info-column" style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+                            <div class="beta-info-column"
+                                style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
                                 <div class="hero-status" style="margin-bottom: 0;">
                                     <h3>ACCESO EXCLUSIVO BETA</h3>
-                                    <p>Estamos finalizando el desarrollo del primer sistema de inteligencia artificial dedicado exclusivamente a la protección del viajero exigente. Al unirte hoy a nuestra fase beta, obtendrás acceso prioritario a la protección inteligente de tus vuelos.</p>
-                                    <p style="margin-top: 15px; color: rgba(175, 82, 222, 0.8);">Travel-Pilot ya monitoriza tus vuelos y te ofrece asistencia inteligente durante la fase beta. Algunas automatizaciones avanzadas se están desplegando progresivamente.</p>
+                                    <p>Estamos finalizando el desarrollo del primer sistema de inteligencia artificial
+                                        dedicado exclusivamente a la protección del viajero exigente. Al unirte hoy a
+                                        nuestra fase beta, obtendrás acceso prioritario a la protección inteligente de
+                                        tus vuelos.</p>
+                                    <p style="margin-top: 15px; color: rgba(175, 82, 222, 0.8);">Travel-Pilot ya
+                                        monitoriza tus vuelos y te ofrece asistencia inteligente durante la fase beta.
+                                        Algunas automatizaciones avanzadas se están desplegando progresivamente.</p>
                                 </div>
                             </div>
                         </div>
@@ -321,7 +331,7 @@
                 <h2 class="section-title">ELIGE TU PLAN</h2>
                 <p class="section-subtitle-pricing">Durante la Beta, todos los planes están disponibles de forma
                     gratuita.</p>
-                         <div class="pricing-grid">
+                <div class="pricing-grid">
                     <!-- STANDARD -->
                     <div class="pricing-card glass">
                         <div class="pricing-header">
@@ -331,11 +341,16 @@
                         </div>
                         <div class="divider"></div>
                         <ul class="pricing-features">
-                            <li><span class="check">✔</span> <strong>Estado de Vuelo:</strong> Seguimiento de retrasos y cancelaciones en tiempo real.</li>
-                            <li><span class="check">✔</span> <strong>Alertas al Móvil:</strong> Avisos inmediatos sobre cambios de puerta o itinerario.</li>
-                            <li><span class="check">✔</span> <strong>Acceso sin Conexión:</strong> Tus billetes y documentos siempre disponibles sin WiFi.</li>
-                            <li><span class="check">✔</span> <strong>Gestor de Viajes:</strong> Todos tus trayectos organizados en un solo lugar.</li>
-                            <li><span class="check">✔</span> <strong>Compensación Legal:</strong> Inicia tu reclamación EU261 con un solo toque.</li>
+                            <li><span class="check">✔</span> <strong>Estado de Vuelo:</strong> Seguimiento de retrasos y
+                                cancelaciones en tiempo real.</li>
+                            <li><span class="check">✔</span> <strong>Alertas al Móvil:</strong> Avisos inmediatos sobre
+                                cambios de puerta o itinerario.</li>
+                            <li><span class="check">✔</span> <strong>Acceso sin Conexión:</strong> Tus billetes y
+                                documentos siempre disponibles sin WiFi.</li>
+                            <li><span class="check">✔</span> <strong>Gestor de Viajes:</strong> Todos tus trayectos
+                                organizados en un solo lugar.</li>
+                            <li><span class="check">✔</span> <strong>Compensación Legal:</strong> Inicia tu reclamación
+                                EU261 con un solo toque.</li>
                         </ul>
                         <div class="divider"></div>
                         <a href="#beta-form" class="hero-cta-btn plan-btn">EMPEZAR GRATIS</a>
@@ -346,20 +361,31 @@
                         <span class="popular-badge">💎 ACCESO EXCLUSIVO</span>
                         <div class="pricing-header">
                             <h3>VIP</h3>
-                            <div class="price">7,99€ / mes <span style="font-size: 0.9rem; color: #AAA; margin-left:10px;">o 59,99€ / año</span></div>
+                            <div class="price">7,99€ / mes <span
+                                    style="font-size: 0.9rem; color: #AAA; margin-left:10px;">o 59,99€ / año</span>
+                            </div>
                             <div class="price-annual"><span class="save-badge">Ahorra 2 meses</span></div>
                             <div class="beta-free-highlight">FASE BETA: GRATIS</div>
                         </div>
                         <div class="divider"></div>
                         <ul class="pricing-features">
-                            <li class="elite-plus"><span class="check">✔</span> <strong>Todo lo del plan Estándar, más</strong></li>
-                            <li class="key-feature"><span class="check">✔</span> <strong>Asistencia prioritaria ante incidencias:</strong> Travel-Pilot analiza lo que ocurre y te propone en segundos la mejor respuesta disponible para tu viaje.</li>
-                            <li><span class="check">✔</span> <strong>Alternativas inteligentes en tiempo real:</strong> hotel, nuevo vuelo, conexión terrestre, sala VIP u otras opciones según el contexto.</li>
-                            <li><span class="check">✔</span> <strong>Anticipación y continuidad del viaje:</strong> avisos y asistencia rápida para reducir fricción y proteger tu agenda.</li>
-                            <li><span class="check">✔</span> <strong>Acceso sin conexión a recursos clave:</strong> documentación e instrucciones esenciales disponibles cuando más las necesitas.</li>
-                            <li><span class="check">✔</span> <strong>Pensado para viajeros frecuentes, profesionales y equipos:</strong> una capa premium de asistencia para quienes no pueden permitirirse improvisar.</li>
+                            <li class="elite-plus"><span class="check">✔</span> <strong>Todo lo del plan Estándar,
+                                    más:</strong></li>
+                            <li class="key-feature"><span class="check">✔</span> <strong>Asistencia prioritaria ante
+                                    incidencias:</strong> Travel-Pilot analiza lo que ocurre y te propone en segundos la
+                                mejor respuesta disponible para tu viaje.</li>
+                            <li><span class="check">✔</span> <strong>Alternativas inteligentes en tiempo real:</strong>
+                                hotel, nuevo vuelo, conexión terrestre, sala VIP u otras opciones según el contexto.
+                            </li>
+                            <li><span class="check">✔</span> <strong>Anticipación y continuidad del viaje:</strong>
+                                avisos y asistencia rápida para reducir fricción y proteger tu agenda.</li>
+                            <li><span class="check">✔</span> <strong>Acceso sin conexión a recursos clave:</strong>
+                                documentación e instrucciones esenciales disponibles cuando más las necesitas.</li>
+                            <li><span class="check">✔</span> <strong>Pensado para viajeros frecuentes, profesionales y
+                                    equipos:</strong> una capa premium de asistencia para quienes no pueden permitirirse
+                                improvisar.</li>
                         </ul>
-                        
+
                         <div class="modalidades-vip">
                             <div class="mod-item">
                                 <div class="mod-price">12,99 €/mes</div>
@@ -424,10 +450,15 @@
 
     <footer>
         <div class="container footer-content">
-            <p>&copy; 2026 TRAVEL-PILOT &nbsp;·&nbsp; 
-                <a href="#" onclick="alert('POLÍTICA DE PRIVACIDAD: En Travel-Pilot protegemos tus datos bajo el estándar EU-GDPR. No compartimos información con terceros sin tu consentimiento explícito.')">Política de Privacidad</a> &nbsp;·&nbsp; 
-                <a href="#" onclick="alert('TÉRMINOS DE USO: El uso de la plataforma en fase beta es gratuito y está sujeto a disponibilidad tecnológica. Las compensaciones legales se gestionan bajo normativa EU261.')">Términos de Uso</a> &nbsp;·&nbsp; 
-                <a href="mailto:beta@travel-pilot.com">Contacto</a></p>
+            <p>&copy; 2026 TRAVEL-PILOT &nbsp;·&nbsp;
+                <a href="#"
+                    onclick="alert('POLÍTICA DE PRIVACIDAD: En Travel-Pilot protegemos tus datos bajo el estándar EU-GDPR. No compartimos información con terceros sin tu consentimiento explícito.')">Política
+                    de Privacidad</a> &nbsp;·&nbsp;
+                <a href="#"
+                    onclick="alert('TÉRMINOS DE USO: El uso de la plataforma en fase beta es gratuito y está sujeto a disponibilidad tecnológica. Las compensaciones legales se gestionan bajo normativa EU261.')">Términos
+                    de Uso</a> &nbsp;·&nbsp;
+                <a href="mailto:beta@travel-pilot.com">Contacto</a>
+            </p>
             <p class="beta-disclaimer">ACCESO BETA RESTRINGIDO — SISTEMA DE ASISTENCIA INTELIGENTE v1.0</p>
         </div>
     </footer>
@@ -598,8 +629,8 @@
                 if (response.ok) {
                     // Intentar guardar también en Supabase para el contador real
                     try {
-                        await _supabase.from('users').insert([{ 
-                            email: emailInput.value, 
+                        await _supabase.from('users').insert([{
+                            email: emailInput.value,
                             name: 'Beta User',
                             metadata: {
                                 traveler_type: typeInput ? typeInput.value : 'N/A',
