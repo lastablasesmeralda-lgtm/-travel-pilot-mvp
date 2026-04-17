@@ -214,15 +214,22 @@ header nav {
     z-index: -1;
 }
 
+.hero .container {
+    max-width: 1500px; /* Ampliamos el espacio total para que quepa TODO */
+    display: flex;
+    justify-content: space-between;
+    gap: 80px;
+}
+
 .hero-content {
-    display: block; /* Volvemos a block para que el texto ocupe todo el ancho */
-    position: relative;
-    min-height: 500px;
+    display: flex;
+    width: 100%;
+    gap: 40px;
 }
 
 .hero-text {
-    width: 100%;
-    max-width: 1250px; /* Ancho completo liberado */
+    flex: 1;
+    min-width: 0;
 }
 
 .badge {
@@ -706,12 +713,11 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 }
 
 .hero-showcase {
-    position: absolute;
-    top: 350px;
-    right: -180px; /* Mandamos los móviles muy a la derecha para que no molesten */
-    width: 280px;
-    z-index: 1;
-    pointer-events: none; /* Que no interfieran con clics en el texto */
+    width: 280px; /* Tamaño blindado */
+    flex-shrink: 0;
+    position: relative; /* Ya no es absoluto, ahora tiene su sitio real */
+    top: 50px;
+    z-index: 10;
 }
 
 @media (max-width: 1100px) {
