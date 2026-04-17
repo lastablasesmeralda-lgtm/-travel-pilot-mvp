@@ -1464,17 +1464,20 @@ footer {
     align-items: flex-start;
     margin-top: 50px;
     flex-wrap: wrap;
+    max-width: 1200px;
+    width: 100%;
 }
 
 .beta-info-column {
-    flex: 2;
+    flex: 1; /* Ocupa el resto del espacio disponible */
     min-width: 350px;
     padding-top: 150px;
 }
 
 .hero-registration-grid .terminal-portal {
     margin: 0;
-    flex: 1.2; /* El formulario un poco más ancho */
+    width: 550px; /* Tamaño fijo blindado */
+    flex-shrink: 0;
 }
 
 /* --- CUSTOM MODALS --- */
