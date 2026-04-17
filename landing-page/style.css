@@ -57,6 +57,49 @@ header nav {
     align-items: center;
 }
 
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 25px;
+    align-items: center;
+}
+
+.nav-links li a {
+    color: #D1D1D1;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.nav-links li a:hover {
+    color: var(--primary);
+    text-shadow: 0 0 10px rgba(175, 82, 222, 0.4);
+}
+
+.nav-links li a.nav-cta {
+    background: rgba(175, 82, 222, 0.15);
+    border: 1px solid var(--primary);
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: #FFF;
+    box-shadow: 0 0 10px rgba(155, 48, 255, 0.2);
+}
+
+.nav-links li a.nav-cta:hover {
+    background: var(--primary);
+    box-shadow: 0 0 20px rgba(155, 48, 255, 0.5);
+    color: #FFF;
+}
+
+@media (max-width: 1000px) {
+    .nav-links {
+        display: none;
+    }
+}
+
 .logo {
     display: flex;
     align-items: center;
