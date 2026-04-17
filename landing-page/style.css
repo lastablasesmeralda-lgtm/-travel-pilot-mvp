@@ -397,7 +397,7 @@ header nav {
 
 .section-subtitle-pricing {
     color: var(--gold);
-    margin-bottom: 100px; /* MUCHO MÁS MARGEN para que el badge no pise el texto */
+    margin-bottom: 40px; /* Reducido para compactar */
     font-size: 1.1rem;
     opacity: 0.9;
     font-weight: 500;
@@ -410,15 +410,15 @@ header nav {
 .pricing-grid {
     display: flex;
     flex-direction: column;
-    gap: 40px;
+    gap: 25px; /* Menos espacio entre tarjetas */
     align-items: center;
-    max-width: 900px;
+    max-width: 1200px; /* Estiradas horizontalmente */
     margin: 0 auto;
 }
 
 .pricing-card {
     width: 100%;
-    padding: 40px;
+    padding: 24px 35px;
     text-align: left;
     display: flex;
     flex-direction: column;
@@ -472,7 +472,7 @@ header nav {
 .pricing-header h3 {
     font-size: 1.8rem;
     color: white;
-    margin-bottom: 12px;
+    margin-bottom: 5px;
     letter-spacing: 2px;
 }
 
@@ -523,19 +523,19 @@ header nav {
     width: 80%;
     height: 1px;
     background: linear-gradient(90deg, transparent, rgba(155, 48, 255, 0.4), transparent);
-    margin: 40px auto;
+    margin: 15px auto; /* Divisores más compactos */
 }
 
 .pricing-features {
     list-style: none;
     text-align: left;
-    margin-bottom: 50px;
+    margin-bottom: 10px; /* Menos espacio al final de la lista */
     width: 100%;
     padding: 0 15px;
 }
 
 .pricing-features li {
-    margin-bottom: 12px;
+    margin-bottom: 8px; /* Puntos más juntos */
     font-size: 0.85rem;
     display: flex;
     gap: 12px;
@@ -548,12 +548,12 @@ header nav {
 }
 
 .modalidades-vip {
-    margin-top: 25px;
+    margin-top: 15px;
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
     border-top: 1px solid rgba(155, 48, 255, 0.1);
-    padding-top: 20px;
+    padding-top: 10px;
     width: 100%;
 }
 
