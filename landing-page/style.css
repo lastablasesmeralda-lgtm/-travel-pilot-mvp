@@ -209,13 +209,14 @@ header nav {
 }
 
 .hero-content {
-    display: flex;
-    align-items: center;
-    gap: 60px;
+    display: block; /* Cambiamos a block para usar posicionamiento absoluto interno con más control */
+    position: relative;
+    min-height: 500px;
 }
 
 .hero-text {
-    flex: 2;
+    width: 65%; /* Dejamos un 35% de espacio a la derecha para las fotos */
+    max-width: 800px;
 }
 
 .badge {
@@ -699,10 +700,17 @@ p, .hero-subtitle, .ia-msg p, .faq-item p, .step-card p {
 }
 
 .hero-showcase {
-    flex: 1;
-    position: relative;
-    max-width: 260px;
-    margin: 0 auto;
+    position: absolute;
+    top: 20px; /* Encajado arriba del todo */
+    right: 0;
+    width: 350px;
+    z-index: 5;
+}
+
+@media (max-width: 1100px) {
+    .hero-content { display: flex; flex-direction: column; align-items: center; }
+    .hero-text { width: 100%; max-width: none; }
+    .hero-showcase { position: relative; top: 0; margin-top: 40px; width: 100%; max-width: 320px; }
 }
 
 .mockup-main {
