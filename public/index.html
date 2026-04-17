@@ -455,7 +455,6 @@
     <!-- MODAL INFRASTRUCTURE -->
     <div id="modal-overlay" class="modal-overlay" onclick="closeModal()">
         <div class="modal-card" onclick="event.stopPropagation()">
-            <button class="modal-close" onclick="closeModal()">&times;</button>
             <div id="modal-content">
                 <!-- Content injected via JS -->
             </div>
@@ -486,10 +485,15 @@
             if (!content) return;
             
             document.getElementById('modal-content').innerHTML = `
-                <h2>${content.title}</h2>
-                <p>${content.text}</p>
-                <div style="text-align: right;">
-                    <button class="terminal-btn" onclick="closeModal()">ENTENDIDO</button>
+                <div class="modal-header">
+                    <h2>${content.title}</h2>
+                    <button class="modal-close-x" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>${content.text}</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-close-btn" onclick="closeModal()">CERRAR VENTANA</button>
                 </div>
             `;
             document.getElementById('modal-overlay').classList.add('active');
