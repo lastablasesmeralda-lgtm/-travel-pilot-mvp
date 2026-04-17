@@ -13,6 +13,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&family=Inter:wght@300;400;600;800&display=swap"
         rel="stylesheet">
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -113,6 +115,10 @@
                                     </div>
                                     <div id="hero-email-status" class="terminal-status">✔ PLAZAS DISPONIBLES — ACCESO
                                         GRATUITO DURANTE LA BETA</div>
+                                    <div class="terminal-counter-box">
+                                        <span class="t-label">SOLICITUDES_ACTUALES:</span>
+                                        <span class="t-number" id="global-counter">--</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -366,6 +372,10 @@
                     </div>
                     <div id="footer-email-status" class="terminal-status">✔ PLAZAS DISPONIBLES — ACCESO GRATUITO DURANTE
                         LA BETA</div>
+                    <div class="terminal-counter-box" style="margin-top: 15px; border-top: 1px dashed rgba(175, 82, 222, 0.3); padding-top: 15px;">
+                        <span class="t-label">SOLICITUDES_ACUMULADAS:</span>
+                        <span class="t-number" id="footer-counter">--</span>
+                    </div>
                     <div class="beta-notice-box" style="margin-top: 15px; max-width: 100%;">
                         <strong>¡AVISO DE FASE BETA:</strong>
                         <p>Estás probando Travel-Pilot en primicia. La IA ya vigila tu vuelo al 100%; ahora estamos
@@ -416,8 +426,42 @@
     <script>
         // CONFIGURACIÓN TÁCTICA
         const FORMSPARK_ACTION_URL = "https://submit-form.com/sbubR96H7";
+        const SB_URL = 'https://bmhrkootluunvoscnwdu.supabase.co';
+        // NOTA: Para producción, esta key debe ser la anon_public de tu panel de Supabase
+        const SB_KEY = 'sb_publishable_KFGJJOZU4m44eX8v0dFaUw_oNMAB5UV'; 
+        const _supabase = supabase.createClient(SB_URL, SB_KEY);
+        const BASE_COUNT = 1240; // Número inicial marcado
+
         let currentAssistant = 'clara';
         let currentAudio = null;
+
+        // Función para actualizar el contador real
+        async function refreshCounter() {
+            try {
+                // Contamos filas en la tabla 'users' o la que elijas para beta
+                const { count, error } = await _supabase
+                    .from('users')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (!error) {
+                    const total = BASE_COUNT + (count || 0);
+                    const formatted = total.toLocaleString();
+                    document.getElementById('global-counter').innerText = formatted;
+                    if(document.getElementById('footer-counter')) {
+                        document.getElementById('footer-counter').innerText = formatted;
+                    }
+                }
+            } catch (e) {
+                console.error("Error cargando contador:", e);
+                document.getElementById('global-counter').innerText = BASE_COUNT.toLocaleString();
+            }
+        }
+
+        // Cargar al inicio
+        window.onload = () => {
+            refreshCounter();
+            window.speechSynthesis.getVoices();
+        };
 
         function stopAudio() {
             if (currentAudio) {
@@ -547,6 +591,12 @@
                 });
 
                 if (response.ok) {
+                    // Intentar guardar también en Supabase para el contador real
+                    try {
+                        await _supabase.from('users').insert([{ email: input.value, name: 'Beta User' }]);
+                        refreshCounter(); // Actualizar contador tras registro
+                    } catch(e) { console.log("DB Sync fallback"); }
+
                     status.innerText = 'ÉXITO: REGISTRO COMPLETADO. REVISE SU EMAIL PRÓXIMAMENTE.';
                     status.style.color = '#27ae60';
                     btn.innerText = 'REGISTRADO';
