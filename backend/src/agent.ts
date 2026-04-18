@@ -254,7 +254,7 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
     }
 
     // 🏆 SUITE DE PRUEBAS MAESTRA (DETERMINISTA)
-    if (code === 'RETRASO-VIP') {
+    if (code === 'RETRASO-VIP' || code === 'IB3166') {
         const originalArrival = new Date(now.getTime() + 4 * 60 * 60 * 1000);
         const delayMinutes = 245; // 4h 05m retraso
         return {
