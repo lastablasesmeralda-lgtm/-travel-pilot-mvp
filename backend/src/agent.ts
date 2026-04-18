@@ -254,6 +254,44 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
     }
 
     // 🏆 SUITE DE PRUEBAS MAESTRA (DETERMINISTA)
+    if (code === 'RETRASO-VIP') {
+        const originalArrival = new Date(now.getTime() + 4 * 60 * 60 * 1000);
+        const delayMinutes = 245; // 4h 05m retraso
+        return {
+            flightId,
+            flightNumber: 'IB3166',
+            status: 'delayed',
+            delayMinutes,
+            airline: 'Iberia Express',
+            departure: { 
+                iata: 'MAD', 
+                delay: delayMinutes, 
+                scheduled: now.toISOString(), 
+                terminal: 'T4', 
+                gate: 'K78' 
+            },
+            arrival: { 
+                iata: 'LHR', 
+                scheduled: originalArrival.toISOString(), 
+                estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), 
+                terminal: 'T5', 
+                gate: 'A10' 
+            },
+            hotel_booking: {
+                name: 'Sofitel London Heathrow', 
+                check_in_limit: '23:59',
+                check_in_limit_iso: new Date(now.toDateString() + ' 23:59').toISOString(),
+                address: 'Heathrow Airport, Terminal 5', 
+                cost_per_night: 350, 
+                is_refundable: false,
+                phone: '+44 20 8757 7777'
+            },
+            connecting_flight: null, 
+            ground_transport: null, 
+            isSimulation: true,
+        };
+    }
+
     if (code === 'RETRASO-60') {
         const originalArrival = new Date(now.getTime() + 1 * 60 * 60 * 1000);
         return {
