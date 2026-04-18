@@ -228,9 +228,14 @@ fastify.get('/api/flightInfo', async (request, reply) => {
         console.log(`[FlightInfo] ✅ Datos enviados para ${flightData.flightNumber}: ${flightData.status}`);
         return reply.send(flightData);
 
-    } catch (error) {
-        console.error('[FlightInfo] ❌ Error:', error);
-        return reply.status(503).send({ error: 'No se pudo contactar AviationStack' });
+    } catch (error: any) {
+        const msg = error.message || String(error);
+        console.error('[FlightInfo] ❌ Error:', msg);
+        
+        if (msg.includes('FLIGHT_NOT_FOUND')) {
+            return reply.status(404).send({ error: msg.replace('FLIGHT_NOT_FOUND: ', '') });
+        }
+        return reply.status(503).send({ error: 'Error contactando con las fuentes de datos de vuelos. Inténtalo de nuevo.' });
     }
 });
 

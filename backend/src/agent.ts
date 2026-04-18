@@ -190,26 +190,57 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
                 }
             );
 
+            if (adbRes.status === 204) {
+                console.log(`[Radar] ℹ️ AERORED: Vuelo ${code} no encontrado para hoy.`);
+                throw new Error(`FLIGHT_NOT_FOUND: El vuelo ${code} no tiene operaciones programadas para hoy.`);
+            }
+
             if (adbRes.ok) {
                 const adbData = await adbRes.json();
                 if (Array.isArray(adbData) && adbData.length > 0) {
                     const f = adbData[0];
+                    const rawStatus = (f.status || '').toLowerCase();
                     console.log(`[Radar] ✅ AERORED localizó: ${f.status}`);
+
+                    // Mapeo de status real
+                    let status = 'scheduled';
+                    if (rawStatus.includes('cancel')) status = 'cancelled';
+                    else if (rawStatus.includes('divert')) status = 'diverted';
+                    else if (rawStatus.includes('land') || rawStatus.includes('arrived')) status = 'landed';
+                    else if (rawStatus.includes('active') || rawStatus.includes('en route') || rawStatus.includes('airborne')) status = 'active';
+                    else if (rawStatus.includes('depart') || rawStatus.includes('taxiing')) status = 'departed';
+                    else if (rawStatus.includes('board')) status = 'boarding';
+                    else if (rawStatus.includes('delay')) status = 'delayed';
+                    else if (rawStatus.includes('schedul') || rawStatus.includes('expected')) status = 'scheduled';
+
+                    // Cálculo del retraso real (en minutos)
+                    let delayMinutes = 0;
+                    const depScheduled = f.departure?.scheduledTime?.utc;
+                    const depRevised = f.departure?.revisedTime?.utc || f.departure?.runwayTime?.utc;
+                    if (depScheduled && depRevised) {
+                        delayMinutes = Math.max(0, Math.round((new Date(depRevised).getTime() - new Date(depScheduled).getTime()) / 60000));
+                    }
+                    if (delayMinutes > 15 && status === 'scheduled') status = 'delayed';
+
                     return {
                         flightId,
-                        flightNumber: code,
-                        status: f.status.toLowerCase().includes('active') || f.status.toLowerCase().includes('flight') ? 'active' : (f.status.toLowerCase().includes('cancelled') ? 'cancelled' : 'delayed'),
-                        delayMinutes: 0,
+                        flightNumber: f.number?.replace(/\s/g, '') || code,
+                        status,
+                        delayMinutes,
                         airline: f.airline?.name || code.substring(0, 2),
                         departure: {
                             iata: f.departure?.airport?.iata || 'N/A',
-                            delay: 0,
-                            scheduled: f.departure?.scheduledTimeLocal || now.toISOString(),
+                            delay: delayMinutes,
+                            scheduled: f.departure?.scheduledTime?.local || f.departure?.scheduledTime?.utc || now.toISOString(),
+                            terminal: f.departure?.terminal || undefined,
+                            gate: f.departure?.gate || undefined,
                         },
                         arrival: {
                             iata: f.arrival?.airport?.iata || 'N/A',
-                            scheduled: f.arrival?.scheduledTimeLocal || now.toISOString(),
-                            estimated: f.arrival?.scheduledTimeLocal || now.toISOString(),
+                            scheduled: f.arrival?.scheduledTime?.local || f.arrival?.scheduledTime?.utc || now.toISOString(),
+                            estimated: f.arrival?.predictedTime?.local || f.arrival?.revisedTime?.local || f.arrival?.scheduledTime?.local || now.toISOString(),
+                            terminal: f.arrival?.terminal || undefined,
+                            gate: f.arrival?.gate || undefined,
                         },
                         hotel_booking: null,
                         connecting_flight: null,
@@ -399,26 +430,54 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
                 }
             );
 
+            if (adbRes.status === 204) {
+                console.log(`[Radar] ℹ️ AERORED: Vuelo ${code} no encontrado para hoy.`);
+                throw new Error(`FLIGHT_NOT_FOUND: El vuelo ${code} no tiene operaciones programadas para hoy.`);
+            }
+
             if (adbRes.ok) {
                 const adbData = await adbRes.json();
                 if (Array.isArray(adbData) && adbData.length > 0) {
                     const f = adbData[0];
+                    const rawStatus = (f.status || '').toLowerCase();
                     console.log(`[Radar] ✅ AERORED localizó: ${f.status}`);
+
+                    let status = 'scheduled';
+                    if (rawStatus.includes('cancel')) status = 'cancelled';
+                    else if (rawStatus.includes('divert')) status = 'diverted';
+                    else if (rawStatus.includes('land') || rawStatus.includes('arrived')) status = 'landed';
+                    else if (rawStatus.includes('active') || rawStatus.includes('en route') || rawStatus.includes('airborne')) status = 'active';
+                    else if (rawStatus.includes('depart') || rawStatus.includes('taxiing')) status = 'departed';
+                    else if (rawStatus.includes('board')) status = 'boarding';
+                    else if (rawStatus.includes('delay')) status = 'delayed';
+
+                    let delayMinutes = 0;
+                    const depScheduled = f.departure?.scheduledTime?.utc;
+                    const depRevised = f.departure?.revisedTime?.utc || f.departure?.runwayTime?.utc;
+                    if (depScheduled && depRevised) {
+                        delayMinutes = Math.max(0, Math.round((new Date(depRevised).getTime() - new Date(depScheduled).getTime()) / 60000));
+                    }
+                    if (delayMinutes > 15 && status === 'scheduled') status = 'delayed';
+
                     return {
                         flightId,
-                        flightNumber: code,
-                        status: f.status.toLowerCase().includes('active') || f.status.toLowerCase().includes('flight') ? 'active' : (f.status.toLowerCase().includes('cancelled') ? 'cancelled' : 'delayed'),
-                        delayMinutes: 0,
+                        flightNumber: f.number?.replace(/\s/g, '') || code,
+                        status,
+                        delayMinutes,
                         airline: f.airline?.name || code.substring(0, 2),
                         departure: {
                             iata: f.departure?.airport?.iata || 'N/A',
-                            delay: 0,
-                            scheduled: f.departure?.scheduledTimeLocal || now.toISOString(),
+                            delay: delayMinutes,
+                            scheduled: f.departure?.scheduledTime?.local || f.departure?.scheduledTime?.utc || now.toISOString(),
+                            terminal: f.departure?.terminal || undefined,
+                            gate: f.departure?.gate || undefined,
                         },
                         arrival: {
                             iata: f.arrival?.airport?.iata || 'N/A',
-                            scheduled: f.arrival?.scheduledTimeLocal || now.toISOString(),
-                            estimated: f.arrival?.scheduledTimeLocal || now.toISOString(),
+                            scheduled: f.arrival?.scheduledTime?.local || f.arrival?.scheduledTime?.utc || now.toISOString(),
+                            estimated: f.arrival?.predictedTime?.local || f.arrival?.revisedTime?.local || f.arrival?.scheduledTime?.local || now.toISOString(),
+                            terminal: f.arrival?.terminal || undefined,
+                            gate: f.arrival?.gate || undefined,
                         },
                         hotel_booking: null,
                         connecting_flight: null,
@@ -503,26 +562,9 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
         }
     } catch (e) { }
 
-    // 🛡️ FALLBACK INTELIGENTE: Si ninguna API responde, generamos un vuelo realista basado en el código
-    // para que la App NUNCA se rompa y permita al usuario seguir con el flujo de blindaje.
-    console.log(`[Radar] ⚠️ Todas las APIs fallaron para ${code}. Iniciando Reconstrucción Inteligente.`);
-    const isIberia = code.startsWith('IB');
-    const isVueling = code.startsWith('VY');
-    const airlineName = isIberia ? 'Iberia' : (isVueling ? 'Vueling' : 'Compañía Aérea');
-
-    return {
-        flightId,
-        flightNumber: code,
-        status: 'scheduled',
-        delayMinutes: 0,
-        airline: airlineName,
-        departure: { iata: isIberia ? 'MAD' : 'BCN', delay: 0, scheduled: now.toISOString() },
-        arrival: { iata: 'TBD', scheduled: now.toISOString(), estimated: now.toISOString() },
-        hotel_booking: null,
-        connecting_flight: null,
-        ground_transport: null,
-        isSimulation: false, // Lo marcamos como no-simulación para que sea tratado como real
-    };
+    // ❌ NINGUNA API RESPONDIÓ — No inventamos datos. Lanzamos error honesto.
+    console.error(`[Radar] ❌ TODAS las APIs fallaron para ${code}. No se encontraron datos reales.`);
+    throw new Error(`FLIGHT_NOT_FOUND: No se encontró información real para el vuelo ${code}. Verifica el código o inténtalo más tarde.`);
 }
 
 // ============================================================
