@@ -212,7 +212,7 @@ fastify.get('/api/flightInfo', async (request, reply) => {
         const code = flight.toUpperCase();
 
         // LOS CÓDIGOS DE TEST AHORA SE GESTIONAN CENTRALIZADAMENTE EN agent.ts
-        const testCodes = ['VUELO-OK', 'RETRASO-180', 'CANCELADO', 'RETRASO-400', 'RETRASO-VIP', 'RETRASO-60', 'DESVIO-VLC', 'JET-PRIVADO', 'VUELO-HISTORIAL', 'IB3166'];
+        const testCodes = ['VUELO-OK', 'RETRASO-180', 'CANCELADO', 'RETRASO-400', 'RETRASO-VIP', 'RETRASO-60', 'DESVIO-VLC', 'JET-PRIVADO', 'VUELO-HISTORIAL'];
 
         if (testCodes.includes(code)) {
             console.log(`[FlightInfo] 🧪 Radar de pruebas (Consistente): ${code}`);
