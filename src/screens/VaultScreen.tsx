@@ -43,6 +43,16 @@ export default function VaultScreen() {
     const [isRescuing, setIsRescuing] = useState(false);
     const [rescueProgress, setRescueProgress] = useState(0);
     const [dniInput, setDniInput] = useState('');
+    const [nameInput, setNameInput] = useState('');
+    const [pnrInput, setPnrInput] = useState('');
+
+    React.useEffect(() => {
+        if (showSignature) {
+            setNameInput(user?.displayName || currentClaimForSig?.passengerName || '');
+            setDniInput(currentClaimForSig?.passengerDNI || '');
+            setPnrInput(currentClaimForSig?.pnr || '');
+        }
+    }, [showSignature, currentClaimForSig, user]);
 
     const [showFileMenu, setShowFileMenu] = useState(false);
     const [selectedFile, setSelectedFile] = useState<any>(null);
@@ -175,11 +185,11 @@ export default function VaultScreen() {
                     amount: currentClaimForSig?.isDynamic ? '250' : (currentClaimForSig?.compensacion || '0'),
                     userEmail: user?.email || 'pasajero@travel-pilot.com',
                     signatureBase64: sig,
-                    // Datos del pasajero extraídos del contexto
-                    passengerName: user?.displayName || currentClaimForSig?.passengerName || null,
+                    // Datos del pasajero extraídos de los inputs y el contexto
+                    passengerName: nameInput || user?.displayName || currentClaimForSig?.passengerName || null,
                     passengerDNI: dniInput || currentClaimForSig?.passengerDNI || null,
                     flightDate: currentClaimForSig?.fechaHora || null,
-                    bookingRef: currentClaimForSig?.pnr || null,
+                    bookingRef: pnrInput || currentClaimForSig?.pnr || null,
                     airlineAddress: currentClaimForSig?.airlineAddress || null,
                 })
             });
@@ -701,13 +711,54 @@ export default function VaultScreen() {
                         <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '900', textAlign: 'center', marginBottom: 20 }}>🖊️ FIRMA DE AUTORIZACIÓN</Text>
 
                         <View style={{ marginBottom: 20 }}>
-                            <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', marginBottom: 8, letterSpacing: 1 }}>DNI / PASAPORTE DEL RECLAMANTE</Text>
+                            <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', marginBottom: 8, letterSpacing: 1 }}>NOMBRE Y APELLIDOS</Text>
+                            <TextInput
+                                value={nameInput}
+                                onChangeText={setNameInput}
+                                placeholder="Ej: Juan García López"
+                                placeholderTextColor="#444"
+                                autoCapitalize="words"
+                                style={{
+                                    backgroundColor: '#000',
+                                    borderWidth: 1,
+                                    borderColor: '#333',
+                                    borderRadius: 12,
+                                    padding: 14,
+                                    color: '#FFF',
+                                    fontSize: 15,
+                                    fontWeight: 'bold',
+                                    marginBottom: 15
+                                }}
+                            />
+
+                            <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', marginBottom: 8, letterSpacing: 1 }}>DNI / PASAPORTE</Text>
                             <TextInput
                                 value={dniInput}
                                 onChangeText={setDniInput}
                                 placeholder="Ej: 12345678X"
                                 placeholderTextColor="#444"
                                 autoCapitalize="characters"
+                                style={{
+                                    backgroundColor: '#000',
+                                    borderWidth: 1,
+                                    borderColor: '#333',
+                                    borderRadius: 12,
+                                    padding: 14,
+                                    color: '#FFF',
+                                    fontSize: 15,
+                                    fontWeight: 'bold',
+                                    marginBottom: 15
+                                }}
+                            />
+
+                            <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', marginBottom: 8, letterSpacing: 1 }}>Nº LOCALIZADOR (PNR)</Text>
+                            <TextInput
+                                value={pnrInput}
+                                onChangeText={setPnrInput}
+                                placeholder="Ej: AB12CD"
+                                placeholderTextColor="#444"
+                                autoCapitalize="characters"
+                                maxLength={6}
                                 style={{
                                     backgroundColor: '#000',
                                     borderWidth: 1,

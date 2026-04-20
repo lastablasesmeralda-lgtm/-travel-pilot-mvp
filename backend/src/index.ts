@@ -1081,12 +1081,12 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         const sArr = sanitizeText(arrivalAirport);
         const sEmail = sanitizeText(userEmail);
 
-        // 🚀 MODO DEMO: Inyectar datos realistas si vienen vacíos
-        const sPassName = passengerName && passengerName !== 'N/A' ? sanitizeText(passengerName) : "JUAN GARCÍA LÓPEZ";
-        const sPassDNI = passengerDNI && passengerDNI !== 'N/A' ? sanitizeText(passengerDNI) : "12345678X";
-        const sFlightDate = passengerName && passengerName !== 'N/A' ? sanitizeText(flightDate) : dateStr; // Si es demo, usa la fecha de hoy
-        const sBookingRef = bookingRef && bookingRef !== 'N/A' ? sanitizeText(bookingRef) : "TP-DEMO-2024";
-        const sAirAddress = airlineAddress && airlineAddress !== 'N/A' ? sanitizeText(airlineAddress) : "Calle Martínez Villergas 49, 28027 Madrid";
+        // 🚀 MODO REAL: Datos introducidos en la firma o pasados por AppContext
+        const sPassName = passengerName && passengerName !== 'N/A' ? sanitizeText(passengerName) : "";
+        const sPassDNI = passengerDNI && passengerDNI !== 'N/A' ? sanitizeText(passengerDNI) : "";
+        const sFlightDate = sanitizeText(flightDate || dateStr);
+        const sBookingRef = bookingRef && bookingRef !== 'N/A' ? sanitizeText(bookingRef) : "";
+        const sAirAddress = airlineAddress && airlineAddress !== 'N/A' ? sanitizeText(airlineAddress) : "Departamento de Reclamaciones de Pasajeros";
         const sStatus = (request.body as any).status || 'delayed';
 
         // LÓGICA DINÁMICA DE TÍTULO Y CUERPO (Reglas Beta 555)
