@@ -5,10 +5,10 @@
     "privacy": "public",
     "version": "1.0.4",
     "orientation": "portrait",
-    "icon": "./assets/logo_premium.jpg",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/logo_premium.jpg",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
