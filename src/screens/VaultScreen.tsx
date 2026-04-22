@@ -18,7 +18,8 @@ export default function VaultScreen() {
         showVIPAlternatives, setShowVIPAlternatives, pendingVIPScroll, setPendingVIPScroll,
         setShowPrivateVault, setTab, confirmFlightRescue, speak,
         showSignature, setShowSignature, currentClaimForSig, setCurrentClaimForSig,
-        moveExtraDocToVault
+        moveExtraDocToVault,
+        userFullName, userIdNumber
     } = useAppContext();
 
     React.useEffect(() => {
@@ -48,11 +49,11 @@ export default function VaultScreen() {
 
     React.useEffect(() => {
         if (showSignature) {
-            setNameInput(user?.displayName || currentClaimForSig?.passengerName || '');
-            setDniInput(currentClaimForSig?.passengerDNI || '');
+            setNameInput(userFullName || user?.displayName || currentClaimForSig?.passengerName || '');
+            setDniInput(userIdNumber || currentClaimForSig?.passengerDNI || '');
             setPnrInput(currentClaimForSig?.pnr || '');
         }
-    }, [showSignature, currentClaimForSig, user]);
+    }, [showSignature, currentClaimForSig, user, userFullName, userIdNumber]);
 
     const [showFileMenu, setShowFileMenu] = useState(false);
     const [selectedFile, setSelectedFile] = useState<any>(null);

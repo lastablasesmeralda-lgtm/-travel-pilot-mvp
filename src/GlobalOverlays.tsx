@@ -96,7 +96,8 @@ export default function GlobalOverlays() {
         handleSendMessage,
         setClaims,
         setShowSignature,
-        setCurrentClaimForSig
+        setCurrentClaimForSig,
+        userFullName
     } = useAppContext();
 
     const navigation = useNavigation<any>();
@@ -174,7 +175,7 @@ export default function GlobalOverlays() {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                passengerName: user?.displayName || 'Pasajero Travel-Pilot',
+                                passengerName: userFullName || user?.displayName || 'Pasajero Travel-Pilot',
                                 flightNumber: flightNum,
                                 airline: flightData?.airline || 'Aerolínea',
                                 departureAirport: flightData?.departure?.iata || 'AEP',

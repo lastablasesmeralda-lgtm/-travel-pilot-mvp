@@ -126,6 +126,8 @@ export const AppProvider = ({ children }) => {
   const [weatherMap, setWeatherMap] = useState<Record<string, any>>({});
   const [isDictating, setIsDictating] = useState(false);
   const [userPhone, setUserPhone] = useState('');
+  const [userFullName, setUserFullName] = useState('');
+  const [userIdNumber, setUserIdNumber] = useState('');
   const [hasSeenPlan, setHasSeenPlan] = useState(false);
   const [selectedRescuePlan, setSelectedRescuePlan] = useState<string | null>(null);
   const [lastSearchId, setLastSearchId] = useState<number>(0);
@@ -208,6 +210,8 @@ export const AppProvider = ({ children }) => {
       setMessages([{ id: '1', text: 'TRAVEL-PILOT REINICIADO. Modo Beta activado. ¿En qué puedo ayudarte?', isUser: false }]);
       setTravelProfile('budget');
       setUserPhone('');
+      setUserFullName('');
+      setUserIdNumber('');
       setDismissedClaims([]);
       setHasSeenPlan(false);
       setSelectedRescuePlan(null);
@@ -216,7 +220,7 @@ export const AppProvider = ({ children }) => {
       const keys = [
         'lastFlightData', 'lastFlightInput', 'activeSearches',
         'offline_claims', 'offline_extraDocs', 'savedTime',
-        'recoveredMoney', 'travelProfile', 'userPhone',
+        'recoveredMoney', 'travelProfile', 'userPhone', 'userFullName', 'userIdNumber',
         'offline_dismissedClaims', 'hasSeenOnboarding', 'hasSeenPlan',
         'disclaimerOnboardingAccepted', 'vaultPin', 'selectedVoice'
       ];
@@ -236,7 +240,7 @@ export const AppProvider = ({ children }) => {
       try {
         const keys = [
           'lastFlightData', 'offline_extraDocs', 'savedTime',
-          'recoveredMoney', 'travelProfile', 'vaultPin', 'userPhone',
+          'recoveredMoney', 'travelProfile', 'vaultPin', 'userPhone', 'userFullName', 'userIdNumber',
           'activeSearches', 'offline_claims', 'offline_dismissedClaims',
           'chatOrigin', 'hasSeenOnboarding', 'selectedVoice'
         ];
@@ -266,6 +270,8 @@ export const AppProvider = ({ children }) => {
         if (stores.recoveredMoney) setRecoveredMoney(parseFloat(stores.recoveredMoney));
         if (stores.vaultPin) setVaultPin(stores.vaultPin);
         if (stores.userPhone) setUserPhone(stores.userPhone);
+        if (stores.userFullName) setUserFullName(stores.userFullName);
+        if (stores.userIdNumber) setUserIdNumber(stores.userIdNumber);
         if (stores.activeSearches) setActiveSearches(JSON.parse(stores.activeSearches));
         if (stores.offline_claims) {
           const sc = JSON.parse(stores.offline_claims);
@@ -1964,7 +1970,7 @@ export const AppProvider = ({ children }) => {
     hasNewDoc, setHasNewDoc,
     speak, stopSpeak, formatTime, getStatusColor, getStatusLabel, scrollViewRef,
     clearMessages, isDictating, startDictation, stopDictation,
-    userPhone, setUserPhone,
+    userPhone, setUserPhone, userFullName, setUserFullName, userIdNumber, setUserIdNumber,
     isReplayingTutorial, setIsReplayingTutorial,
     savedTime, setSavedTime,
     recoveredMoney, setRecoveredMoney,

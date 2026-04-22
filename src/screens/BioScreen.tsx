@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { s } from '../styles';
@@ -11,15 +11,11 @@ export default function BioScreen() {
         availableVoices, selectedVoice, setSelectedVoice, user,
         setHasSeenOnboarding, userPhone, setUserPhone, setIsReplayingTutorial,
         travelProfile, setTravelProfile, speak, simulatePushNotification, handleLogout,
-        savedTime, recoveredMoney, masterReset
+        savedTime, recoveredMoney, masterReset,
+        userFullName, setUserFullName, userIdNumber, setUserIdNumber
     } = useAppContext();
-    const [showGuide, setShowGuide] = useState(false);
-    const [showVip, setShowVip] = useState(false);
-
-    // Estados locales para el formulario de perfil (Pre-rellenados para Demo)
-    const [fullName, setFullName] = useState('Juan García López');
-    const [idNumber, setIdNumber] = useState('12345678X');
-    const [demoPhone, setDemoPhone] = useState('+34 600 000 000');
+    const [showGuide, setShowGuide] = React.useState(false);
+    const [showVip, setShowVip] = React.useState(false);
 
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0A' }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 100, paddingBottom: 120 }}>
@@ -93,9 +89,9 @@ export default function BioScreen() {
                     <View style={{ width: '100%', marginBottom: 15 }}>
                         <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold', marginBottom: 5 }}>NOMBRE</Text>
                         <TextInput
-                            value={fullName}
-                            onChangeText={setFullName}
-                            placeholder="Ej: Juan García López"
+                            value={userFullName}
+                            onChangeText={setUserFullName}
+                            placeholder="Tu nombre completo"
                             placeholderTextColor="#444"
                             style={{ backgroundColor: '#1A1A1A', color: '#FFF', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#333' }}
                         />
@@ -104,9 +100,9 @@ export default function BioScreen() {
                     <View style={{ width: '100%', marginBottom: 15 }}>
                         <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold', marginBottom: 5 }}>DNI / PASAPORTE</Text>
                         <TextInput
-                            value={idNumber}
-                            onChangeText={setIdNumber}
-                            placeholder="Ej: 12345678X"
+                            value={userIdNumber}
+                            onChangeText={setUserIdNumber}
+                            placeholder="Tu DNI o pasaporte"
                             placeholderTextColor="#444"
                             style={{ backgroundColor: '#1A1A1A', color: '#FFF', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#333' }}
                         />
@@ -115,9 +111,9 @@ export default function BioScreen() {
                     <View style={{ width: '100%', marginBottom: 15 }}>
                         <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold', marginBottom: 5 }}>TELÉFONO</Text>
                         <TextInput
-                            value={demoPhone}
-                            onChangeText={setDemoPhone}
-                            placeholder="Ej: +34 600 000 000"
+                            value={userPhone}
+                            onChangeText={setUserPhone}
+                            placeholder="Tu teléfono (ej: +34 600...)"
                             placeholderTextColor="#444"
                             keyboardType="phone-pad"
                             style={{ backgroundColor: '#1A1A1A', color: '#FFF', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#333' }}
@@ -125,7 +121,12 @@ export default function BioScreen() {
                     </View>
 
                     <TouchableOpacity
-                         onPress={() => Alert.alert('Éxito', 'Información actualizada y encriptada.')}
+                         onPress={async () => {
+                             await AsyncStorage.setItem('userFullName', userFullName);
+                             await AsyncStorage.setItem('userIdNumber', userIdNumber);
+                             await AsyncStorage.setItem('userPhone', userPhone);
+                             Alert.alert('✅ Éxito', 'Información actualizada y encriptada.');
+                         }}
                          style={{ backgroundColor: '#4CD964', borderRadius: 12, paddingVertical: 12, alignItems: 'center' }}
                     >
                          <Text style={{ color: '#000', fontWeight: 'bold' }}>GUARDAR CAMBIOS</Text>

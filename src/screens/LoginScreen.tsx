@@ -64,7 +64,7 @@ export default function LoginScreen() {
                 <View style={{ padding: 16, backgroundColor: '#111', borderRadius: 16, marginBottom: 12, marginTop: 40, borderWidth: 1, borderColor: '#222' }}>
                     <View style={{ marginBottom: 24, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#333' }}>
                         <Image
-                            source={{ uri: 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?w=900' }}
+                            source={require('../../assets/onboarding2.jpg')}
                             style={{ width: '100%', height: 200 }}
                             resizeMode="cover"
                         />
