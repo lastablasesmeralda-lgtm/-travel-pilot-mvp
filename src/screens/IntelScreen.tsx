@@ -290,7 +290,11 @@ export default function IntelScreen() {
                                 : travelProfile === 'budget'
                                     ? `Retraso crítico detectado. Tu expediente de reclamación EU261 está listo para firmar en tu Bóveda de DOCS. Un toque y el proceso legal empieza solo.`
                                     : `Retraso crítico detectado. Tu expediente de reclamación EU261 está listo para firmar en DOCS. Con el plan VIP tendrías opciones adicionales de rescate.`;
-                        } else if ((flightData?.departure?.delay || 0) >= 60) {
+                        } else if ((flightData?.status || '').toLowerCase().includes('divert') || (flightData?.status || '').toLowerCase().includes('desvio')) {
+                            msg = travelProfile === 'premium'
+                                ? `Vuelo desviado de su ruta original. He activado tu protocolo VIP de extracción terrestre. Tienes los detalles en tu sección de documentos.`
+                                : `Vuelo desviado de su ruta original. Tienes derecho a transporte alternativo. Consulta las opciones en pantalla.`;
+                        } else if ((flightData?.departure?.delay || 0) >= 60 || (flightData?.delayMinutes || 0) >= 60) {
                             msg = travelProfile === 'premium'
                                 ? `Retraso detectado. Tu vuelo está bajo vigilancia prioritaria. Cualquier cambio relevante te llegará al instante.`
                                 : `Retraso detectado. Estoy monitorizando tu vuelo en tiempo real. Si la situación cambia, serás el primero en saberlo.`;
@@ -338,14 +342,16 @@ export default function IntelScreen() {
                                         {idlePhrase}
                                     </Text>
                                 </View>
-                            ) : (flightData?.departure?.delay || 0) >= 60 ? (
+                            ) : ((flightData?.departure?.delay || 0) >= 60 || (flightData?.delayMinutes || 0) >= 60 || (flightData?.status || '').toLowerCase().includes('divert') || (flightData?.status || '').toLowerCase().includes('desvio')) ? (
                                 <View>
                                     <View style={{ marginBottom: 12 }}>
                                         <Text style={{ color: '#E0E0E0', fontSize: 13, lineHeight: 20, fontStyle: 'italic', letterSpacing: 0.3 }}>
-                                            {(flightData?.departure?.delay || 0) >= 180 ? (
+                                            {(flightData?.status || '').toLowerCase().includes('divert') || (flightData?.status || '').toLowerCase().includes('desvio') ? (
+                                                <>🚨 <Text style={{ color: '#FF3B30', fontWeight: 'bold' }}>DESVÍO DETECTADO:</Text> El vuelo <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>{flightData.flightNumber}</Text> ha cambiado su ruta original. He activado el <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>Protocolo de Extracción</Text>.</>
+                                            ) : (flightData?.departure?.delay || 0) >= 180 || (flightData?.delayMinutes || 0) >= 180 ? (
                                                 <>🚨 <Text style={{ color: '#FF3B30', fontWeight: 'bold' }}>ALERTA CRÍTICA:</Text> Retraso superior a 3h identificado en el vuelo <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>{flightData.flightNumber}</Text>. Tienes derecho a solicitar <Text style={{ color: '#4CD964', fontWeight: 'bold' }}>{getEU261Amount(flightData)}€</Text> de indemnización. He activado tu Estrategia <Text style={{ color: '#AF52DE', fontWeight: 'bold' }}>{travelProfile === 'premium' ? 'VIP' : travelProfile === 'budget' ? 'ECONÓMICA' : 'EQUILIBRADA'}</Text>.</>
                                             ) : (
-                                                <>⚠️ <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>INCIDENCIA DETECTADA:</Text> Retraso de {(flightData?.departure?.delay || 0)} min en el vuelo <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>{flightData.flightNumber}</Text>. He organizado una <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>Estrategia {travelProfile === 'premium' ? 'VIP' : travelProfile === 'budget' ? 'ECONÓMICA' : 'EQUILIBRADA'}</Text> personalizada.</>
+                                                <>⚠️ <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>INCIDENCIA DETECTADA:</Text> Retraso de {(flightData?.departure?.delay || flightData?.delayMinutes || 0)} min en el vuelo <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>{flightData.flightNumber}</Text>. He organizado una <Text style={{ color: '#D4AF37', fontWeight: 'bold' }}>Estrategia {travelProfile === 'premium' ? 'VIP' : travelProfile === 'budget' ? 'ECONÓMICA' : 'EQUILIBRADA'}</Text> personalizada.</>
                                             )}
                                         </Text>
                                     </View>

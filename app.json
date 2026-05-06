@@ -33,9 +33,7 @@
     "plugins": [
       "expo-mail-composer"
     ],
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "extra": {
       "eas": {
         "projectId": "e8268118-5519-489f-a17c-a860b24d8c7b"

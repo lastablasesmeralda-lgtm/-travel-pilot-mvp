@@ -7,8 +7,9 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as MailComposer from 'expo-mail-composer';
 import { useAppContext, IS_BETA } from '../context/AppContext';
-import { getEU261Amount } from '../utils/flightUtils';
+import { getEU261Amount, getRegulationName } from '../utils/flightUtils';
 import { BACKEND_URL } from '../../config';
+import { DOC_IMAGES } from '../constants/Assets';
 
 export default function VaultScreen() {
     const {
@@ -179,11 +180,11 @@ export default function VaultScreen() {
                     flightNumber: currentClaimForSig?.vuelo,
                     airline: currentClaimForSig?.aerolinea,
                     // Si es la demo (isDynamic), forzamos datos para PDF bonito. Si no, datos reales.
-                    delayMinutes: currentClaimForSig?.isDynamic ? 240 : (currentClaimForSig?.delayActual || 0),
+                    delayMinutes: currentClaimForSig?.isAssistance ? 60 : (currentClaimForSig?.isDynamic ? 240 : (currentClaimForSig?.delayActual || 0)),
                     status: currentClaimForSig?.isDynamic ? 'delayed' : (currentClaimForSig?.status || 'delayed'),
-                    departureAirport: currentClaimForSig?.ruta?.split('>')[0]?.trim() || 'MAD',
-                    arrivalAirport: currentClaimForSig?.ruta?.split('>')[1]?.trim() || 'VLC',
-                    amount: currentClaimForSig?.isDynamic ? '250' : (currentClaimForSig?.compensacion || '0'),
+                    departureAirport: currentClaimForSig?.ruta?.split(/[>→]|\->/)[0]?.trim() || 'MAD',
+                    arrivalAirport: currentClaimForSig?.ruta?.split(/[>→]|\->/)[1]?.trim() || 'VLC',
+                    amount: currentClaimForSig?.isAssistance ? '0' : (currentClaimForSig?.isDynamic ? '250' : (currentClaimForSig?.compensacion || '0')),
                     userEmail: user?.email || 'pasajero@travel-pilot.com',
                     signatureBase64: sig,
                     // Datos del pasajero extraídos de los inputs y el contexto
@@ -202,11 +203,14 @@ export default function VaultScreen() {
 
             const json = await res.json();
             if (json.pdfBase64) {
-                const fileUri = (FileSystem.cacheDirectory || '') + `reclamacion_EU261_${Date.now()}.pdf`;
+                const regTag = currentClaimForSig?.isAssistance ? 'ASISTENCIA' : 'RECLAMACION';
+                const regName = getRegulationName(flightData);
+                const fileUri = (FileSystem.cacheDirectory || '') + `${regTag}_${regName.replace('/', '_')}_${Date.now()}.pdf`;
                 const encoding = (FileSystem.EncodingType as any)?.Base64 || 'base64';
                 await FileSystem.writeAsStringAsync(fileUri, json.pdfBase64, { encoding });
                 setSignedClaimId(currentClaimForSig?.id);
-                setRecoveredMoney((prev: number) => prev + (parseInt(currentClaimForSig?.compensacion) || 250));
+                const compVal = parseInt(currentClaimForSig?.compensacion);
+                setRecoveredMoney((prev: number) => prev + (isNaN(compVal) ? 0 : compVal));
 
                 webViewRef.current?.injectJavaScript('clearCanvas();true;');
                 setShowSignature(false);
@@ -324,7 +328,7 @@ export default function VaultScreen() {
                             <TouchableOpacity
                                 onPress={() => {
                                     // 1. Redirigir el Ticket Maestro VIP al panel de opciones (VIPAlternatives)
-                                    if (d.t?.includes('VIP')) {
+                                    if (d.t?.includes('PROTOCOLO') && d.t?.includes('VIP')) {
                                         setFlightData((prev: any) => {
                                             if (prev) {
                                                 return { ...prev, delayMinutes: d.t.includes('RESCATE') ? 180 : 60, status: 'delayed' };
@@ -334,8 +338,8 @@ export default function VaultScreen() {
                                         setCurrentActionDoc(d);
                                         setShowVIPAlternatives(true);
                                     }
-                                    // 2. CASO PROPUESTA: Abrir ventana de acción detallada para planes de alojamiento/vuelo
-                                    else if (d.t?.includes('PROPUESTA') || d.t?.includes('ALOJAMIENTO')) {
+                                    // 2. CASO PROPUESTA: Abrir ventana de acción detallada solo para propuestas interactivas (no certificados)
+                                    else if (d.t?.includes('PROPUESTA')) {
                                         setCurrentActionDoc(d);
                                         setShowActionModal(true);
                                     }
@@ -349,8 +353,17 @@ export default function VaultScreen() {
                                 activeOpacity={0.7}
                                 style={{ flex: 1, flexDirection: 'row', alignItems: 'center', padding: 18 }}
                             >
-                                <View style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: '#0A0A0A', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#222' }}>
-                                    {d.i ? <Image source={typeof d.i === 'number' ? d.i : { uri: d.i }} style={{ width: 52, height: 52, borderRadius: 14 }} /> : <Text style={{ fontSize: 21 }}>📄</Text>}
+                                <View style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: '#0A0A0A', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#222', overflow: 'hidden' }}>
+                                    {(() => {
+                                        if (!d.i) return <Text style={{ fontSize: 21 }}>📄</Text>;
+                                        const source = (typeof d.i === 'string' && DOC_IMAGES[d.i]) 
+                                            ? DOC_IMAGES[d.i] 
+                                            : (typeof d.i === 'string' && (d.i.startsWith('http') || d.i.startsWith('file')))
+                                                ? { uri: d.i }
+                                                : d.i;
+                                        
+                                        return <Image source={source} style={{ width: '100%', height: '100%' }} resizeMode="cover" />;
+                                    })()}
                                 </View>
                                 <View style={{ flex: 1, marginLeft: 14 }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -364,7 +377,7 @@ export default function VaultScreen() {
                                     <Text style={{ color: '#B0B0B0', fontSize: 11, marginTop: 3 }}>{d.s || 'Generado por IA'}</Text>
                                 </View>
                             </TouchableOpacity>
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 onPress={() => {
                                     Alert.alert(
                                         "¿MOVER A BÓVEDA PRIVADA?",
@@ -374,14 +387,14 @@ export default function VaultScreen() {
                                             { text: "MOVER AHORA", onPress: () => moveExtraDocToVault(d.id) }
                                         ]
                                     );
-                                }} 
+                                }}
                                 style={{ padding: 20, borderLeftWidth: 1, borderLeftColor: '#222' }}
                             >
                                 <Text style={{ color: '#D4AF37', fontSize: 18 }}>🔒</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity 
-                                onPress={() => handleDelete(d.id, d.t)} 
+                            <TouchableOpacity
+                                onPress={() => handleDelete(d.id, d.t)}
                                 style={{ padding: 20, borderLeftWidth: 1, borderLeftColor: '#222' }}
                             >
                                 <Text style={{ color: '#FF3B30', fontSize: 18 }}>✕</Text>
@@ -536,7 +549,7 @@ export default function VaultScreen() {
 
                 {/* RECLAMACIONES */}
                 <View onLayout={(e) => { claimsYRef.current = e.nativeEvent.layout.y; }} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 14 }}>
-                    <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', letterSpacing: 1.5 }}>⚖️ RECLAMACIONES EU261</Text>
+                    <Text style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 'bold', letterSpacing: 1.5 }}>⚖️ EXPEDIENTES LEGALES {getRegulationName(flightData)}</Text>
                 </View>
 
                 {claims.length === 0 ? (
@@ -577,7 +590,7 @@ export default function VaultScreen() {
                                 </TouchableOpacity>
                             </View>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Text style={{ color: '#B0B0B0', fontSize: 11 }}>{c.compensacion}€</Text>
+                                <Text style={{ color: '#B0B0B0', fontSize: 11 }}>{c.isAssistance ? 'Asistencia' : `${c.compensacion}€`}</Text>
                                 <Text style={{ color: '#AF52DE', fontSize: 11, fontWeight: 'bold' }}>{signedClaimId === c.id ? 'FIRMADO' : 'FIRMAR ✍️'}</Text>
                             </View>
                         </TouchableOpacity>

@@ -11,6 +11,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Audio } from 'expo-av';
 import { getEU261Amount } from '../utils/flightUtils';
+import * as FileSystem from 'expo-file-system/legacy';
 
 type AppContextType = any;
 export const IS_BETA = true; // Cambiar a true para betas/testing
@@ -107,7 +108,7 @@ export const AppProvider = ({ children }) => {
       id: 'demo-hotel-premium',
       t: 'RESERVA HOTEL',
       s: 'CONF: #88291-TX // MADRID',
-      i: require('../../assets/reserva_hotel_pura.jpg'),
+      i: require('../../assets/certificado_alojamiento_vip.jpg'),
       source: 'OUTLOOK',
       icon: '🛌',
       verified: true,
@@ -148,7 +149,7 @@ export const AppProvider = ({ children }) => {
 
   // FUNCIÓN PARA MOVER DOCUMENTOS A LA BÓVEDA PRIVADA (ALTERNATIVA 3)
   const moveExtraDocToVault = (id: string) => {
-    setExtraDocs((prev: any[]) => prev.map(doc => 
+    setExtraDocs((prev: any[]) => prev.map(doc =>
       doc.id === id ? { ...doc, source: 'DOCS' } : doc
     ));
     Vibration.vibrate(10);
@@ -156,7 +157,7 @@ export const AppProvider = ({ children }) => {
   };
 
   const unvaultExtraDoc = (id: string) => {
-    setExtraDocs((prev: any[]) => prev.map(doc => 
+    setExtraDocs((prev: any[]) => prev.map(doc =>
       doc.id === id ? { ...doc, source: undefined } : doc
     ));
     Vibration.vibrate(10);
@@ -1092,16 +1093,25 @@ export const AppProvider = ({ children }) => {
   };
 
   const getStatusColor = (status: string) => {
-    if (status === 'active' || status === 'scheduled') return '#4CD964';
-    if (status === 'landed') return '#4CD964';
-    if (status === 'cancelled') return '#FF3B30';
+    const s = (status || '').toLowerCase();
+    if (s === 'active' || s === 'scheduled') return '#4CD964';
+    if (s === 'landed') return '#4CD964';
+    if (s === 'cancelled') return '#FF3B30';
+    if (s === 'diverted' || s.includes('desvio')) return '#FF9500';
     return '#FF9500';
   };
 
   const getStatusLabel = (status: string, delay: number) => {
+    const s = (status || '').toLowerCase();
+    if (s === 'cancelled') return 'CANCELADO';
+    if (s === 'diverted' || s.includes('desvio')) return 'DESVIADO';
+    if (s === 'boarding') return 'EMBARCANDO';
+    if (s === 'landed') return 'ATERRIZADO';
+    if (s === 'incident') return 'INCIDENCIA';
     if (delay > 0) return `RETRASADO +${delay} MIN`;
-    if (status === 'active') return 'EN VUELO';
-    if (status === 'scheduled') return 'PROGRAMADO';
+    if (s === 'delayed') return 'RETRASADO';
+    if (s === 'active' || s === 'en route') return 'EN VUELO';
+    if (s === 'scheduled') return 'PROGRAMADO';
     return status?.toUpperCase() || 'DESCONOCIDO';
   };
 
@@ -1155,6 +1165,8 @@ export const AppProvider = ({ children }) => {
       );
       return;
     }
+
+    setLastSearchId(prev => prev + 1);
 
     // 1) LIMPIAR TODO del circuito anterior para evitar conflictos
     stopSpeak();
@@ -1262,8 +1274,8 @@ export const AppProvider = ({ children }) => {
           : 'Retraso extremo detectado. Tienes derecho a la indemnización máxima de 600 euros. Revisa las opciones en pantalla.';
       } else if (data.flightNumber === 'DESVIO-VLC') {
         finalSpeech = travelProfile === 'premium'
-          ? 'Vuelo desviado a Valencia. Tienes derecho a transporte alternativo. Estoy analizando las mejores opciones para llegar a tu destino.'
-          : 'Vuelo desviado a Valencia. Tienes derecho a transporte alternativo hasta tu destino final. Consulta la información en pantalla.';
+          ? 'Vuelo desviado de su ruta original. He activado el protocolo de extracción y transporte alternativo para asegurar tu llegada al destino final.'
+          : 'Vuelo desviado de su ruta original. Tienes derecho a transporte alternativo hasta tu destino final. Consulta la información en pantalla.';
       } else if (data.flightNumber === 'VUELO-HISTORIAL') {
         finalSpeech = travelProfile === 'premium'
           ? 'He analizado tu vuelo pasado. Tienes derecho a una indemnización por el retraso sufrido. He generado el expediente legal en tu Bóveda.'
@@ -1275,7 +1287,11 @@ export const AppProvider = ({ children }) => {
       } else if (data.flightNumber === 'RETRASO-60') {
         finalSpeech = travelProfile === 'premium'
           ? 'Retraso detectado. He preparado tu pase VIP y manutención por si la espera se alarga. Te aviso si la situación cambia.'
-          : 'Retraso detectado. Si supera las 2 horas, solicita tus vales de comida. Sigo vigilando tu vuelo.';
+          : 'Retraso detectado. Si supera las 2 horas, solicita tus vales de comida. Sigo vigilando tu vuelo. Consulta en tu sección de documentos.';
+      } else if (data.status === 'diverted' || (data.status || '').toLowerCase().includes('desvio')) {
+        finalSpeech = travelProfile === 'premium'
+          ? `Vuelo desviado de su ruta programada. He activado el protocolo de extracción y transporte alternativo para asegurar tu llegada al destino final hoy mismo.`
+          : `Vuelo desviado de su ruta programada. Tienes derecho a transporte alternativo hasta tu destino final. Consulta las opciones en pantalla.`;
       } else if (data.status === 'cancelled') {
         // CANCELADO + cualquier otro vuelo cancelado real
         finalSpeech = travelProfile === 'premium'
@@ -1314,7 +1330,6 @@ export const AppProvider = ({ children }) => {
         setBrowserLogs(prev => [...prev, `✅ Protocolo finalizado. Plan de contingencia desplegado.`]);
       }, 3000);
 
-      setLastSearchId(prev => prev + 1);
     } catch (e) {
       setBrowserLogs(prev => [...prev, `❌ Fallo crítico en el motor de ejecución: Error de conexión.`]);
       setSearchError('Error de conexión con el servidor. Revisa el túnel ngrok.');
@@ -1346,7 +1361,8 @@ export const AppProvider = ({ children }) => {
   const showPlan = () => {
     Vibration.vibrate(50);
     setHasSeenPlan(true);
-    if (prefetchedData) { setApiPlan(prefetchedData); setShowSOS(true); }
+    const isDiverted = flightData?.status?.toLowerCase().includes('diverted') || flightData?.status?.toLowerCase().includes('desvio');
+    if (prefetchedData && !isDiverted) { setApiPlan(prefetchedData); setShowSOS(true); }
     else { fetchContingencyPlan(); }
   };
 
@@ -1377,18 +1393,34 @@ export const AppProvider = ({ children }) => {
       };
       setApiPlan({ ...instantPlan, options: [econOption, lockedCard] });
     } else {
-      // MODO VIP: Única tarjeta maestra resolutiva (OPCIÓN 3 seleccionada por el usuario)
-      const masterVIPOption = {
-        type: 'RÁPIDO',
-        title: 'PROTOCOLO DE RESCATE PREMIUM',
-        description: 'Acceso directo a tu panel personalizado de alternativas. Vuelos, salas VIP y expedientes legales listos para ejecución inmediata.',
-        aiReasoning: 'Protocolo Integral Activado: He unificado todas las vías de solución en tu panel de mando personal.',
-        voiceScriptFinal: 'Estrategia de rescate generada. He analizado todas las alternativas y preparado tu expediente de reclamación. Tienes todo listo en tu sección de documentos.'
-      };
-      setApiPlan({ ...instantPlan, options: [masterVIPOption] });
+      const isDiverted = flightData?.status?.toLowerCase().includes('diverted') || flightData?.status?.toLowerCase().includes('desvio');
+
+      let vipOption;
+      if (isDiverted) {
+        vipOption = {
+          type: 'VIP DESVÍO',
+          title: 'PLAN DE EMERGENCIA: DESVÍO DE VUELO',
+          description: 'Gestión inmediata de Alojamiento VIP, Extracción Terrestre y Expediente de Reclamación.',
+          aiReasoning: 'Protocolo de Desvío Activado: He bloqueado una habitación de hotel y preparado tu transporte alternativo para sacarte de aquí.',
+          voiceScriptFinal: 'Estrategia de emergencia generada para este desvío. He preparado tu hotel, transporte y reclamación legal. Tienes todo listo en tu sección de documentos.',
+          image: 'https://images.unsplash.com/photo-1542282088-fe8426682b8f?auto=format&fit=crop&q=80&w=800'
+        };
+      } else {
+        // MODO VIP ESTÁNDAR
+        vipOption = {
+          type: 'RÁPIDO',
+          title: 'PROTOCOLO DE RESCATE PREMIUM',
+          description: 'Acceso directo a tu panel personalizado de alternativas. Vuelos, salas VIP y expedientes legales listos para ejecución inmediata.',
+          aiReasoning: 'Protocolo Integral Activado: He unificado todas las vías de solución en tu panel de mando personal.',
+          voiceScriptFinal: 'Estrategia de rescate generada. He analizado todas las alternativas y preparado tu expediente de reclamación. Tienes todo listo en tu sección de documentos.'
+        };
+      }
+      setApiPlan({ ...instantPlan, options: [vipOption] });
     }
     setShowSOS(true); setHasSeenPlan(true); setIsGenerating(false);
     setSavedTime(prev => prev + 0.5); // Generar un plan ahorra 30 mins
+
+    // GENERACIÓN PROACTIVA DE DOCUMENTOS DESACTIVADA (REDUNDANTE PARA LA DEMO)
 
     // En segundo plano: si la IA responde con algo mejor, se actualiza en silencio
     try {
@@ -1405,39 +1437,45 @@ export const AppProvider = ({ children }) => {
       });
       const data = await response.json();
       if (data.contingencyPlan) {
-        // LIMPIEZA DINÁMICA + FILTRO EJECUTIVO FORZOSO
-        const cleanOptions = (data.contingencyPlan.options || []).map((o: any) => {
-          let title = (o.title || '').replace(/\+\d+€/g, '').replace(/\d+€/g, '').replace(/€/g, '').trim();
-          let desc = (o.description || '').replace(/\d+€/g, '').replace(/€/g, '').trim();
-
-          if (travelProfile === 'premium') {
-            // Reducimos a la tarjeta maestra si es VIP
-            return {
-              ...o,
+        if (travelProfile === 'premium') {
+          const isDiverted = flightData?.status?.toLowerCase().includes('diverted') || flightData?.status?.toLowerCase().includes('desvio');
+          let vipOption;
+          if (isDiverted) {
+            vipOption = {
+              type: 'VIP DESVÍO',
+              title: 'PLAN DE EMERGENCIA: DESVÍO DE VUELO',
+              description: 'Gestión inmediata de Alojamiento VIP, Extracción Terrestre y Expediente de Reclamación.',
+              aiReasoning: 'Protocolo de Desvío Activado: He bloqueado una habitación de hotel y preparado tu transporte alternativo para sacarte de aquí.',
+              voiceScriptFinal: 'Estrategia de emergencia generada para este desvío. He preparado tu hotel, transporte y reclamación legal. Tienes todo listo en tu sección de documentos.',
+              image: 'https://images.unsplash.com/photo-1542282088-fe8426682b8f?auto=format&fit=crop&q=80&w=800',
+              estimatedCost: 0,
+              actionType: 'transport'
+            };
+          } else {
+            vipOption = {
               type: 'RÁPIDO',
               title: 'PROTOCOLO DE RESCATE PREMIUM',
-              description: 'Acceso directo a tu panel personalizado de alternativas. Vuelos, salas VIP y expedientes legales listos para ejecución inmediata.',
-              estimatedCost: 0
+              description: 'Acceso directo a tu panel de mando: Extracción terrestre, salas VIP y asistencia legal completa.',
+              aiReasoning: 'Protocolo Integral Activado: He unificado todas las vías de solución en tu panel de mando personal.',
+              voiceScriptFinal: 'Estrategia de rescate generada. He analizado todas las alternativas y preparado tu expediente de reclamación. Tienes todo listo en tu sección de documentos.',
+              estimatedCost: 0,
+              actionType: 'transport'
             };
           }
-
-          if (!(o.type?.includes('ECONÓMIC') || o.type?.includes('BARAT'))) {
-            return {
-              ...o,
-              title: `🔒 ${title}`,
-              description: desc,
-              actionType: 'locked',
-              estimatedCost: 0
-            };
-          }
-
-          return { ...o, title, description: desc, estimatedCost: 0 };
-        });
-
-        // Aseguramos que solo haya una opción si es VIP
-        const finalOptions = travelProfile === 'premium' ? [cleanOptions[0]] : cleanOptions;
-
-        setApiPlan({ ...data.contingencyPlan, options: finalOptions });
+          setApiPlan({ ...data.contingencyPlan, options: [vipOption] });
+        } else {
+          const cleanOptions = (data.contingencyPlan.options || []).map((o: any) => {
+            let title = (o.title || '').replace(/\+\d+€/g, '').replace(/\d+€/g, '').replace(/€/g, '').trim();
+            let desc = (o.description || '').replace(/\d+€/g, '').replace(/€/g, '').trim();
+            if (travelProfile === 'budget' || travelProfile === 'balanced') {
+              if (o.type?.includes('RÁPID') || o.type?.includes('RAPID') || o.type?.includes('CONFORT')) {
+                return { ...o, title: `🔒 ${title}`, description: desc, actionType: 'locked', estimatedCost: 0 };
+              }
+            }
+            return { ...o, title, description: desc, estimatedCost: 0 };
+          });
+          setApiPlan({ ...data.contingencyPlan, options: cleanOptions });
+        }
       }
     } catch (e) {
       console.error("Error IA (plan local ya visible):", e);
@@ -1547,14 +1585,18 @@ export const AppProvider = ({ children }) => {
             const airport = flightData?.arrival?.airport || 'Destino';
             const isClaim = responseLower.includes('reclamación') || responseLower.includes('defensa');
 
+            const isHotel = responseLower.includes('hotel') || responseLower.includes('alojamiento');
+
             const amount = getEU261Amount(flightData);
             const chatDoc = {
               id: `chat_doc_${Date.now()}`,
-              t: isClaim ? `Reclamación ${flightNum}_${amount}€` : responseLower.includes('plan') ? `PLAN DE VUELOS ALTERNATIVOS ${flightNum}` : 'DOCUMENTO DE ASISTENCIA IA',
-              s: `Generado por IA el ${new Date().toLocaleDateString()} // Ref: ${flightNum}-${airport}`,
-              i: isClaim ? 'demo-boarding-premium' : 'demo-boarding-premium', // Cambiado a boarding para evitar la imagen del hotel
+              t: isClaim ? `Reclamación ${flightNum}_${amount}€` :
+                isHotel ? `CERTIFICADO DE ALOJAMIENTO VIP` :
+                  responseLower.includes('plan') ? `PLAN DE VUELOS ALTERNATIVOS ${flightNum}` : 'DOCUMENTO DE ASISTENCIA IA',
+              s: isHotel ? `Reserva Confirmada // ${airport}` : `Generado por IA el ${new Date().toLocaleDateString()} // Ref: ${flightNum}-${airport}`,
+              i: isHotel ? 'demo-hotel-premium' : 'demo-boarding-premium',
               source: 'ASISTENTE IA',
-              icon: isClaim ? '⚖️' : '📄',
+              icon: isClaim ? '⚖️' : isHotel ? '🛌' : '📄',
               verified: true,
             };
 

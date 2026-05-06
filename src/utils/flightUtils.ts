@@ -1,5 +1,5 @@
 
-export const getEU261Amount = (f: any) => {
+export const getEU261Amount = (f: any): string => {
     if (!f) return '250';
     const origin = f.departure?.iata;
     const dest = f.arrival?.iata;
@@ -13,4 +13,17 @@ export const getEU261Amount = (f: any) => {
     if (longHaul.includes(origin) || longHaul.includes(dest)) return '600';
 
     return '400'; // Por defecto para media distancia
+};
+
+export const getRegulationName = (f: any): string => {
+    if (!f) return 'EU261';
+    const origin = (f.departure?.iata || '').toUpperCase();
+    const dest = (f.arrival?.iata || '').toUpperCase();
+    
+    const euAirports = ['MAD', 'BCN', 'CDG', 'ORY', 'FRA', 'MUC', 'AMS', 'LIS', 'BIO', 'TFN', 'TFS', 'LPA', 'BER', 'WAW', 'FCO', 'MXP', 'VIE', 'BRU', 'CPH', 'ATH', 'DUB'];
+    const usAirports = ['JFK', 'EWR', 'LAX', 'MIA', 'SFO', 'ORD', 'ATL', 'DFW', 'LAS', 'SEA', 'BOS', 'MCO'];
+    
+    if (euAirports.includes(origin) || euAirports.includes(dest)) return 'EU261';
+    if (usAirports.includes(origin) && usAirports.includes(dest)) return 'US DOT';
+    return 'MONTREAL';
 };

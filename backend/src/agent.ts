@@ -86,7 +86,7 @@ export function evaluateImpact(ctx: FlightContext, travelProfile: string = 'bala
     let connectionRisk = false;
     let groundTransportRisk = false;
 
-    const shortHaul = ['MAD', 'BCN', 'CDG', 'ORY', 'LHR', 'LGW', 'FRA', 'MUC', 'AMS', 'LIS', 'BIO', 'TFN', 'TFS', 'LPA', 'BRU', 'ZRH'];
+    const shortHaul = ['MAD', 'BCN', 'CDG', 'ORY', 'LHR', 'LGW', 'FRA', 'MUC', 'AMS', 'LIS', 'BIO', 'TFN', 'TFS', 'LPA', 'BRU', 'ZRH', 'VLC'];
     const longHaul = ['JFK', 'EWR', 'LAX', 'MIA', 'SFO', 'GRU', 'MEX', 'BOG', 'DAR', 'SYD', 'NRT', 'HND', 'HAV', 'EZE', 'PEK', 'DXB'];
 
     let distanceComp = 400; // Por defecto medio alcance
@@ -263,31 +263,31 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
             status: 'delayed',
             delayMinutes,
             airline: 'Iberia Express',
-            departure: { 
-                iata: 'MAD', 
-                delay: delayMinutes, 
-                scheduled: now.toISOString(), 
-                terminal: 'T4', 
-                gate: 'K78' 
+            departure: {
+                iata: 'MAD',
+                delay: delayMinutes,
+                scheduled: now.toISOString(),
+                terminal: 'T4',
+                gate: 'K78'
             },
-            arrival: { 
-                iata: 'LHR', 
-                scheduled: originalArrival.toISOString(), 
-                estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(), 
-                terminal: 'T5', 
-                gate: 'A10' 
+            arrival: {
+                iata: 'LHR',
+                scheduled: originalArrival.toISOString(),
+                estimated: new Date(originalArrival.getTime() + delayMinutes * 60 * 1000).toISOString(),
+                terminal: 'T5',
+                gate: 'A10'
             },
             hotel_booking: {
-                name: 'Sofitel London Heathrow', 
+                name: 'Sofitel London Heathrow',
                 check_in_limit: '23:59',
                 check_in_limit_iso: new Date(now.toDateString() + ' 23:59').toISOString(),
-                address: 'Heathrow Airport, Terminal 5', 
-                cost_per_night: 350, 
+                address: 'Heathrow Airport, Terminal 5',
+                cost_per_night: 350,
                 is_refundable: false,
                 phone: '+44 20 8757 7777'
             },
-            connecting_flight: null, 
-            ground_transport: null, 
+            connecting_flight: null,
+            ground_transport: null,
             isSimulation: true,
         };
     }
@@ -420,13 +420,20 @@ export async function checkFlightStatus(flightId: string): Promise<FlightContext
     }
 
     if (code === 'DESVIO-VLC') {
+        const originalArrival = new Date(now.getTime() + 2 * 60 * 60 * 1000);
         return {
-            flightId, flightNumber: 'DESVIO-VLC', status: 'diverted', delayMinutes: 120,
+            flightId,
+            flightNumber: 'IB3160',
+            status: 'diverted',
+            delayMinutes: 120,
             airline: 'Iberia',
-            departure: { iata: 'MAD', delay: 0, scheduled: now.toISOString() },
-            arrival: { iata: 'VLC', scheduled: now.toISOString(), estimated: now.toISOString() },
-            ground_transport: { type: 'TRAIN', last_departure_iso: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString() },
-            hotel_booking: null, connecting_flight: null, isSimulation: true,
+            departure: { iata: 'LHR', delay: 0, scheduled: now.toISOString(), terminal: 'T5' },
+            arrival: { iata: 'VLC', scheduled: originalArrival.toISOString(), estimated: originalArrival.toISOString(), terminal: '1' },
+            original_arrival: 'MAD',
+            ground_transport: { type: 'TRAIN', last_departure_iso: new Date(now.getTime() + 3 * 60 * 60 * 1000).toISOString() },
+            hotel_booking: null,
+            connecting_flight: null,
+            isSimulation: true,
         };
     }
 
@@ -660,25 +667,25 @@ export async function handleFlightMonitoring(flightId: string, travelProfile: st
             return {
                 options: [
                     {
+                        type: 'CONFORT',
+                        title: 'ALQUILER DE COCHE PREMIUM',
+                        description: `Como miembro VIP, hemos pre-seleccionado modelos SUV y Ejecutivos en el aeropuerto de Valencia para tu traslado a Madrid. El coste será cubierto por tu garantía de protección de viaje.`,
+                        estimatedCost: 150,
+                        actionType: 'transport'
+                    },
+                    {
                         type: 'RÁPIDO',
                         title: 'BILLETE DE AVE AL DESTINO',
-                        description: `He localizado el próximo tren rápido desde Valencia hacia tu destino original. Adquiere el billete y sube tu recibo a DOCS para solicitar el reembolso automático a la aerolínea por ley EU261.`,
+                        description: `He localizado el próximo tren rápido (AVE) desde Valencia Joaquín Sorolla hacia Madrid. Dirígete a la estación; tu plaza está priorizada por incidencia aérea.`,
                         estimatedCost: 45,
                         actionType: 'transport'
                     },
                     {
-                        type: 'CONFORT',
-                        title: 'ASISTENCIA TRANPORTE PRIVADO',
-                        description: `Tienes derecho legal a traslado terrestre. Viaja en Taxi o VTC hasta tu destino final. Guarda la factura en tu Bóveda Segura para que gestione tu reembolso íntegro.`,
-                        estimatedCost: 180,
-                        actionType: 'transport'
-                    },
-                    {
                         type: 'ECONÓMICO',
-                        title: 'HOTEL EN VALENCIA',
-                        description: `Si los enlaces terrestres han cerrado, la aerolínea debe pagar tu cama. Te he localizado estancias premium cerca de Manises. Presenta este expediente en el mostrador para exigir tu habitación.`,
-                        estimatedCost: amount || 250,
-                        actionType: 'hotel'
+                        title: 'TRASLADO ASISTIDO',
+                        description: `La aerolínea tiene la obligación legal de transportarte a tu destino final. Hemos generado el documento de reclamación para que lo presentes en el mostrador de Iberia en Valencia.`,
+                        estimatedCost: 0,
+                        actionType: 'transport'
                     }
                 ],
                 impact
@@ -760,8 +767,8 @@ ESTATUS DEL USUARIO: {travelProfile}
 
 {format_instructions}
 
-IMPORTANT: Return ONLY the raw JSON object. Do not include markdown code blocks.
-Your description for 'RÁPIDO' MUST mention a REAL alternative flight number based on common routes (e.g., if flight is IB123, suggest IB125 or similar) and use the current flight context: {flightNumber}.
+IMPORTANTE: Devuelva ÚNICAMENTE el objeto JSON sin procesar. No incluya bloques de código Markdown.
+Su descripción para 'RÁPIDO' DEBE mencionar un número de vuelo alternativo REAL basado en rutas comunes. (e.g., Si el vuelo es IB123, sugiera IB125 o similar) y utilice el contexto del vuelo actual.: {flightNumber}.
 `,
                 inputVariables: [
                     "flightNumber", "departure", "arrival", "delay", "original_arrival",

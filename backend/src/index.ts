@@ -403,7 +403,8 @@ const getCoords = async (name: string) => {
             'MAD': 'Madrid', 'BCN': 'Barcelona', 'CDG': 'Paris', 'ORY': 'Paris',
             'LHR': 'London', 'LGW': 'London', 'FRA': 'Frankfurt', 'MUC': 'Munich',
             'AMS': 'Amsterdam', 'LIS': 'Lisbon', 'JFK': 'New York', 'MEX': 'Mexico City',
-            'BER': 'Berlin', 'IST': 'Istanbul', 'DXB': 'Dubai', 'WAW': 'Warsaw', 'EZE': 'Buenos Aires'
+            'BER': 'Berlin', 'IST': 'Istanbul', 'DXB': 'Dubai', 'WAW': 'Warsaw', 'EZE': 'Buenos Aires',
+            'VLC': 'Valencia'
         };
         const queryName = iataMap[name.toUpperCase()] || name;
 
@@ -931,7 +932,9 @@ async function getWeatherData(target: string) {
                 'londres': { latitude: 51.50, longitude: -0.12, name: 'Londres' },
                 'london': { latitude: 51.50, longitude: -0.12, name: 'London' },
                 'parís': { latitude: 48.85, longitude: 2.34, name: 'París' },
-                'bora bora': { latitude: -16.50, longitude: -151.74, name: 'Bora Bora' }
+                'bora bora': { latitude: -16.50, longitude: -151.74, name: 'Bora Bora' },
+                'vlc': { latitude: 39.4697, longitude: -0.3774, name: 'Valencia' },
+                'valencia': { latitude: 39.4697, longitude: -0.3774, name: 'Valencia' }
             };
             const lower = mainQuery.toLowerCase();
             if (fallbacks[lower]) {
@@ -1055,10 +1058,27 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         const DARK = rgb(0.1, 0.1, 0.1);
         const GREY = rgb(0.4, 0.4, 0.4);
 
+        const getRegulationInfo = (orig: string, dest: string) => {
+            orig = orig.toUpperCase();
+            dest = dest.toUpperCase();
+            const euAirports = ['MAD', 'BCN', 'CDG', 'ORY', 'FRA', 'MUC', 'AMS', 'LIS', 'BIO', 'TFN', 'TFS', 'LPA', 'BER', 'WAW', 'FCO', 'MXP', 'VIE', 'BRU', 'CPH', 'ATH', 'DUB'];
+            const usAirports = ['JFK', 'EWR', 'LAX', 'MIA', 'SFO', 'ORD', 'ATL', 'DFW', 'LAS', 'SEA', 'BOS', 'MCO'];
+            
+            if (euAirports.includes(orig) || euAirports.includes(dest)) {
+                return { reg: 'EU261/2004', title: 'ORDEN FORMAL DE ASISTENCIA EU261', footer: 'Documento con validez legal EU261/2004' };
+            } else if (usAirports.includes(orig) && usAirports.includes(dest)) {
+                return { reg: 'US DOT', title: 'RECLAMACIÓN OFICIAL US DOT', footer: 'Documento legal bajo regulaciones US DOT' };
+            } else {
+                return { reg: 'CONVENIO DE MONTREAL', title: 'RECLAMACIÓN INTERNACIONAL (MONTREAL)', footer: 'Documento con validez bajo el Convenio de Montreal' };
+            }
+        };
+
+        const regInfo = getRegulationInfo(departureAirport || '', arrivalAirport || '');
+
         // Cabecera
         page.drawRectangle({ x: 0, y: height - 90, width, height: 90, color: DARK });
         page.drawText('TRAVEL-PILOT', { x: 40, y: height - 45, size: 22, font: fontBold, color: GOLD });
-        page.drawText('RECLAMACIÓN OFICIAL EU261/2004', { x: 40, y: height - 65, size: 10, font: fontRegular, color: rgb(0.8, 0.8, 0.8) });
+        page.drawText(regInfo.title, { x: 40, y: height - 65, size: 10, font: fontRegular, color: rgb(0.8, 0.8, 0.8) });
         page.drawText(`Ref: TP-${Date.now().toString().slice(-6)}`, { x: 400, y: height - 55, size: 9, font: fontRegular, color: GOLD });
 
         // Fecha
@@ -1094,55 +1114,204 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         const isNight = currentHour >= 22 || currentHour < 6;
         const delay = delayMinutes || 0;
 
-        let pdfTitle = 'RECLAMACIÓN EU261 / 2004';
+        let pdfTitle = `RECLAMACIÓN ${regInfo.reg}`;
         let bodyLines: string[] = [];
 
         if (sStatus === 'cancelled') {
-            pdfTitle = 'RECLAMACIÓN EU261 — CANCELACIÓN DE VUELO';
-            bodyLines = [
-                `Por la presente exijo, al amparo del Art. 5 y Art. 8 del Reglamento CE 261/2004,`,
-                `la eleccion entre:`,
-                `a) Reembolso integro del billete en 7 dias.`,
-                `b) Transporte alternativo al destino final en las condiciones mas rapidas posibles.`,
-                `Asi mismo exijo asistencia inmediata conforme al Art. 9 durante la espera.`
-            ];
-        } else if (sStatus === 'overbooked' || sStatus === 'denied_boarding') {
-            pdfTitle = 'RECLAMACIÓN EU261 — DENEGACION DE EMBARQUE';
-            bodyLines = [
-                `Por la presente exijo compensacion inmediata conforme al Art. 4 y Art. 7 del`,
-                `Reglamento CE 261/2004 por denegacion involuntaria de embarque, asi como`,
-                `asistencia completa del Art. 9: alojamiento, transporte, manutencion`,
-                `y comunicacion.`
-            ];
-        } else {
-            // CASO RETRASO (Basado en Reglas 1, 2 y 3)
-            if (delay < 180) {
-                pdfTitle = 'SOLICITUD DE ASISTENCIA INMEDIATA';
+            pdfTitle = `RECLAMACIÓN ${regInfo.reg} — CANCELACIÓN DE VUELO`;
+            if (regInfo.reg === 'EU261/2004') {
+                bodyLines = [
+                    "ORDEN FORMAL DE RECLAMACIÓN POR CANCELACIÓN",
+                    "--------------------------------------------------",
+                    `Se ha verificado la CANCELACIÓN del vuelo ${sFlight}`,
+                    `programado para la fecha ${sFlightDate}.`,
+                    "",
+                    "Al amparo de los Artículos 5, 7 y 8 del Reglamento (CE) 261/2004,",
+                    "el pasajero EXIJE de forma inmediata la elección entre:",
+                    "",
+                    "a) Reembolso íntegro del billete en un plazo de 7 días.",
+                    "b) Conducción al destino final en condiciones de transporte comparables.",
+                    "",
+                    "Adicionalmente, se EXIJE la compensación económica de hasta 600€",
+                    "según la distancia del vuelo, y la asistencia completa (Art. 9)",
+                    "mientras persista la demora en el transporte alternativo.",
+                    "",
+                    "La aerolínea tiene la obligación de probar cualquier circunstancia",
+                    "extraordinaria que pretenda eximirle de esta compensación."
+                ];
+            } else if (regInfo.reg === 'US DOT') {
+                bodyLines = [
+                    "OFFICIAL CANCELLATION CLAIM (US DOT)",
+                    "--------------------------------------------------",
+                    `Flight ${sFlight} has been confirmed as CANCELLED.`,
+                    "",
+                    "Under US Department of Transportation (DOT) regulations,",
+                    "passengers are entitled to a full refund for the cancelled flight,",
+                    "including any baggage fees or extras paid, regardless of the reason.",
+                    "",
+                    "THE PASSENGER DEMANDS:",
+                    "1. Prompt refund of the full ticket price.",
+                    "2. Rebooking or assistance for alternative transportation.",
+                    "3. Care and meals during the waiting period.",
+                    "",
+                    "Failure to comply will result in a formal report to the DOT."
+                ];
             } else {
-                pdfTitle = 'RECLAMACION EU261 - COMPENSACION + ASISTENCIA';
+                bodyLines = [
+                    "RECLAMACIÓN INTERNACIONAL (CONVENCIÓN DE MONTREAL)",
+                    "--------------------------------------------------",
+                    `Se ha confirmado la CANCELACIÓN del vuelo internacional ${sFlight}.`,
+                    "",
+                    "Bajo la Convención de Montreal, el transportista es responsable del",
+                    "daño ocasionado por la cancelación y retraso en el transporte aéreo.",
+                    "",
+                    "EL PASAJERO EXIJE:",
+                    "• Indemnización por daños y perjuicios derivados de la cancelación.",
+                    "• Cobertura de todos los gastos de manutención y pernocta generados.",
+                    "",
+                    "Cualquier gasto adicional será reclamado en base a los Derechos",
+                    "Especiales de Giro (DEG) correspondientes."
+                ];
+            }
+        } else if (sStatus === 'overbooked' || sStatus === 'denied_boarding') {
+            pdfTitle = `RECLAMACIÓN ${regInfo.reg} — DENEGACION DE EMBARQUE`;
+            if (regInfo.reg === 'EU261/2004') {
+                bodyLines = [
+                    "ORDEN FORMAL POR DENEGACIÓN DE EMBARQUE",
+                    "--------------------------------------------------",
+                    `Se ha producido una DENEGACIÓN DE EMBARQUE (Overbooking)`,
+                    `involuntaria en el vuelo ${sFlight}.`,
+                    "",
+                    "Conforme al Artículo 4 y Artículo 7 del Reglamento (CE) 261/2004,",
+                    "el pasajero EXIJE de forma inmediata y automática:",
+                    "",
+                    "1. Compensación económica inmediata (entre 250€ y 600€).",
+                    "2. Conducción al destino final o reembolso del billete.",
+                    "3. Asistencia completa: Manutención y, si procede, alojamiento.",
+                    "",
+                    "La denegación de embarque sin compensación inmediata es una",
+                    "infracción grave que será reportada de inmediato a AESA."
+                ];
+            } else if (regInfo.reg === 'US DOT') {
+                bodyLines = [
+                    "OFFICIAL OVERBOOKING CLAIM (US DOT)",
+                    "--------------------------------------------------",
+                    `Involuntary DENIED BOARDING has occurred for flight ${sFlight}.`,
+                    "",
+                    "Under 14 CFR Part 250, passengers denied boarding involuntarily",
+                    "due to overbooking are entitled to 'Denied Boarding Compensation'.",
+                    "",
+                    "THE PASSENGER DEMANDS:",
+                    "• Immediate cash payment (up to $1,550 depending on delay).",
+                    "• Full assistance for rebooking on the next available flight.",
+                    "",
+                    "The airline must provide a written statement of rights immediately."
+                ];
+            } else {
+                bodyLines = [
+                    "RECLAMACIÓN POR DENEGACIÓN DE EMBARQUE (MONTREAL)",
+                    "--------------------------------------------------",
+                    `Se ha verificado la denegación de embarque en el vuelo ${sFlight}.`,
+                    "",
+                    "Se exige la compensación inmediata por el incumplimiento del",
+                    "contrato de transporte y los daños ocasionados por la pérdida del",
+                    "transporte original, bajo las normas internacionales vigentes."
+                ];
+            }
+        } else {
+            // CASO RETRASO
+            if (delay < 180) {
+                pdfTitle = `CERTIFICADO FORMAL DE ASISTENCIA ${regInfo.reg}`;
+            } else {
+                pdfTitle = `RECLAMACIÓN ${regInfo.reg} — INDEMNIZACIÓN + ASISTENCIA`;
             }
 
-            bodyLines.push(`Por la presente SOLICITO formalmente a la aerolinea ${sAirline} la asistencia`);
-            bodyLines.push(`y compensacion proporcional a la incidencia en el vuelo ${sFlight} (${sDep} -> ${sArr}).`);
-            bodyLines.push(``);
-
-            if (delay >= 120) {
-                bodyLines.push(`Asi mismo, exijo el derecho a asistencia inmediata (Art. 9) que incluye`);
-                bodyLines.push(`manutencion y comunicacion (comida, bebida y dos llamadas telefonicas`);
-                bodyLines.push(`o emails) durante el tiempo de espera.`);
-                bodyLines.push(``);
-            }
-
-            if (delay >= 180) {
-                bodyLines.push(`Dado que el retraso supera las 3 horas, exijo compensacion economica de entre`);
-                bodyLines.push(`250 EUR y 600 EUR segun distancia del vuelo, conforme al Art. 7.`);
-                bodyLines.push(``);
-            }
-
-            if (delay >= 180 && isNight) {
-                bodyLines.push(`Dado que el retraso implica pernocta, exijo alojamiento en hotel y transporte`);
-                bodyLines.push(`entre aeropuerto y hotel (Art. 9.1.b), con efecto inmediato esta misma noche.`);
-                bodyLines.push(``);
+            if (regInfo.reg === 'EU261/2004') {
+                if (delay < 180) {
+                    bodyLines = [
+                        "FUNDAMENTO LEGAL (Reglamento CE 261/2004)",
+                        "--------------------------------------------------",
+                        "Conforme al Reglamento (CE) nº 261/2004 del Parlamento Europeo y del Consejo,",
+                        "se establece el derecho a atención y asistencia para los pasajeros en caso de",
+                        "incidencias en el vuelo. Los sistemas de Travel-Pilot han confirmado un retraso",
+                        `de ${delay} minutos en el vuelo ${sFlight}, lo que activa el protocolo de asistencia.`,
+                        "",
+                        "EL PASAJERO ABAJO FIRMANTE EXIJE DE FORMA INMEDIATA:",
+                        "1. Vales de comida y refrescos suficientes en función del tiempo de espera.",
+                        "2. Dos llamadas telefónicas, mensajes de télex o de fax o correos electrónicos.",
+                        "",
+                        "La denegación de esta asistencia básica por parte de la aerolínea será notificada",
+                        "a la autoridad aeronáutica competente para su posterior sanción e indemnización.",
+                        "Por favor, procedan a entregar los vales correspondientes de forma proactiva.",
+                        "",
+                        "Este documento tiene validez legal bajo el Reglamento (CE) 261/2004."
+                    ];
+                } else {
+                    bodyLines = [
+                        "RECLAMACIÓN FORMAL DE INDEMNIZACIÓN Y ASISTENCIA",
+                        "--------------------------------------------------",
+                        `Se ha verificado un retraso de ${delay} minutos en el vuelo ${sFlight}.`,
+                        "",
+                        "Bajo el Reglamento (CE) 261/2004, el pasajero tiene derecho a:",
+                        "• Compensación económica inmediata (Art. 7).",
+                        "• Asistencia en el aeropuerto (comida, bebida y comunicaciones).",
+                        "• Reembolso o transporte alternativo si procede.",
+                        "",
+                        "Se exige el pago de la indemnización correspondiente de forma inmediata."
+                    ];
+                }
+            } else if (regInfo.reg === 'US DOT') {
+                bodyLines = [
+                    "OFFICIAL MANDATORY ASSISTANCE ORDER (US DOT)",
+                    "--------------------------------------------------",
+                    `A flight disruption has been identified for flight ${sFlight}`,
+                    `with a delay of ${delay} minutes.`,
+                    "",
+                    "Under US DOT consumer protection rules, this passenger is eligible",
+                    "for immediate care and assistance by the airline.",
+                    "",
+                    "MANDATORY REQUIREMENTS:",
+                    "• Meal Vouchers: Adequate food and beverages for the wait.",
+                    "• Lodging: Overnight accommodation if the delay persists.",
+                    "• Communication tools as needed.",
+                    "",
+                    "Failure to provide these services will be reported to the US DOT."
+                ];
+            } else {
+                if (delay >= 180) {
+                    pdfTitle = `RECLAMACIÓN FORMAL — CONVENIO DE MONTREAL`;
+                    bodyLines = [
+                        "RECLAMACIÓN FORMAL BAJO EL CONVENIO DE MONTREAL",
+                        "--------------------------------------------------",
+                        `Se ha verificado un retraso de ${delay} minutos en el vuelo ${sFlight}.`,
+                        "",
+                        "Conforme al Convenio de Montreal (1999), el transportista es responsable",
+                        "del daño ocasionado por retraso en el transporte aéreo de pasajeros.",
+                        "",
+                        "DERECHOS ACTIVADOS:",
+                        "• Reembolso de gastos de manutención y pernocta incurridos.",
+                        "• Indemnización por daños y perjuicios derivados del retraso.",
+                        "• Límites de responsabilidad hasta 5.346 DEG (Derechos Especiales de Giro).",
+                        "",
+                        "Exijo el reembolso de todos los gastos derivados de esta incidencia."
+                    ];
+                } else {
+                    bodyLines = [
+                        "ORDEN INTERNACIONAL DE ASISTENCIA (MONTREAL)",
+                        "--------------------------------------------------",
+                        `Se ha verificado un retraso de ${delay} minutos en el vuelo ${sFlight}.`,
+                        "",
+                        "Bajo el Convenio de Montreal, la aerolínea es responsable del bienestar",
+                        "del pasajero durante interrupciones del servicio.",
+                        "",
+                        "DERECHOS ACTIVADOS:",
+                        "• Gastos de manutención esenciales.",
+                        "• Medios de comunicación.",
+                        "• Alojamiento y transporte si se requiere pernocta.",
+                        "",
+                        "Cualquier gasto no cubierto será reclamado legalmente."
+                    ];
+                }
             }
         }
 
@@ -1192,24 +1361,42 @@ fastify.post('/api/generateClaim', async (request, reply) => {
             page.drawText(`Localizador:   ${sBookingRef}`, { x: 40, y, size: 10, font: fontBold, color: DARK });
             y -= 17;
         }
-        page.drawText(`Estado:        ${sStatus.toUpperCase()}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
+        const getStatusTranslation = (status: string) => {
+            const lower = status.toLowerCase();
+            if (lower === 'delayed') return 'RETRASADO';
+            if (lower === 'cancelled') return 'CANCELADO';
+            if (lower === 'diverted') return 'DESVIADO';
+            if (lower === 'scheduled') return 'PROGRAMADO';
+            if (lower === 'active') return 'EN VUELO';
+            if (lower === 'landed') return 'ATERRIZADO';
+            return status.toUpperCase();
+        };
+
+        page.drawText(`Estado:        ${getStatusTranslation(sStatus)}`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
         y -= 17;
-        if (sStatus === 'delayed') {
+        if (sStatus.toLowerCase() === 'delayed') {
             page.drawText(`Retraso:       ${delay} minutos`, { x: 40, y, size: 10, font: fontRegular, color: BLACK });
             y -= 17;
         }
 
-        const getEU261AmountStr = (orig: string, dest: string, delay: number, status: string) => {
-            if (status !== 'cancelled' && status !== 'overbooked' && status !== 'denied_boarding' && delay < 180) return '0 EUR';
-            const shortHaul = ['MAD', 'BCN', 'CDG', 'ORY', 'LHR', 'LGW', 'FRA', 'MUC', 'AMS', 'LIS', 'BIO', 'TFN', 'TFS', 'LPA'];
-            if (shortHaul.includes(orig) && shortHaul.includes(dest)) return '250 EUR';
-            const longHaul = ['JFK', 'EWR', 'LAX', 'MIA', 'SFO', 'GRU', 'MEX', 'BOG', 'DAR', 'SYE', 'NRT', 'HND', 'HAV', 'EZE'];
-            if (longHaul.includes(orig) || longHaul.includes(dest)) return '600 EUR';
-            return '400 EUR';
+        const getCompensationAmountStr = (orig: string, dest: string, delay: number, status: string, reg: string) => {
+            if (reg === 'EU261/2004') {
+                if (status !== 'cancelled' && status !== 'overbooked' && status !== 'denied_boarding' && delay < 180) return '0 EUR';
+                const shortHaul = ['MAD', 'BCN', 'CDG', 'ORY', 'LHR', 'LGW', 'FRA', 'MUC', 'AMS', 'LIS', 'BIO', 'TFN', 'TFS', 'LPA'];
+                if (shortHaul.includes(orig) && shortHaul.includes(dest)) return '250 EUR';
+                const longHaul = ['JFK', 'EWR', 'LAX', 'MIA', 'SFO', 'GRU', 'MEX', 'BOG', 'DAR', 'SYE', 'NRT', 'HND', 'HAV', 'EZE'];
+                if (longHaul.includes(orig) || longHaul.includes(dest)) return '600 EUR';
+                return '400 EUR';
+            } else if (reg === 'US DOT') {
+                if (status === 'overbooked' || status === 'denied_boarding') return 'Hasta 1,550 USD';
+                return 'Reembolso / Gastos';
+            } else {
+                return 'Daños (DEG)';
+            }
         };
 
-        const amount = getEU261AmountStr(departureAirport || '', arrivalAirport || '', delay, sStatus);
-        page.drawText(`Estimacion:    ${amount} (Ley 261/2004)`, { x: 40, y, size: 10, font: fontBold, color: DARK });
+        const amount = getCompensationAmountStr(departureAirport || '', arrivalAirport || '', delay, sStatus, regInfo.reg);
+        page.drawText(`Estimacion:    ${amount} (${regInfo.reg})`, { x: 40, y, size: 10, font: fontBold, color: DARK });
 
         // Cuerpo legal dinámico
         y -= 50;
@@ -1226,7 +1413,8 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         y -= 20;
         page.drawText(`Exijo resolucion en el plazo de 14 dias habiles. Me reservo el derecho a acudir`, { x: 40, y, size: 9.5, font: fontRegular, color: DARK });
         y -= 15;
-        page.drawText(`a la autoridad aeronautica competente (AESA) en caso de silencio o negativa.`, { x: 40, y, size: 9.5, font: fontRegular, color: DARK });
+        const authority = regInfo.reg === 'EU261/2004' ? 'a la autoridad aeronautica competente (AESA)' : 'a los organismos de consumo y aviacion civil competentes';
+        page.drawText(`${authority} en caso de silencio o negativa.`, { x: 40, y, size: 9.5, font: fontRegular, color: DARK });
 
         // Firma
         y -= 30;
@@ -1258,7 +1446,7 @@ fastify.post('/api/generateClaim', async (request, reply) => {
 
         // Pie de página extendido con Disclaimer Legal
         page.drawRectangle({ x: 0, y: 0, width, height: 65, color: DARK });
-        page.drawText('Generado por Travel-Pilot AI · Documento con validez legal EU261/2004', { x: 40, y: 45, size: 7.5, font: fontBold, color: GOLD });
+        page.drawText(`Generado por Travel-Pilot AI · ${regInfo.footer}`, { x: 40, y: 45, size: 7.5, font: fontBold, color: GOLD });
 
         const disclaimerLines = [
             "Este documento ha sido generado automáticamente por Travel-Pilot como herramienta de asistencia.",
@@ -1379,10 +1567,31 @@ fastify.post('/api/generateAssistanceCertificate', async (request: any, reply) =
         const BLACK = rgb(0, 0, 0);
         const GREY = rgb(0.4, 0.4, 0.4);
 
+        const getRegulationInfo = (orig: string, dest: string) => {
+            orig = orig.toUpperCase();
+            dest = dest.toUpperCase();
+            const euAirports = ['MAD', 'BCN', 'CDG', 'ORY', 'FRA', 'MUC', 'AMS', 'LIS', 'BIO', 'TFN', 'TFS', 'LPA', 'BER', 'WAW', 'FCO', 'MXP', 'VIE', 'BRU', 'CPH', 'ATH', 'DUB'];
+            const usAirports = ['JFK', 'EWR', 'LAX', 'MIA', 'SFO', 'ORD', 'ATL', 'DFW', 'LAS', 'SEA', 'BOS', 'MCO'];
+            
+            if (euAirports.includes(orig) || euAirports.includes(dest)) {
+                return { reg: 'EU261/2004', title: 'CERTIFICADO FORMAL DE ASISTENCIA EU261', footer: 'Este documento tiene validez legal bajo el Reglamento CE 261/2004.', fund: 'FUNDAMENTO LEGAL (Reglamento CE 261/2004)' };
+            } else if (usAirports.includes(orig) && usAirports.includes(dest)) {
+                return { reg: 'US DOT', title: 'CERTIFICADO FORMAL DE ASISTENCIA US DOT', footer: 'Este documento tiene validez bajo las regulaciones US DOT.', fund: 'FUNDAMENTO LEGAL (US DOT)' };
+            } else {
+                return { reg: 'Convención de Montreal', title: 'CERTIFICADO ASISTENCIA (MONTREAL)', footer: 'Este documento tiene validez legal bajo la Convención de Montreal.', fund: 'FUNDAMENTO LEGAL (Convención de Montreal)' };
+            }
+        };
+
+        const isEmergency = request.body.type === 'EMERGENCY';
+        const regInfo = getRegulationInfo(departureAirport || '', arrivalAirport || '');
+        if (isEmergency) {
+            regInfo.title = regInfo.reg === 'EU261/2004' ? 'CERTIFICADO DE EMERGENCIA Y REUBICACIÓN' : 'EMERGENCY RELOCATION CERTIFICATE';
+        }
+
         // Cabecera Premium
         page.drawRectangle({ x: 0, y: height - 120, width, height: 120, color: DARK });
         page.drawText('TRAVEL-PILOT', { x: 40, y: height - 40, size: 22, font: fontBold, color: GOLD });
-        page.drawText('CERTIFICADO FORMAL DE ASISTENCIA EU261', { x: 40, y: height - 60, size: 10, font: fontRegular, color: rgb(0.8,0.8,0.8) });
+        page.drawText(regInfo.title, { x: 40, y: height - 60, size: 10, font: fontRegular, color: rgb(0.8,0.8,0.8) });
         page.drawText(`Ref: ASIST-${Date.now().toString().slice(-6)}`, { x: 400, y: height - 50, size: 9, font: fontRegular, color: GOLD });
 
         let y = height - 160;
@@ -1399,35 +1608,73 @@ fastify.post('/api/generateAssistanceCertificate', async (request: any, reply) =
         };
 
         drawH('DATOS DEL RECLAMANTE');
-        drawL('NOMBRE', '_____________________________________________________');
-        drawL('PASAPORTE', '_____________________________________________________');
+        drawL('NOMBRE', passengerName || '__________________________________');
+        drawL('PASAPORTE', '__________________________________');
         y -= 20;
 
-        drawH('DETALLES DEL VUELO AFECTADO');
+        drawH('DETALLES DE LA INCIDENCIA');
         drawL('Vuelo', flightNumber);
         drawL('Aerolínea', airline);
         drawL('Trayecto', `${departureAirport} > ${arrivalAirport}`);
         drawL('Fecha', flightDate);
-        drawL('Localizador', bookingRef);
-        drawL('Retraso', `${delayMinutes} minutos`);
+        drawL('Estado', isEmergency ? 'DESVIADO / CANCELADO' : 'RETRASADO');
         y -= 30;
 
-        drawH('FUNDAMENTO LEGAL (Reglamento CE 261/2004)');
-        const bodyText = [
-            "Conforme al Reglamento (CE) nº 261/2004 del Parlamento Europeo y del Consejo,",
-            "se establece el derecho a atención y asistencia para los pasajeros en caso de",
-            `incidencias en el vuelo. Los sistemas de Travel-Pilot han confirmado un retraso`,
-            `de ${delayMinutes} minutos en el vuelo ${flightNumber}, lo que activa el protocolo de asistencia.`,
-            "",
-            "EL PASAJERO ABAJO FIRMANTE EXIJE DE FORMA INMEDIATA:",
-            "1. Vales de comida y refrescos suficientes en función del tiempo de espera.",
-            "2. Dos llamadas telefónicas, mensajes de télex o de fax o correos electrónicos.",
-            "",
-            "La denegación de esta asistencia básica por parte de la aerolínea será notificada",
-            "a la autoridad aeronáutica competente para su posterior sanción e indemnización.",
-            "",
-            "Por favor, procedan a entregar los vales correspondientes de forma proactiva."
-        ];
+        drawH(regInfo.fund);
+        let bodyText: string[] = [];
+
+        if (isEmergency) {
+            bodyText = [
+                "ORDEN DE ASISTENCIA POR DESVÍO O CANCELACIÓN CRÍTICA",
+                "--------------------------------------------------",
+                `El vuelo ${flightNumber} ha sufrido una interrupción mayor (Desvío/Cancelación).`,
+                `El pasajero se encuentra fuera de su destino original sin transporte.`,
+                "",
+                "Bajo el amparo legal del Reglamento (CE) nº 261/2004 (o equivalente),",
+                "la aerolínea tiene la OBLIGACIÓN INMEDIATA de proporcionar:",
+                "",
+                "1. ALOJAMIENTO EN HOTEL: Para todas las noches que sean necesarias.",
+                "2. TRANSPORTE: Traslados aeropuerto-hotel y transporte al destino final.",
+                "3. MANUTENCIÓN: Comida y bebida durante toda la estancia.",
+                "",
+                "Este certificado sirve como notificación formal de la urgencia del caso.",
+                "La denegación de estos servicios es una infracción legal grave.",
+                "",
+                "Se solicita al personal de tierra o al establecimiento de destino",
+                "proceder con el registro del pasajero bajo cargo a la aerolínea."
+            ];
+        } else if (regInfo.reg === 'EU261/2004') {
+            bodyText = [
+                "ORDEN FORMAL DE ASISTENCIA OBLIGATORIA",
+                "--------------------------------------------------",
+                `Se ha detectado una interrupción operativa en el vuelo ${flightNumber}`,
+                `con un retraso confirmado de ${delayMinutes} minutos.`,
+                "",
+                "Bajo el amparo legal del Reglamento (CE) nº 261/2004, este documento",
+                "sirve como notificación formal de que el pasajero es ELEGIBLE para",
+                "asistencia inmediata y obligatoria por parte de la aerolínea.",
+                "",
+                "REQUERIMIENTOS EXIGIBLES DE FORMA INMEDIATA:",
+                "• Manutención: Comida y refrescos suficientes según la espera.",
+                "• Comunicación: Derecho a dos llamadas o correos electrónicos.",
+                "• Alojamiento: Si el vuelo requiere pernocta (incluyendo traslados).",
+                "",
+                "Esta asistencia es un DERECHO IRRENUNCIABLE. La denegación será registrada",
+                "por Travel-Pilot y reportada a las autoridades aeronáuticas (AESA)."
+            ];
+        } else {
+            bodyText = [
+                "ORDEN INTERNACIONAL DE ASISTENCIA (MONTREAL/DOT)",
+                "--------------------------------------------------",
+                `Incidencia confirmada en el vuelo ${flightNumber}.`,
+                `Retraso detectado: ${delayMinutes} minutos.`,
+                "",
+                "Bajo las leyes de protección al consumidor aéreo, el pasajero",
+                "tiene derecho a asistencia básica, comida y alojamiento si procede.",
+                "",
+                "Se exige la cobertura de gastos esenciales de forma inmediata."
+            ];
+        }
 
         for (const line of bodyText) {
             page.drawText(line, { x: 40, y, size: 10, font: line.includes('EXIJE') ? fontBold : fontRegular, color: DARK });
@@ -1444,7 +1691,7 @@ fastify.post('/api/generateAssistanceCertificate', async (request: any, reply) =
         
         y -= 60;
         page.drawRectangle({ x: 40, y: y - 10, width: 515, height: 40, color: rgb(0.95, 0.95, 0.95) });
-        page.drawText('Este documento tiene validez legal bajo el Reglamento CE 261/2004.', { x: 50, y: y + 10, size: 8, font: fontRegular, color: DARK });
+        page.drawText(regInfo.footer, { x: 50, y: y + 10, size: 8, font: fontRegular, color: DARK });
         page.drawText('Presentado digitalmente vía Travel-Pilot IA.', { x: 50, y: y, size: 8, font: fontRegular, color: DARK });
 
         const pdfBytes = await pdfDoc.save();

@@ -11,16 +11,19 @@ import PrivateVaultScreen from './screens/PrivateVaultScreen';
 import * as Notifications from 'expo-notifications';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import { getRegulationName } from './utils/flightUtils';
 
 // Importar imágenes directamente para que siempre estén disponibles
 const DOC_IMAGES: Record<string, any> = {
     'demo-passport-premium': require('../assets/pasaporte_puro.jpg'),
     'demo-boarding-premium': require('../assets/tarjeta_embarque_pura.jpg'),
-    'demo-hotel-premium': require('../assets/reserva_hotel_pura.jpg'),
+    'demo-hotel': require('../assets/reserva_hotel_pura.jpg'),
+    'demo-hotel-premium': require('../assets/certificado_alojamiento_vip.jpg'),
     'ticket-rapido': require('../assets/ticket_rapido_vip.jpg'),
     'ticket-rapido-estandar': require('../assets/ticket_rapido_vip.jpg'),
     'ticket-equilibrado': require('../assets/ticket_equilibrado_confort.jpg'),
     'ticket-economico': require('../assets/ticket_economico.jpg'),
+    'ticket-desvio': require('../assets/protocolo_desvio.jpg'),
 };
 
 // Diccionario de teléfonos de atención al cliente por aerolínea
@@ -126,98 +129,45 @@ export default function GlobalOverlays() {
     const [showAllOptions, setShowAllOptions] = useState(false);
     const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
     const [vipInitialDetail, setVipInitialDetail] = useState<string | null>(null);
+    const [isSearchingHotel, setIsSearchingHotel] = useState(false);
     const logScrollRef = useRef<any>(null);
 
-    // Resetear el trigger cuando cambia el vuelo buscado O el ID de búsqueda (Actualizar)
+    // Resetear el disparador automático cuando cambia el vuelo
     React.useEffect(() => {
         setHasAutoTriggered(false);
-    }, [flightData?.flightNumber, lastSearchId]);
+    }, [flightData?.flightNumber, flightData?.status, lastSearchId]);
 
     React.useEffect(() => {
-        // SEGURIDAD: No disparar si los datos vienen del caché de AppContext (Evitar salto al login)
-        // Solo disparamos si el usuario está activamente en la app y NO acabamos de arrancar
-        if (!flightData || hasAutoTriggered || showSOS || showVIPAlternatives || showCancellation) return;
+        if (!flightData || showSOS || showVIPAlternatives || showCancellation) return;
+        if (hasAutoTriggered) return;
 
-        // Búsqueda robusta de estado cancelado
         const status = flightData.status?.toLowerCase() || '';
         const isCancelled = status.includes('cancel');
         const isDiverted = status.includes('diverted') || status.includes('desvio');
-        const isDelayed = (flightData.departure?.delay || 0) >= 60;
+        const isDelayed = (flightData.departure?.delay || 0) >= 60 || (flightData.delayMinutes || 0) >= 60;
 
-        // IMPORTANTE: Si flightData tiene la marca 'fromCache', no auto-disparamos el modal
+        // IMPORTANTE: Si flightData tiene la marca 'isFromCache', no auto-disparamos el modal
         if (flightData.isFromCache) return;
 
         if (isCancelled || isDiverted || isDelayed) {
-            const isMajorIssue = isCancelled || isDiverted || (flightData.departure?.delay || 0) >= 120;
-
             if (isCancelled) {
-                setShowSOS(false);
-                setShowVIPAlternatives(false);
                 setShowCancellation(true);
-            } else if (travelProfile !== 'premium' && !isMajorIssue) {
-                // BYPASS MODO ESTÁNDAR PARA RETRASOS LEVES:
-                const mockAssistancePlan = {
-                    type: 'ECONÓMICO',
-                    title: 'SOLICITUD DE ASISTENCIA EU261',
-                    description: 'Documento legal para reclamar vales de manutención y asistencia en tierra.',
-                    actionType: 'assistance',
-                    voiceScriptFinal: 'Retraso de sesenta minutos detectado. He generado tu certificado legal de asistencia. Enséñalo en el mostrador para tus vales de comida. Tienes el PDF listo en tu sección de documentos.'
-                };
-                setSelectedPlan(mockAssistancePlan);
-                setShowBrowser(true); // Abrimos directamente los logs de procesado
-                speak("Retraso detectado. Generando certificado oficial de asistencia. Un momento.");
-
-                // GENERACIÓN REAL DE PDF VÍA BACKEND
-                (async () => {
-                    try {
-                        const flightNum = flightData?.flightNumber || 'TP404';
-                        const response = await fetch(`${BACKEND_URL}/api/generateAssistanceCertificate`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                passengerName: userFullName || user?.displayName || 'Pasajero Travel-Pilot',
-                                flightNumber: flightNum,
-                                airline: flightData?.airline || 'Aerolínea',
-                                departureAirport: flightData?.departure?.iata || 'AEP',
-                                arrivalAirport: flightData?.arrival?.iata || 'DEST',
-                                delayMinutes: (flightData?.departure?.delay || 0),
-                                flightDate: new Date().toLocaleDateString(),
-                                bookingRef: flightData?.bookingRef || 'TP-REF-DEMO',
-                                userEmail: user?.email || 'viajero@travelpilot.com'
-                            })
-                        });
-                        const data = await response.json();
-                        if (data.success && data.pdfBase64) {
-                            const fileUri = `${FileSystem.documentDirectory}Asistencia_${flightNum}.pdf`;
-                            await FileSystem.writeAsStringAsync(fileUri, data.pdfBase64, { encoding: FileSystem.EncodingType.Base64 });
-
-                            setExtraDocs((prev: any[]) => [
-                                {
-                                    id: `asist_pdf_${Date.now()}`,
-                                    t: 'CERTIFICADO DE ASISTENCIA EU261',
-                                    s: `Documento PDF // Vuelo ${flightNum}`,
-                                    i: fileUri,
-                                    source: 'SYSTEM',
-                                    icon: '⚖️',
-                                    verified: true,
-                                    isPdf: true
-                                },
-                                ...prev
-                            ]);
-                            setHasNewDoc(true);
-                        }
-                    } catch (e) {
-                        console.error("Error generando PDF asistencia:", e);
-                    }
-                })();
+            } else if (isDiverted) {
+                // Los desvíos SIEMPRE muestran el plan completo (Rescue), incluso en estándar
+                showPlan();
+            } else if (travelProfile !== 'premium' && (flightData.departure?.delay || 0) < 120) {
+                // Solo para retrasos leves en modo estándar abrimos logs directos
+                const mockPlan = { type: 'ECONÓMICO', title: 'Asistencia IA', description: 'Preparando documentación de asistencia legal.', actionType: 'assistance' };
+                setSelectedPlan(mockPlan);
+                setShowBrowser(true);
             } else {
+                // Modo VIP o Retraso Grave
                 showPlan();
             }
             setHasAutoTriggered(true);
         }
-    }, [flightData, hasAutoTriggered, showSOS, showVIPAlternatives, showCancellation, travelProfile]);
+    }, [flightData, hasAutoTriggered, showSOS, showVIPAlternatives, showCancellation, travelProfile, lastSearchId, flightData?.status]);
 
-    // DICTADO INICIAL DEL PLAN DE CRISIS DINÁMICO
     React.useEffect(() => {
         if (showSOS && apiPlan && !isGenerating && apiPlan.voiceScriptInitial) {
             speak(apiPlan.voiceScriptInitial, selectedPlan ? undefined : 'es-ES-standard');
@@ -454,12 +404,7 @@ export default function GlobalOverlays() {
                                 </View>
                             ) : (
                                 <>
-                                    {apiPlan?.impact && (
-                                        <View style={{ backgroundColor: '#111', width: '100%', padding: 12, borderRadius: 10, marginBottom: 15, borderWidth: 1, borderColor: apiPlan.impact.potentialLoss > 0 ? '#FF9500' : '#4CD964' }}>
-                                            <Text style={{ color: '#AF52DE', fontSize: 12, fontWeight: 'bold' }}>✨ SUGERENCIA DEL ASISTENTE:</Text>
-                                            <Text style={{ color: '#FF9500', fontSize: 11, marginTop: 4 }}>• {apiPlan.impact.hotelAlert}</Text>
-                                        </View>
-                                    )}
+
                                     <View style={{ width: '100%', marginTop: 10 }}>
                                         {(() => {
                                             const options = apiPlan?.options || [];
@@ -532,7 +477,8 @@ export default function GlobalOverlays() {
                                                             marginBottom: 12,
                                                             shadowColor: isMain ? borderColor : 'transparent',
                                                             shadowOpacity: isMain ? 0.3 : 0,
-                                                            shadowRadius: 10
+                                                            shadowRadius: 10,
+                                                            overflow: 'hidden'
                                                         }}
                                                         onPress={() => {
                                                             if (opt.actionType === 'locked') {
@@ -541,12 +487,12 @@ export default function GlobalOverlays() {
                                                                 setPendingVIPRedirect(true);
                                                                 return;
                                                             }
-                                                            const isRápido = opt.type?.includes('RÁPID') || opt.type?.includes('RAPID');
+                                                            const isRápido = opt.type?.includes('RÁPID') || opt.type?.includes('RAPID') || opt.type?.includes('VIP');
                                                             const isEco = opt.type?.includes('ECONÓMIC') || opt.type?.includes('BARAT');
                                                             const optType = (isRápido && travelProfile === 'premium') ? 'VIP' : isRápido ? 'RÁPIDO' : isEco ? 'ECONÓMICO' : 'EQUILIBRADO';
                                                             const msg = opt.voiceScriptFinal || (travelProfile === 'premium'
                                                                 ? `De acuerdo. Me ocupo de todo personalmente. Buscando soluciones en tu destino.`
-                                                                : `Entendido. Estoy preparando toda la documentación legal para tu reclamación ahora mismo.`);
+                                                                : `Entendido. Estoy preparando toda la documentación legal para tu reclamación ahora mismo. Puedes revisar en la seccion de documentos`);
                                                             speak(msg);
 
                                                             setSelectedRescuePlan(opt.title); // Capturamos la elección
@@ -555,6 +501,12 @@ export default function GlobalOverlays() {
                                                             setShowBrowser(true);
                                                         }}
                                                     >
+                                                        {opt.image && (
+                                                            <>
+                                                                <Image source={{ uri: opt.image }} style={{ position: 'absolute', width: '150%', height: '150%', opacity: 0.3, resizeMode: 'cover' }} />
+                                                                <View style={{ position: 'absolute', width: '150%', height: '150%', backgroundColor: 'rgba(0,0,0,0.5)' }} />
+                                                            </>
+                                                        )}
                                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                                                             <Text style={{ fontSize: isMain ? 22 : 18, marginRight: 8 }}>{icon}</Text>
                                                             <View>
@@ -607,7 +559,9 @@ export default function GlobalOverlays() {
                                                         <Text style={{ color: '#EEE', fontSize: 13, lineHeight: 21, fontWeight: '400' }}>
                                                             {flightData?.status?.toLowerCase().includes('cancel')
                                                                 ? `He verificado la cancelación del vuelo ${flightData?.flightNumber}. `
-                                                                : `Confirmados ${flightData?.departure?.delay || 0} min de retraso en tu vuelo. `
+                                                                : (flightData?.status === 'diverted' || (flightData?.status || '').toLowerCase().includes('desvio'))
+                                                                    ? `Confirmado desvío de ruta del vuelo ${flightData?.flightNumber}. `
+                                                                    : `Confirmados ${flightData?.departure?.delay || 0} min de retraso en tu vuelo. `
                                                             }
                                                             Basado en tu perfil de <Text style={{ color: '#D4AF37', fontWeight: '900' }}>{travelProfile === 'premium' ? 'ÉLITE VIP' : travelProfile === 'fast' ? 'TIEMPO PRIORITARIO' : 'CONTROL DE GASTOS'}</Text>, he diseñado esta estrategia maestra:
                                                         </Text>
@@ -664,6 +618,7 @@ export default function GlobalOverlays() {
                             <ScrollView
                                 ref={logScrollRef}
                                 style={{ flex: 1 }}
+                                contentContainerStyle={{ paddingBottom: 40 }}
                                 onContentSizeChange={() => logScrollRef.current?.scrollToEnd({ animated: true })}
                             >
                                 <Text style={{ color: '#4CD964', fontSize: 13, lineHeight: 22, fontWeight: '500', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' }}>
@@ -710,7 +665,7 @@ export default function GlobalOverlays() {
                                                     {((flightData?.delayMinutes || flightData?.departure?.delay || 0) < 120) && !flightData?.status?.includes('cancel') ? 'PROTOCOLO ACTIVADO' : 'ESTRATEGIA COMPLETADA'}
                                                 </Text>
                                                 <Text style={{ color: '#4CD964', marginTop: 5, fontSize: 13, textAlign: 'center', fontWeight: '500' }}>
-                                                    {isExtracting ? 'He terminado de sincronizar tu cuenta. He localizado el documento y lo he guardado en tu Bóveda.' :
+                                                    {isExtracting ? 'He terminado de sincronizar tu cuenta. He localizado el documento y lo he guardado en tu Sección de Documentos.' :
                                                         travelProfile === 'premium' ?
                                                             (((flightData?.delayMinutes || flightData?.departure?.delay || 0) < 120) && !flightData?.status?.includes('cancel')
                                                                 ? 'Protocolo de cortesía VIP activado. Tu acceso a la Sala VIP y los servicios de asistencia están listos en la sección de documentos.'
@@ -751,40 +706,36 @@ export default function GlobalOverlays() {
                                     const isEco = !isPremium && (selectedPlan.type?.includes('ECONÓMIC') || selectedPlan.type?.includes('BARAT'));
                                     const isHotel = selectedPlan.actionType === 'hotel' || selectedPlan.type?.includes('CONFORT');
 
-                                    const imgRescate = isHotel ? require('../assets/reserva_hotel_pura.jpg') :
-                                        isVip ? require('../assets/ticket_rapido_vip.jpg') :
-                                            isRápido ? require('../assets/ticket_rapido_vip.jpg') :
-                                                isEco ? require('../assets/ticket_economico.jpg') :
-                                                    require('../assets/ticket_equilibrado_confort.jpg');
+                                    const status = (flightData?.status || '').toLowerCase();
+                                    const isDiverted = status.includes('diverted') || status.includes('desvio');
 
-                                    if (selectedPlan.voiceScriptFinal) {
-                                        speak(selectedPlan.voiceScriptFinal);
-                                    } else {
-                                        const isMajorIssue = (flightData?.delayMinutes || flightData?.departure?.delay || 0) >= 120 || flightData?.status === 'cancelled';
-                                        speak(
-                                            isVip
-                                                ? (isMajorIssue
-                                                    ? 'Estrategia de rescate generada. He preparado tu expediente de reclamación y las opciones de reubicación. Tienes todo listo en tu sección de documentos.'
-                                                    : 'He activado tu protocolo de cortesía VIP. Tienes tu acceso a la Sala VIP y los servicios de asistencia listos en tu sección de documentos para una espera confortable.')
-                                                : isHotel
-                                                    ? 'He organizado tu plan de estancia. Tienes la información del hotel y los pasos a seguir en tu sección de documentos.'
-                                                    : isEco
-                                                        ? 'Documentación legal finalizada. Tu reclamación EU261 está lista en tu sección de documentos para ser firmada y enviada.'
-                                                        : 'He terminado de analizar tus opciones. Tienes toda la información y planes de vuelo en tu sección de documentos.'
-                                        );
-                                    }
+                                    const imgRescate = isHotel
+                                        ? (isPremium ? require('../assets/certificado_alojamiento_vip.jpg') : require('../assets/reserva_hotel_pura.jpg'))
+                                        : isDiverted ? require('../assets/protocolo_desvio.jpg') :
+                                            isVip ? require('../assets/ticket_rapido_vip.jpg') :
+                                                isRápido ? require('../assets/ticket_rapido_vip.jpg') :
+                                                    isEco ? require('../assets/ticket_economico.jpg') :
+                                                        require('../assets/ticket_equilibrado_confort.jpg');
 
-                                    const isMajorIssue = (flightData?.delayMinutes || flightData?.departure?.delay || 0) >= 120 || flightData?.status === 'cancelled';
+                                    // Eliminamos el speak() redundante de aquí
+                                    const isMajorIssue = (flightData?.delayMinutes || flightData?.departure?.delay || 0) >= 120 || status === 'cancelled' || isDiverted;
+
                                     const newTicket = {
                                         id: `rescue_${Date.now()}`,
-                                        t: isVip
-                                            ? (isMajorIssue ? `PROTOCOLO DE RESCATE PREMIUM (VIP)` : `PROTOCOLO DE CORTESÍA VIP`)
-                                            : (isHotel ? `GESTIÓN DE REUBICACIÓN Y TRASLADO` :
-                                                `PROPUESTA RESCATE IA (${isEco ? 'ECONÓMICO' : isRápido ? 'RÁPIDO' : 'EQUILIBRADO'})`),
-                                        s: isVip ? (isMajorIssue ? 'Estrategia Integral Personalizada' : 'Privilegios y Confort Activados') : (isHotel ? `Alojamiento · ${selectedPlan.title}` : `Propuesta Vuelo · ${selectedPlan.title}`),
+                                        t: (isDiverted && isVip)
+                                            ? `PROTOCOLO DE EMERGENCIA: DESVÍO DE VUELO`
+                                            : isVip
+                                                ? (isMajorIssue ? `PROTOCOLO DE RESCATE PREMIUM (VIP)` : `PROTOCOLO DE CORTESÍA VIP`)
+                                                : (isHotel ? `GESTIÓN DE REUBICACIÓN Y TRASLADO` :
+                                                    `CERTIFICADO DE ASISTENCIA IA (${isEco ? 'ECONÓMICO' : isRápido ? 'RÁPIDO' : 'EQUILIBRADO'})`),
+                                        s: (isDiverted && isVip)
+                                            ? 'Protocolo de Extracción y Transporte Terrestre'
+                                            : isVip
+                                                ? (isMajorIssue ? 'Estrategia Integral Personalizada' : 'Privilegios y Confort Activados')
+                                                : (isHotel ? `Alojamiento · ${selectedPlan.title}` : `Propuesta Vuelo · ${selectedPlan.title}`),
                                         i: imgRescate,
                                         source: 'TRAVEL-PILOT IA',
-                                        icon: isVip ? (isMajorIssue ? '💎' : '✨') : (isHotel ? '🛌' : '🎟️'),
+                                        icon: (isDiverted && isVip) ? '🔄' : isVip ? (isMajorIssue ? '💎' : '✨') : (isHotel ? '🛌' : '🎟️'),
                                         verified: true,
                                         isActionable: !isHotel,
                                         rescueData: {
@@ -794,10 +745,9 @@ export default function GlobalOverlays() {
                                             boardingTime: 'Inmediato'
                                         }
                                     };
-                                    if (selectedPlan?.actionType !== 'assistance') {
-                                        setExtraDocs((prev: any) => [newTicket, ...prev]);
-                                        setHasNewDoc(true);
-                                    }
+                                    // Generamos el ticket para todos los planes, incluyendo asistencia estándar
+                                    setExtraDocs((prev: any) => [newTicket, ...prev]);
+                                    setHasNewDoc(true);
                                     setSelectedPlan(null);
                                 }
                             }}
@@ -824,7 +774,7 @@ export default function GlobalOverlays() {
                         <View style={{ width: '100%', height: 300, backgroundColor: '#0A0A0A', position: 'relative' }}>
                             {(() => {
                                 const isPdf = viewDoc?.isPdf;
-                                const imgSource = DOC_IMAGES[viewDoc?.id] || (typeof viewDoc?.i === 'string' && DOC_IMAGES[viewDoc.i]) || (typeof viewDoc?.i === 'number' ? viewDoc.i : viewDoc?.i ? { uri: viewDoc.i } : null);
+                                const imgSource = DOC_IMAGES[viewDoc?.id] || (typeof viewDoc?.i === 'string' && DOC_IMAGES[viewDoc.i]) || (typeof viewDoc?.i === 'number' ? viewDoc.i : (typeof viewDoc?.i === 'string' ? { uri: viewDoc.i } : (viewDoc?.i || null)));
 
                                 if (isPdf) {
                                     return (
@@ -857,11 +807,11 @@ export default function GlobalOverlays() {
                             {isScanning && <Animated.View style={[s.laser, { transform: [{ translateY: scanAnim }] }]} />}
                         </View>
                         <View style={{ padding: 20, alignItems: 'center' }}>
-                            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14, textAlign: 'center' }}>
+                            <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 14, textAlign: 'center', letterSpacing: 0.5 }}>
                                 {isScanning ? 'ESCANEANDO DOCUMENTO...' : `${viewDoc?.t || 'DOCUMENTO'} - VERIFICADO`}
                             </Text>
 
-                            {viewDoc?.t?.includes('GESTIÓN DE REUBICACIÓN') ? (
+                            {(viewDoc?.t?.includes('GESTIÓN DE REUBICACIÓN') || viewDoc?.t?.includes('DESVÍO')) ? (
                                 <View style={{ width: '100%', marginTop: 10 }}>
                                     <TouchableOpacity
                                         style={[s.bt, { backgroundColor: '#AF52DE', borderRadius: 12, marginBottom: 10 }]}
@@ -878,9 +828,38 @@ export default function GlobalOverlays() {
                                     <TouchableOpacity
                                         style={[s.bt, { backgroundColor: '#007AFF', borderRadius: 12, marginBottom: 10 }]}
                                         onPress={() => {
-                                            setViewDoc(null)
-                                            setShowChat(true)
-                                            handleSendMessage("Necesito asistencia con el alojamiento en Valencia")
+                                            setIsSearchingHotel(true);
+                                            const isPremium = travelProfile === 'premium';
+                                            speak(isPremium ? "Iniciando búsqueda de alojamiento Premium en las cercanías. Un momento, por favor." : "Buscando opciones de alojamiento en las cercanías. Un momento, por favor.");
+                                            setTimeout(() => {
+                                                setIsSearchingHotel(false);
+
+                                                // GENERACIÓN DIRECTA DEL DOCUMENTO (Garantiza que aparezca en Docs)
+                                                const flightNum = flightData?.flightNumber || 'TP-VLC';
+                                                const isPremium = travelProfile === 'premium';
+                                                const hotelDoc = {
+                                                    id: `hotel_${Date.now()}`,
+                                                    t: isPremium ? `CERTIFICADO DE ALOJAMIENTO VIP` : `CERTIFICADO DE ALOJAMIENTO`,
+                                                    s: isPremium ? `Reserva Confirmada // Hotel Meliá Congress Valencia` : `Disponibilidad Localizada // Meliá Congress Valencia`,
+                                                    i: isPremium ? 'demo-hotel-premium' : 'demo-hotel',
+                                                    source: isPremium ? 'TRAVEL-PILOT CONCIERGE' : 'IA TRAVEL-ASSIST',
+                                                    icon: '🛌',
+                                                    verified: true,
+                                                };
+                                                setExtraDocs((prev: any) => [hotelDoc, ...prev]);
+                                                setHasNewDoc(true);
+
+                                                setViewDoc(null);
+                                                setShowChat(true);
+                                                setTab('chat');
+                                                setChatOrigin('hotel');
+
+                                                const chatMsg = isPremium
+                                                    ? "IA, he visto que has bloqueado una habitación en el Meliá Congress. Confírmame los detalles de mi estancia."
+                                                    : "IA, he visto disponibilidad en el Meliá Congress según mi plan de reubicación. Ayúdame a gestionar mi estancia.";
+
+                                                handleSendMessage(chatMsg);
+                                            }, 3500);
                                         }}
                                     >
                                         <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🏨 2. GESTIONAR ALOJAMIENTO (CHAT)</Text>
@@ -919,19 +898,56 @@ export default function GlobalOverlays() {
                                 </View>
                             ) : (
                                 <>
-                                    {viewDoc?.isPdf && (
-                                        <TouchableOpacity
-                                            style={[s.bt, { backgroundColor: '#4CD964', marginTop: 15, borderRadius: 12, width: '100%' }]}
-                                            onPress={async () => {
-                                                if (viewDoc.i && await Sharing.isAvailableAsync()) {
-                                                    await Sharing.shareAsync(viewDoc.i)
-                                                } else {
-                                                    Alert.alert('Error', 'No se puede compartir el archivo en este dispositivo.')
-                                                }
-                                            }}
-                                        >
-                                            <Text style={{ color: '#000', fontWeight: 'bold' }}>📥 DESCARGAR / COMPARTIR PDF</Text>
-                                        </TouchableOpacity>
+                                    { (viewDoc?.isPdf || viewDoc?.t?.includes('ASISTENCIA') || viewDoc?.t?.includes('PROPUESTA')) && (
+                                        <>
+                                            <TouchableOpacity
+                                                style={[s.bt, { backgroundColor: '#AF52DE', marginTop: 15, borderRadius: 12, width: '100%' }]}
+                                                onPress={() => {
+                                                    setViewDoc(null)
+                                                    const isAssistance = viewDoc?.t?.includes('ASISTENCIA');
+                                                    const claimId = isAssistance ? `ASISTENCIA-${flightData?.flightNumber || 'DFLT'}` : `CLAIM-${flightData?.flightNumber || 'DFLT'}`;
+                                                    const newClaim = {
+                                                        id: claimId,
+                                                        aerolinea: flightData?.airline || 'Aerolínea',
+                                                        vuelo: flightData?.flightNumber || '---',
+                                                        ruta: `${flightData?.departure?.iata || 'MAD'} > ${flightData?.arrival?.iata || 'VLC'}`,
+                                                        estado: 'PENDIENTE DE FIRMA',
+                                                        compensacion: isAssistance ? '0' : '250',
+                                                        isDynamic: true,
+                                                        isAssistance: isAssistance
+                                                    }
+
+                                                    setClaims((prev: any) => {
+                                                        const exists = prev.find((c: any) => c.id === claimId)
+                                                        if (exists) return prev
+                                                        return [newClaim, ...prev]
+                                                    })
+                                                    setCurrentClaimForSig(newClaim)
+                                                    setTab('Vault')
+                                                    setTimeout(() => {
+                                                        setShowSignature(true)
+                                                        speak(isAssistance
+                                                            ? "He preparado tu certificado de asistencia. Introduce tu DNI y firma para finalizar."
+                                                            : "He preparado tu reclamación de 250 euros. Introduce tu DNI y firma para finalizar.")
+                                                    }, 500)
+                                                }}
+                                            >
+                                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>✍️ FIRMA DIGITAL</Text>
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity
+                                                style={[s.bt, { backgroundColor: '#4CD964', marginTop: 10, borderRadius: 12, width: '100%' }]}
+                                                onPress={async () => {
+                                                    if (viewDoc.i && await Sharing.isAvailableAsync()) {
+                                                        await Sharing.shareAsync(viewDoc.i)
+                                                    } else {
+                                                        Alert.alert('Error', 'No se puede compartir el archivo en este dispositivo.')
+                                                    }
+                                                }}
+                                            >
+                                                <Text style={{ color: '#000', fontWeight: 'bold' }}>📥 DESCARGAR / COMPARTIR PDF</Text>
+                                            </TouchableOpacity>
+                                        </>
                                     )}
 
                                     {viewDoc?.isConfirmed && (
@@ -962,16 +978,36 @@ export default function GlobalOverlays() {
                     setShowChat(true);
                 }}
                 onGoToClaims={() => {
+                    // 1. Crear el expediente antes de irse
+                    const claimId = `CLAIM-${flightData?.flightNumber || 'DFLT'}`;
+                    const newClaim = {
+                        id: claimId,
+                        aerolinea: flightData?.airline || 'Aerolínea',
+                        vuelo: flightData?.flightNumber || '---',
+                        ruta: `${flightData?.departure?.iata || 'MAD'} > ${flightData?.arrival?.iata || 'VLC'}`,
+                        estado: 'PENDIENTE DE FIRMA',
+                        compensacion: '250',
+                        isDynamic: true
+                    };
+
+                    setClaims((prev: any) => {
+                        const exists = prev.find((c: any) => c.id === claimId);
+                        if (exists) return prev;
+                        return [newClaim, ...prev];
+                    });
+
+                    // 2. Preparar el estado para la firma
+                    setCurrentClaimForSig(newClaim);
                     setShowVIPAlternatives(false);
-                    setShowCancellation(false); // Cierre final para ir a firma
+                    setShowSOS(false); // Evita el pantallazo del modal que estaba debajo
+                    setShowCancellation(false);
                     setTab('Vault');
 
-                    // Delay para asegurar que los Modals se cierren antes de la transición
+                    // 3. Abrir la firma con un pequeño delay para que cargue la vista
                     setTimeout(() => {
-                        navigation.navigate('Vault'); // NAVEGACIÓN REAL
-                    }, 300);
-
-                    setPendingVIPScroll(true);
+                        setShowSignature(true);
+                        speak("He preparado tu reclamación oficial. Introduce tu DNI y firma aquí abajo para que podamos procesarla de inmediato.");
+                    }, 800);
                 }}
                 setExtraDocs={setExtraDocs}
                 setHasNewDoc={setHasNewDoc}
@@ -1006,6 +1042,18 @@ export default function GlobalOverlays() {
             <PrivateVaultScreen />
 
             <GlobalStopButton isSpeaking={isSpeaking} stopSpeak={stopSpeak} />
+            {/* MODAL SIMULACIÓN BÚSQUEDA HOTEL */}
+            <Modal visible={isSearchingHotel} transparent animationType="fade">
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator color={travelProfile === 'premium' ? "#D4AF37" : "#007AFF"} size="large" />
+                    <Text style={{ color: travelProfile === 'premium' ? "#D4AF37" : "#FFF", marginTop: 20, fontWeight: '900', letterSpacing: 2, fontSize: 12, textAlign: 'center', paddingHorizontal: 40 }}>
+                        {travelProfile === 'premium' ? "IA CONCIERGE: BUSCANDO HOTELES VIP..." : "BÚSQUEDA DE ALOJAMIENTO DISPONIBLE..."}
+                    </Text>
+                    <Text style={{ color: '#666', marginTop: 8, fontSize: 10 }}>
+                        {travelProfile === 'premium' ? "Conectando con Amadeus GDS & Expedia..." : "Consultando disponibilidad en tiempo real..."}
+                    </Text>
+                </View>
+            </Modal>
         </>
     );
 }

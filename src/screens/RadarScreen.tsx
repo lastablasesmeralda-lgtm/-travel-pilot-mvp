@@ -182,7 +182,7 @@ export default function VuelosScreen() {
                                         <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold' }}>GUARDAR</Text>
                                     </TouchableOpacity>
                                     <View style={{ backgroundColor: getStatusColor(data.status), paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
-                                        <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold' }}>{getStatusLabel(data.status, data.departure.delay)}</Text>
+                                        <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold' }}>{getStatusLabel(data.status, data.departure?.delay)}</Text>
                                     </View>
                                 </View>
                             </View>
@@ -215,7 +215,7 @@ export default function VuelosScreen() {
                                 <View style={{ flex: 1 }}>
                                     <Text style={{ color: '#B0B0B0', fontSize: 11 }}>ESTADO</Text>
                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <Text style={{ color: getStatusColor(data.status), fontSize: 13, fontWeight: 'bold' }}>{data.status?.toUpperCase()}</Text>
+                                        <Text style={{ color: getStatusColor(data.status), fontSize: 13, fontWeight: 'bold' }}>{getStatusLabel(data.status, data.departure?.delay)}</Text>
                                         {data.isSimulation && (
                                             <View style={{ backgroundColor: 'rgba(76, 217, 100, 0.1)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 6, borderWidth: 1, borderColor: '#4CD964' }}>
                                                 <Text style={{ color: '#4CD964', fontSize: 8, fontWeight: 'bold' }}>🧪 TEST</Text>
