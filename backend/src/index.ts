@@ -1231,20 +1231,15 @@ fastify.post('/api/generateClaim', async (request, reply) => {
                     bodyLines = [
                         "FUNDAMENTO LEGAL (Reglamento CE 261/2004)",
                         "--------------------------------------------------",
-                        "Conforme al Reglamento (CE) nº 261/2004 del Parlamento Europeo y del Consejo,",
-                        "se establece el derecho a atención y asistencia para los pasajeros en caso de",
-                        "incidencias en el vuelo. Los sistemas de Travel-Pilot han confirmado un retraso",
-                        `de ${delay} minutos en el vuelo ${sFlight}, lo que activa el protocolo de asistencia.`,
+                        `Conforme al Reglamento (CE) 261/2004, los sistemas de Travel-Pilot han confirmado`,
+                        `un retraso de ${delay} minutos en el vuelo ${sFlight}, activando el derecho a asistencia.`,
                         "",
-                        "EL PASAJERO ABAJO FIRMANTE EXIJE DE FORMA INMEDIATA:",
+                        "EL PASAJERO EXIJE DE FORMA INMEDIATA:",
                         "1. Vales de comida y refrescos suficientes en función del tiempo de espera.",
-                        "2. Dos llamadas telefónicas, mensajes de télex o de fax o correos electrónicos.",
+                        "2. Medios de comunicación (llamadas o correos electrónicos).",
                         "",
-                        "La denegación de esta asistencia básica por parte de la aerolínea será notificada",
-                        "a la autoridad aeronáutica competente para su posterior sanción e indemnización.",
-                        "Por favor, procedan a entregar los vales correspondientes de forma proactiva.",
-                        "",
-                        "Este documento tiene validez legal bajo el Reglamento (CE) 261/2004."
+                        "La denegación de esta asistencia básica será notificada a AESA para su sanción.",
+                        "Por favor, procedan a entregar los vales correspondientes de forma proactiva."
                     ];
                 } else {
                     bodyLines = [
@@ -1283,33 +1278,25 @@ fastify.post('/api/generateClaim', async (request, reply) => {
                     bodyLines = [
                         "RECLAMACIÓN FORMAL BAJO EL CONVENIO DE MONTREAL",
                         "--------------------------------------------------",
-                        `Se ha verificado un retraso de ${delay} minutos en el vuelo ${sFlight}.`,
+                        `Incidencia confirmada en el vuelo ${sFlight} (+${delay} min).`,
                         "",
-                        "Conforme al Convenio de Montreal (1999), el transportista es responsable",
-                        "del daño ocasionado por retraso en el transporte aéreo de pasajeros.",
-                        "",
-                        "DERECHOS ACTIVADOS:",
+                        "Bajo el Convenio de Montreal (1999), el transportista es responsable",
+                        "del daño ocasionado por retraso. Se activan los siguientes derechos:",
                         "• Reembolso de gastos de manutención y pernocta incurridos.",
-                        "• Indemnización por daños y perjuicios derivados del retraso.",
-                        "• Límites de responsabilidad hasta 5.346 DEG (Derechos Especiales de Giro).",
+                        "• Indemnización por daños y perjuicios (Límite 5.346 DEG).",
                         "",
-                        "Exijo el reembolso de todos los gastos derivados de esta incidencia."
+                        "Exijo el reembolso inmediato de los gastos derivados."
                     ];
                 } else {
                     bodyLines = [
                         "ORDEN INTERNACIONAL DE ASISTENCIA (MONTREAL)",
                         "--------------------------------------------------",
-                        `Se ha verificado un retraso de ${delay} minutos en el vuelo ${sFlight}.`,
+                        `Retraso detectado: ${delay} minutos en el vuelo ${sFlight}.`,
                         "",
-                        "Bajo el Convenio de Montreal, la aerolínea es responsable del bienestar",
-                        "del pasajero durante interrupciones del servicio.",
+                        "Bajo el Convenio de Montreal, el pasajero tiene derecho a:",
+                        "• Manutención, comunicación y alojamiento si se requiere pernocta.",
                         "",
-                        "DERECHOS ACTIVADOS:",
-                        "• Gastos de manutención esenciales.",
-                        "• Medios de comunicación.",
-                        "• Alojamiento y transporte si se requiere pernocta.",
-                        "",
-                        "Cualquier gasto no cubierto será reclamado legalmente."
+                        "Se exige la cobertura de estos gastos esenciales."
                     ];
                 }
             }
@@ -1399,10 +1386,10 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         page.drawText(`Estimacion:    ${amount} (${regInfo.reg})`, { x: 40, y, size: 10, font: fontBold, color: DARK });
 
         // Cuerpo legal dinámico
-        y -= 50;
+        y -= 25;
         page.drawText('FUNDAMENTO LEGAL Y SOLICITUD', { x: 40, y, size: 11, font: fontBold, color: DARK });
         page.drawLine({ start: { x: 40, y: y - 5 }, end: { x: 555, y: y - 5 }, thickness: 0.5, color: GOLD });
-        y -= 25;
+        y -= 20;
 
         for (const line of bodyLines) {
             page.drawText(line, { x: 40, y, size: 9.5, font: fontRegular, color: DARK });
@@ -1410,17 +1397,17 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         }
 
         // Cierre legal
-        y -= 20;
+        y -= 15;
         page.drawText(`Exijo resolucion en el plazo de 14 dias habiles. Me reservo el derecho a acudir`, { x: 40, y, size: 9.5, font: fontRegular, color: DARK });
         y -= 15;
         const authority = regInfo.reg === 'EU261/2004' ? 'a la autoridad aeronautica competente (AESA)' : 'a los organismos de consumo y aviacion civil competentes';
         page.drawText(`${authority} en caso de silencio o negativa.`, { x: 40, y, size: 9.5, font: fontRegular, color: DARK });
 
         // Firma
-        y -= 30;
+        y -= 20;
         page.drawText('FIRMA DEL PASAJERO', { x: 40, y, size: 11, font: fontBold, color: DARK });
         page.drawLine({ start: { x: 40, y: y - 5 }, end: { x: 555, y: y - 5 }, thickness: 0.5, color: GOLD });
-        y -= 15;
+        y -= 10;
 
         if (signatureBase64) {
             try {
