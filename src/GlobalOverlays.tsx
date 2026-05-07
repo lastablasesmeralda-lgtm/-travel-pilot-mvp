@@ -813,88 +813,155 @@ export default function GlobalOverlays() {
 
                             {(viewDoc?.t?.includes('GESTIÓN DE REUBICACIÓN') || viewDoc?.t?.includes('DESVÍO')) ? (
                                 <View style={{ width: '100%', marginTop: 10 }}>
-                                    <TouchableOpacity
-                                        style={[s.bt, { backgroundColor: '#AF52DE', borderRadius: 12, marginBottom: 10 }]}
-                                        onPress={() => {
-                                            Alert.alert(
-                                                "🚅 ESTRATEGIA DE TRANSPORTE",
-                                                "Tienes derecho legal a un Tren (AVE) o Autobús gratuito para llegar a tu destino original. \n\nPASOS A SEGUIR:\n1. Dirígete ahora mismo al mostrador de la aerolínea.\n2. Muestra este ticket y exige tu traslado bajo la ley EU261.\n3. Si no te dan solución, adquiere el billete de AVE y guarda el recibo para el reembolso total."
-                                            )
-                                        }}
-                                    >
-                                        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🚅 1. VER TRANSPORTE ALTERNATIVO</Text>
-                                    </TouchableOpacity>
+                                    {travelProfile === 'premium' ? (
+                                        <>
+                                            <TouchableOpacity
+                                                style={[s.bt, { backgroundColor: '#D4AF37', borderRadius: 12, marginBottom: 10 }]}
+                                                onPress={() => {
+                                                    Alert.alert(
+                                                        "🚁 EXTRACCIÓN TERRESTRE PREMIUM",
+                                                        "Tu traslado privado ha sido activado.\n\nHe solicitado un vehículo con conductor para llevarte directamente a tu destino final (Valencia).\n\n📍 Punto de recogida: Salida principal del aeropuerto.\n⏱️ Tiempo estimado: 15-20 minutos.\n\nSi prefieres AVE, tengo un billete de primera clase reservado como alternativa."
+                                                    )
+                                                }}
+                                            >
+                                                <Text style={{ color: '#000', fontWeight: 'bold' }}>🚁 1. EXTRACCIÓN TERRESTRE PREMIUM</Text>
+                                            </TouchableOpacity>
 
-                                    <TouchableOpacity
-                                        style={[s.bt, { backgroundColor: '#007AFF', borderRadius: 12, marginBottom: 10 }]}
-                                        onPress={() => {
-                                            setIsSearchingHotel(true);
-                                            const isPremium = travelProfile === 'premium';
-                                            speak(isPremium ? "Iniciando búsqueda de alojamiento Premium en las cercanías. Un momento, por favor." : "Buscando opciones de alojamiento en las cercanías. Un momento, por favor.");
-                                            setTimeout(() => {
-                                                setIsSearchingHotel(false);
+                                            <TouchableOpacity
+                                                style={[s.bt, { backgroundColor: '#AF52DE', borderRadius: 12, marginBottom: 10 }]}
+                                                onPress={() => {
+                                                    setIsSearchingHotel(true);
+                                                    speak("Activando protocolo de alojamiento VIP. He bloqueado una suite en el hotel más cercano con las mejores valoraciones. Un momento.");
+                                                    setTimeout(() => {
+                                                        setIsSearchingHotel(false);
+                                                        const flightNum = flightData?.flightNumber || 'TP-VLC';
+                                                        const hotelDoc = {
+                                                            id: `hotel_${Date.now()}`,
+                                                            t: `CERTIFICADO DE ALOJAMIENTO VIP`,
+                                                            s: `Reserva Confirmada // Hotel Meliá Congress Valencia`,
+                                                            i: 'demo-hotel-premium',
+                                                            source: 'TRAVEL-PILOT CONCIERGE',
+                                                            icon: '🛌',
+                                                            verified: true,
+                                                        };
+                                                        setExtraDocs((prev: any) => [hotelDoc, ...prev]);
+                                                        setHasNewDoc(true);
+                                                        setViewDoc(null);
+                                                        setShowChat(true);
+                                                        setTab('chat');
+                                                        setChatOrigin('hotel');
+                                                        handleSendMessage("IA, confirma los detalles de mi suite VIP en el Meliá Congress. Necesito check-in express y late checkout.");
+                                                    }, 3500);
+                                                }}
+                                            >
+                                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🏨 2. ALOJAMIENTO VIP AUTOMATIZADO</Text>
+                                            </TouchableOpacity>
 
-                                                // GENERACIÓN DIRECTA DEL DOCUMENTO (Garantiza que aparezca en Docs)
-                                                const flightNum = flightData?.flightNumber || 'TP-VLC';
-                                                const isPremium = travelProfile === 'premium';
-                                                const hotelDoc = {
-                                                    id: `hotel_${Date.now()}`,
-                                                    t: isPremium ? `CERTIFICADO DE ALOJAMIENTO VIP` : `CERTIFICADO DE ALOJAMIENTO`,
-                                                    s: isPremium ? `Reserva Confirmada // Hotel Meliá Congress Valencia` : `Disponibilidad Localizada // Meliá Congress Valencia`,
-                                                    i: isPremium ? 'demo-hotel-premium' : 'demo-hotel',
-                                                    source: isPremium ? 'TRAVEL-PILOT CONCIERGE' : 'IA TRAVEL-ASSIST',
-                                                    icon: '🛌',
-                                                    verified: true,
-                                                };
-                                                setExtraDocs((prev: any) => [hotelDoc, ...prev]);
-                                                setHasNewDoc(true);
+                                            <TouchableOpacity
+                                                style={[s.bt, { backgroundColor: '#4CD964', borderRadius: 12 }]}
+                                                onPress={() => {
+                                                    setViewDoc(null)
+                                                    const claimId = `CLAIM-${flightData?.flightNumber || 'DFLT'}`
+                                                    const newClaim = {
+                                                        id: claimId,
+                                                        aerolinea: flightData?.airline || 'Aerolínea',
+                                                        vuelo: flightData?.flightNumber || '---',
+                                                        ruta: `${flightData?.departure?.iata || 'MAD'} > ${flightData?.arrival?.iata || 'VLC'}`,
+                                                        estado: 'PENDIENTE DE FIRMA',
+                                                        compensacion: '250',
+                                                        isDynamic: true
+                                                    }
+                                                    setClaims((prev: any) => {
+                                                        const exists = prev.find((c: any) => c.id === claimId)
+                                                        if (exists) return prev
+                                                        return [newClaim, ...prev]
+                                                    })
+                                                    setCurrentClaimForSig(newClaim)
+                                                    setTab('Vault')
+                                                    setTimeout(() => {
+                                                        setShowSignature(true)
+                                                        speak("Expediente legal completo preparado. He incluido el informe del desvío, los gastos adicionales y la reclamación EU261. Firma para enviarlo.")
+                                                    }, 500)
+                                                }}
+                                            >
+                                                <Text style={{ color: '#000', fontWeight: 'bold' }}>⚖️ 3. EXPEDIENTE LEGAL COMPLETO</Text>
+                                            </TouchableOpacity>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <TouchableOpacity
+                                                style={[s.bt, { backgroundColor: '#AF52DE', borderRadius: 12, marginBottom: 10 }]}
+                                                onPress={() => {
+                                                    Alert.alert(
+                                                        "🚅 ESTRATEGIA DE TRANSPORTE",
+                                                        "Tienes derecho legal a un Tren (AVE) o Autobús gratuito para llegar a tu destino original. \n\nPASOS A SEGUIR:\n1. Dirígete ahora mismo al mostrador de la aerolínea.\n2. Muestra este ticket y exige tu traslado bajo la ley EU261.\n3. Si no te dan solución, adquiere el billete de AVE y guarda el recibo para el reembolso total."
+                                                    )
+                                                }}
+                                            >
+                                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🚅 1. VER TRANSPORTE ALTERNATIVO</Text>
+                                            </TouchableOpacity>
 
-                                                setViewDoc(null);
-                                                setShowChat(true);
-                                                setTab('chat');
-                                                setChatOrigin('hotel');
+                                            <TouchableOpacity
+                                                style={[s.bt, { backgroundColor: '#007AFF', borderRadius: 12, marginBottom: 10 }]}
+                                                onPress={() => {
+                                                    setIsSearchingHotel(true);
+                                                    speak("Buscando opciones de alojamiento en las cercanías. Un momento, por favor.");
+                                                    setTimeout(() => {
+                                                        setIsSearchingHotel(false);
+                                                        const flightNum = flightData?.flightNumber || 'TP-VLC';
+                                                        const hotelDoc = {
+                                                            id: `hotel_${Date.now()}`,
+                                                            t: `CERTIFICADO DE ALOJAMIENTO`,
+                                                            s: `Disponibilidad Localizada // Meliá Congress Valencia`,
+                                                            i: 'demo-hotel',
+                                                            source: 'IA TRAVEL-ASSIST',
+                                                            icon: '🛌',
+                                                            verified: true,
+                                                        };
+                                                        setExtraDocs((prev: any) => [hotelDoc, ...prev]);
+                                                        setHasNewDoc(true);
+                                                        setViewDoc(null);
+                                                        setShowChat(true);
+                                                        setTab('chat');
+                                                        setChatOrigin('hotel');
+                                                        handleSendMessage("IA, he visto disponibilidad en el Meliá Congress según mi plan de reubicación. Ayúdame a gestionar mi estancia.");
+                                                    }, 3500);
+                                                }}
+                                            >
+                                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🏨 2. GESTIONAR ALOJAMIENTO (CHAT)</Text>
+                                            </TouchableOpacity>
 
-                                                const chatMsg = isPremium
-                                                    ? "IA, he visto que has bloqueado una habitación en el Meliá Congress. Confírmame los detalles de mi estancia."
-                                                    : "IA, he visto disponibilidad en el Meliá Congress según mi plan de reubicación. Ayúdame a gestionar mi estancia.";
-
-                                                handleSendMessage(chatMsg);
-                                            }, 3500);
-                                        }}
-                                    >
-                                        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🏨 2. GESTIONAR ALOJAMIENTO (CHAT)</Text>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        style={[s.bt, { backgroundColor: '#4CD964', borderRadius: 12 }]}
-                                        onPress={() => {
-                                            setViewDoc(null)
-                                            const claimId = `CLAIM-${flightData?.flightNumber || 'DFLT'}`
-                                            const newClaim = {
-                                                id: claimId,
-                                                aerolinea: flightData?.airline || 'Aerolínea',
-                                                vuelo: flightData?.flightNumber || '---',
-                                                ruta: `${flightData?.departure?.iata || 'MAD'} > ${flightData?.arrival?.iata || 'VLC'}`,
-                                                estado: 'PENDIENTE DE FIRMA',
-                                                compensacion: '250',
-                                                isDynamic: true
-                                            }
-
-                                            setClaims((prev: any) => {
-                                                const exists = prev.find((c: any) => c.id === claimId)
-                                                if (exists) return prev
-                                                return [newClaim, ...prev]
-                                            })
-                                            setCurrentClaimForSig(newClaim)
-                                            setTab('Vault')
-                                            setTimeout(() => {
-                                                setShowSignature(true)
-                                                speak("He preparado tu reclamación de 250 euros. Introduce tu DNI y firma para finalizar.")
-                                            }, 500)
-                                        }}
-                                    >
-                                        <Text style={{ color: '#000', fontWeight: 'bold' }}>⚖️ 3. SOLICITAR INDEMNIZACIÓN</Text>
-                                    </TouchableOpacity>
+                                            <TouchableOpacity
+                                                style={[s.bt, { backgroundColor: '#4CD964', borderRadius: 12 }]}
+                                                onPress={() => {
+                                                    setViewDoc(null)
+                                                    const claimId = `CLAIM-${flightData?.flightNumber || 'DFLT'}`
+                                                    const newClaim = {
+                                                        id: claimId,
+                                                        aerolinea: flightData?.airline || 'Aerolínea',
+                                                        vuelo: flightData?.flightNumber || '---',
+                                                        ruta: `${flightData?.departure?.iata || 'MAD'} > ${flightData?.arrival?.iata || 'VLC'}`,
+                                                        estado: 'PENDIENTE DE FIRMA',
+                                                        compensacion: '250',
+                                                        isDynamic: true
+                                                    }
+                                                    setClaims((prev: any) => {
+                                                        const exists = prev.find((c: any) => c.id === claimId)
+                                                        if (exists) return prev
+                                                        return [newClaim, ...prev]
+                                                    })
+                                                    setCurrentClaimForSig(newClaim)
+                                                    setTab('Vault')
+                                                    setTimeout(() => {
+                                                        setShowSignature(true)
+                                                        speak("He preparado tu reclamación de 250 euros. Introduce tu DNI y firma para finalizar.")
+                                                    }, 500)
+                                                }}
+                                            >
+                                                <Text style={{ color: '#000', fontWeight: 'bold' }}>⚖️ 3. SOLICITAR INDEMNIZACIÓN</Text>
+                                            </TouchableOpacity>
+                                        </>
+                                    )}
                                 </View>
                             ) : (
                                 <>
