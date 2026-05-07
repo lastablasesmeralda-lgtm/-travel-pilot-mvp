@@ -3,7 +3,7 @@ export const DOC_IMAGES: Record<string, any> = {
     'demo-passport-premium': require('../../assets/pasaporte_puro.jpg'),
     'demo-boarding-premium': require('../../assets/tarjeta_embarque_pura.jpg'),
     'demo-hotel': require('../../assets/reserva_hotel_pura.jpg'),
-    'demo-hotel-premium': require('../../assets/certificado_alojamiento_vip.jpg'),
+    'demo-hotel-premium': require('../../assets/reserva_hotel_pura.jpg'),
     'ticket-rapido': require('../../assets/ticket_rapido_vip.jpg'),
     'ticket-rapido-estandar': require('../../assets/ticket_rapido_vip.jpg'),
     'ticket-equilibrado': require('../../assets/ticket_equilibrado_confort.jpg'),

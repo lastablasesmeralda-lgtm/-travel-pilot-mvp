@@ -18,7 +18,7 @@ const DOC_IMAGES: Record<string, any> = {
     'demo-passport-premium': require('../assets/pasaporte_puro.jpg'),
     'demo-boarding-premium': require('../assets/tarjeta_embarque_pura.jpg'),
     'demo-hotel': require('../assets/reserva_hotel_pura.jpg'),
-    'demo-hotel-premium': require('../assets/certificado_alojamiento_vip.jpg'),
+    'demo-hotel-premium': require('../assets/reserva_hotel_pura.jpg'),
     'ticket-rapido': require('../assets/ticket_rapido_vip.jpg'),
     'ticket-rapido-estandar': require('../assets/ticket_rapido_vip.jpg'),
     'ticket-equilibrado': require('../assets/ticket_equilibrado_confort.jpg'),
@@ -722,20 +722,20 @@ export default function GlobalOverlays() {
 
                                     const newTicket = {
                                         id: `rescue_${Date.now()}`,
-                                        t: (isDiverted && isVip)
-                                            ? `PROTOCOLO DE EMERGENCIA: DESVÍO DE VUELO`
+                                        t: isDiverted
+                                            ? (isVip ? `PROTOCOLO DE EMERGENCIA: DESVÍO DE VUELO` : `GESTIÓN DE REUBICACIÓN Y TRASLADO`)
                                             : isVip
                                                 ? (isMajorIssue ? `PROTOCOLO DE RESCATE PREMIUM (VIP)` : `PROTOCOLO DE CORTESÍA VIP`)
                                                 : (isHotel ? `GESTIÓN DE REUBICACIÓN Y TRASLADO` :
                                                     `CERTIFICADO DE ASISTENCIA IA (${isEco ? 'ECONÓMICO' : isRápido ? 'RÁPIDO' : 'EQUILIBRADO'})`),
-                                        s: (isDiverted && isVip)
-                                            ? 'Protocolo de Extracción y Transporte Terrestre'
+                                        s: isDiverted
+                                            ? (isVip ? 'Protocolo de Extracción y Transporte Terrestre' : 'Transporte Alternativo · Reubicación')
                                             : isVip
                                                 ? (isMajorIssue ? 'Estrategia Integral Personalizada' : 'Privilegios y Confort Activados')
                                                 : (isHotel ? `Alojamiento · ${selectedPlan.title}` : `Propuesta Vuelo · ${selectedPlan.title}`),
                                         i: imgRescate,
                                         source: 'TRAVEL-PILOT IA',
-                                        icon: (isDiverted && isVip) ? '🔄' : isVip ? (isMajorIssue ? '💎' : '✨') : (isHotel ? '🛌' : '🎟️'),
+                                        icon: isDiverted ? '🔄' : isVip ? (isMajorIssue ? '💎' : '✨') : (isHotel ? '🛌' : '🎟️'),
                                         verified: true,
                                         isActionable: !isHotel,
                                         rescueData: {

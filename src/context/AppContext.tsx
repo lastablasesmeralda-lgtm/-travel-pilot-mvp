@@ -108,7 +108,7 @@ export const AppProvider = ({ children }) => {
       id: 'demo-hotel-premium',
       t: 'RESERVA HOTEL',
       s: 'CONF: #88291-TX // MADRID',
-      i: require('../../assets/certificado_alojamiento_vip.jpg'),
+      i: require('../../assets/reserva_hotel_pura.jpg'),
       source: 'OUTLOOK',
       icon: '🛌',
       verified: true,
@@ -1591,9 +1591,9 @@ export const AppProvider = ({ children }) => {
             const chatDoc = {
               id: `chat_doc_${Date.now()}`,
               t: isClaim ? `Reclamación ${flightNum}_${amount}€` :
-                isHotel ? `CERTIFICADO DE ALOJAMIENTO VIP` :
+                isHotel ? `RESERVA DE HOTEL CONFIRMADA` :
                   responseLower.includes('plan') ? `PLAN DE VUELOS ALTERNATIVOS ${flightNum}` : 'DOCUMENTO DE ASISTENCIA IA',
-              s: isHotel ? `Reserva Confirmada // ${airport}` : `Generado por IA el ${new Date().toLocaleDateString()} // Ref: ${flightNum}-${airport}`,
+              s: isHotel ? `Confirmada por IA // ${airport}` : `Generado por IA el ${new Date().toLocaleDateString()} // Ref: ${flightNum}-${airport}`,
               i: isHotel ? 'demo-hotel-premium' : 'demo-boarding-premium',
               source: 'ASISTENTE IA',
               icon: isClaim ? '⚖️' : isHotel ? '🛌' : '📄',
