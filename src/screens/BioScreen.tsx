@@ -192,7 +192,7 @@ export default function BioScreen() {
                             <Text style={{ color: '#B0B0B0', fontSize: 11, lineHeight: 16 }}>
                                 {travelProfile === 'premium'
                                     ? 'Estás cubierto contra retrasos, cancelaciones y pérdidas de equipaje con prioridad absoluta.'
-                                    : 'Accede al sistema de reclamaciones automáticas, salas VIP y asistencia humana 24/7.'}
+                                    : 'Gestión automática de hoteles, contacto con aerolíneas y todas las rutas de rescate desbloqueadas.'}
                             </Text>
                             <Text style={{ color: '#D4AF37', fontSize: 12, fontWeight: 'bold', marginTop: 12 }}>
                                 {travelProfile === 'premium' ? 'GESTIONAR MI SUSCRIPCIÓN →' : 'SABER MÁS Y ACTIVAR →'}

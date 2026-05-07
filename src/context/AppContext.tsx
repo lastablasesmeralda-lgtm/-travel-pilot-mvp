@@ -1536,7 +1536,7 @@ export const AppProvider = ({ children }) => {
     (async () => {
       setIsTyping(true);
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s for Gemini
+      const timeoutId = setTimeout(() => controller.abort(), 40000); // 40s para evitar cortes en cold start
 
       // Saneamiento estructural
       let safeHistory = history.slice(-10);
