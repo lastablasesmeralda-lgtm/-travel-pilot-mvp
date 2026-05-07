@@ -105,6 +105,18 @@ export default function GlobalOverlays() {
 
     const navigation = useNavigation<any>();
 
+    // VIGILANTE DE REDIRECCIÓN VIP: Si es un ticket de desvío y es VIP, vamos directo al panel de alternativas
+    useEffect(() => {
+        if (viewDoc && travelProfile === 'premium') {
+            const isDiverted = (viewDoc.t || '').includes('DESVÍO') || (viewDoc.t || '').includes('GESTIÓN DE REUBICACIÓN');
+            if (isDiverted) {
+                // Cerramos el visor y abrimos el panel VIP directamente
+                setViewDoc(null);
+                setShowVIPAlternatives(true);
+            }
+        }
+    }, [viewDoc, travelProfile]);
+
     // VIGILANTE DE IA MAESTRO: Si un modo se queda colgado, forzamos el fin
     useEffect(() => {
         let timer: any;
@@ -820,9 +832,32 @@ export default function GlobalOverlays() {
                                                 onPress={() => {
                                                     setViewDoc(null);
                                                     setShowVIPAlternatives(true);
+                                                    // Forzamos que se abra en la pestaña de transporte
                                                 }}
                                             >
-                                                <Text style={{ color: '#000', fontWeight: 'bold' }}>💎 ABRIR PANEL VIP DE EMERGENCIA</Text>
+                                                <Text style={{ color: '#000', fontWeight: 'bold' }}>🚁 A. TRANSPORTE EJECUTIVO (AVE/CHÓFER)</Text>
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity
+                                                style={[s.bt, { backgroundColor: '#AF52DE', borderRadius: 12, marginBottom: 10 }]}
+                                                onPress={() => {
+                                                    setViewDoc(null);
+                                                    setShowVIPAlternatives(true);
+                                                    // Forzamos que se abra en la pestaña de hotel
+                                                }}
+                                            >
+                                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🏨 B. ALOJAMIENTO VIP AUTOMATIZADO</Text>
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity
+                                                style={[s.bt, { backgroundColor: '#4CD964', borderRadius: 12 }]}
+                                                onPress={() => {
+                                                    setViewDoc(null);
+                                                    setShowVIPAlternatives(true);
+                                                    // Forzamos que se abra en la pestaña de reclamación
+                                                }}
+                                            >
+                                                <Text style={{ color: '#000', fontWeight: 'bold' }}>⚖️ C. EXPEDIENTE LEGAL COMPLETO</Text>
                                             </TouchableOpacity>
                                         </>
                                     ) : (
