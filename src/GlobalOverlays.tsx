@@ -818,73 +818,11 @@ export default function GlobalOverlays() {
                                             <TouchableOpacity
                                                 style={[s.bt, { backgroundColor: '#D4AF37', borderRadius: 12, marginBottom: 10 }]}
                                                 onPress={() => {
-                                                    Alert.alert(
-                                                        "🚁 EXTRACCIÓN TERRESTRE PREMIUM",
-                                                        "Tu traslado privado ha sido activado.\n\nHe solicitado un vehículo con conductor para llevarte directamente a tu destino final (Valencia).\n\n📍 Punto de recogida: Salida principal del aeropuerto.\n⏱️ Tiempo estimado: 15-20 minutos.\n\nSi prefieres AVE, tengo un billete de primera clase reservado como alternativa."
-                                                    )
+                                                    setViewDoc(null);
+                                                    setShowVIPAlternatives(true);
                                                 }}
                                             >
-                                                <Text style={{ color: '#000', fontWeight: 'bold' }}>🚁 1. EXTRACCIÓN TERRESTRE PREMIUM</Text>
-                                            </TouchableOpacity>
-
-                                            <TouchableOpacity
-                                                style={[s.bt, { backgroundColor: '#AF52DE', borderRadius: 12, marginBottom: 10 }]}
-                                                onPress={() => {
-                                                    setIsSearchingHotel(true);
-                                                    speak("Activando protocolo de alojamiento VIP. He bloqueado una suite en el hotel más cercano con las mejores valoraciones. Un momento.");
-                                                    setTimeout(() => {
-                                                        setIsSearchingHotel(false);
-                                                        const flightNum = flightData?.flightNumber || 'TP-VLC';
-                                                        const hotelDoc = {
-                                                            id: `hotel_${Date.now()}`,
-                                                            t: `CERTIFICADO DE ALOJAMIENTO VIP`,
-                                                            s: `Reserva Confirmada // Hotel Meliá Congress Valencia`,
-                                                            i: 'demo-hotel-premium',
-                                                            source: 'TRAVEL-PILOT CONCIERGE',
-                                                            icon: '🛌',
-                                                            verified: true,
-                                                        };
-                                                        setExtraDocs((prev: any) => [hotelDoc, ...prev]);
-                                                        setHasNewDoc(true);
-                                                        setViewDoc(null);
-                                                        setShowChat(true);
-                                                        setTab('chat');
-                                                        setChatOrigin('hotel');
-                                                        handleSendMessage("IA, confirma los detalles de mi suite VIP en el Meliá Congress. Necesito check-in express y late checkout.");
-                                                    }, 3500);
-                                                }}
-                                            >
-                                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🏨 2. ALOJAMIENTO VIP AUTOMATIZADO</Text>
-                                            </TouchableOpacity>
-
-                                            <TouchableOpacity
-                                                style={[s.bt, { backgroundColor: '#4CD964', borderRadius: 12 }]}
-                                                onPress={() => {
-                                                    setViewDoc(null)
-                                                    const claimId = `CLAIM-${flightData?.flightNumber || 'DFLT'}`
-                                                    const newClaim = {
-                                                        id: claimId,
-                                                        aerolinea: flightData?.airline || 'Aerolínea',
-                                                        vuelo: flightData?.flightNumber || '---',
-                                                        ruta: `${flightData?.departure?.iata || 'MAD'} > ${flightData?.arrival?.iata || 'VLC'}`,
-                                                        estado: 'PENDIENTE DE FIRMA',
-                                                        compensacion: '250',
-                                                        isDynamic: true
-                                                    }
-                                                    setClaims((prev: any) => {
-                                                        const exists = prev.find((c: any) => c.id === claimId)
-                                                        if (exists) return prev
-                                                        return [newClaim, ...prev]
-                                                    })
-                                                    setCurrentClaimForSig(newClaim)
-                                                    setTab('Vault')
-                                                    setTimeout(() => {
-                                                        setShowSignature(true)
-                                                        speak("Expediente legal completo preparado. He incluido el informe del desvío, los gastos adicionales y la reclamación EU261. Firma para enviarlo.")
-                                                    }, 500)
-                                                }}
-                                            >
-                                                <Text style={{ color: '#000', fontWeight: 'bold' }}>⚖️ 3. EXPEDIENTE LEGAL COMPLETO</Text>
+                                                <Text style={{ color: '#000', fontWeight: 'bold' }}>💎 ABRIR PANEL VIP DE EMERGENCIA</Text>
                                             </TouchableOpacity>
                                         </>
                                     ) : (
