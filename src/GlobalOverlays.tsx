@@ -105,17 +105,6 @@ export default function GlobalOverlays() {
 
     const navigation = useNavigation<any>();
 
-    // VIGILANTE DE REDIRECCIÓN VIP: Si es un ticket de desvío y es VIP, vamos directo al panel de alternativas
-    useEffect(() => {
-        if (viewDoc && travelProfile === 'premium') {
-            const isDiverted = (viewDoc.t || '').includes('DESVÍO') || (viewDoc.t || '').includes('GESTIÓN DE REUBICACIÓN');
-            if (isDiverted) {
-                // Cerramos el visor y abrimos el panel VIP directamente
-                setViewDoc(null);
-                setShowVIPAlternatives(true);
-            }
-        }
-    }, [viewDoc, travelProfile]);
 
     // VIGILANTE DE IA MAESTRO: Si un modo se queda colgado, forzamos el fin
     useEffect(() => {
@@ -832,29 +821,65 @@ export default function GlobalOverlays() {
                                                 onPress={() => {
                                                     setViewDoc(null);
                                                     setShowVIPAlternatives(true);
-                                                    // Forzamos que se abra en la pestaña de transporte
                                                 }}
                                             >
-                                                <Text style={{ color: '#000', fontWeight: 'bold' }}>🚁 A. TRANSPORTE EJECUTIVO (AVE/CHÓFER)</Text>
+                                                <Text style={{ color: '#000', fontWeight: 'bold' }}>🚁 A. OPCIONES VIP DE EMERGENCIA</Text>
                                             </TouchableOpacity>
 
                                             <TouchableOpacity
                                                 style={[s.bt, { backgroundColor: '#AF52DE', borderRadius: 12, marginBottom: 10 }]}
                                                 onPress={() => {
                                                     setViewDoc(null);
-                                                    setShowVIPAlternatives(true);
-                                                    // Forzamos que se abra en la pestaña de hotel
+                                                    setIsSearchingHotel(true);
+                                                    speak("Activando protocolo de alojamiento VIP. Buscando hoteles premium en las cercanías. Un momento.");
+                                                    setTimeout(() => {
+                                                        setIsSearchingHotel(false);
+                                                        const hotelDoc = {
+                                                            id: `hotel_${Date.now()}`,
+                                                            t: 'CERTIFICADO DE ALOJAMIENTO VIP',
+                                                            s: 'Reserva Confirmada // Hotel Meliá Congress Valencia',
+                                                            i: 'demo-hotel-premium',
+                                                            source: 'TRAVEL-PILOT CONCIERGE',
+                                                            icon: '🛌',
+                                                            verified: true,
+                                                        };
+                                                        setExtraDocs((prev: any) => [hotelDoc, ...prev]);
+                                                        setHasNewDoc(true);
+                                                        setShowChat(true);
+                                                        setTab('chat');
+                                                        setChatOrigin('hotel');
+                                                        handleSendMessage("IA, he visto que has bloqueado una habitación en el Meliá Congress. Confírmame los detalles de mi estancia.");
+                                                    }, 3500);
                                                 }}
                                             >
-                                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🏨 B. ALOJAMIENTO VIP AUTOMATIZADO</Text>
+                                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>🏨 B. ALOJAMIENTO VIP (CONCIERGE)</Text>
                                             </TouchableOpacity>
 
                                             <TouchableOpacity
                                                 style={[s.bt, { backgroundColor: '#4CD964', borderRadius: 12 }]}
                                                 onPress={() => {
                                                     setViewDoc(null);
-                                                    setShowVIPAlternatives(true);
-                                                    // Forzamos que se abra en la pestaña de reclamación
+                                                    const claimId = `CLAIM-${flightData?.flightNumber || 'DFLT'}`;
+                                                    const newClaim = {
+                                                        id: claimId,
+                                                        aerolinea: flightData?.airline || 'Aerolínea',
+                                                        vuelo: flightData?.flightNumber || '---',
+                                                        ruta: `${flightData?.departure?.iata || 'MAD'} > ${flightData?.arrival?.iata || 'VLC'}`,
+                                                        estado: 'PENDIENTE DE FIRMA',
+                                                        compensacion: '250',
+                                                        isDynamic: true
+                                                    };
+                                                    setClaims((prev: any) => {
+                                                        const exists = prev.find((c: any) => c.id === claimId);
+                                                        if (exists) return prev;
+                                                        return [newClaim, ...prev];
+                                                    });
+                                                    setCurrentClaimForSig(newClaim);
+                                                    setTab('Vault');
+                                                    setTimeout(() => {
+                                                        setShowSignature(true);
+                                                        speak("Expediente legal completo preparado. He incluido el informe del desvío, los gastos adicionales y la reclamación EU261. Firma para enviarlo.");
+                                                    }, 500);
                                                 }}
                                             >
                                                 <Text style={{ color: '#000', fontWeight: 'bold' }}>⚖️ C. EXPEDIENTE LEGAL COMPLETO</Text>

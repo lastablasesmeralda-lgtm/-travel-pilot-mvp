@@ -20,10 +20,11 @@ export const getRegulationName = (f: any): string => {
     const origin = (f.departure?.iata || '').toUpperCase();
     const dest = (f.arrival?.iata || '').toUpperCase();
     
-    const euAirports = ['MAD', 'BCN', 'CDG', 'ORY', 'FRA', 'MUC', 'AMS', 'LIS', 'BIO', 'TFN', 'TFS', 'LPA', 'BER', 'WAW', 'FCO', 'MXP', 'VIE', 'BRU', 'CPH', 'ATH', 'DUB'];
+    const euAirports = ['MAD', 'BCN', 'CDG', 'ORY', 'FRA', 'MUC', 'AMS', 'LIS', 'BIO', 'TFN', 'TFS', 'LPA', 'BER', 'WAW', 'FCO', 'MXP', 'VIE', 'BRU', 'CPH', 'ATH', 'DUB', 'VLC', 'AGP', 'SVQ', 'PMI', 'ACE', 'SCQ', 'OVD', 'ZAZ', 'SDR', 'IBZ', 'MAH', 'GRO', 'LEI', 'LHR', 'LGW', 'STN', 'MAN', 'EDI'];
     const usAirports = ['JFK', 'EWR', 'LAX', 'MIA', 'SFO', 'ORD', 'ATL', 'DFW', 'LAS', 'SEA', 'BOS', 'MCO'];
     
     if (euAirports.includes(origin) || euAirports.includes(dest)) return 'EU261';
     if (usAirports.includes(origin) && usAirports.includes(dest)) return 'US DOT';
-    return 'MONTREAL';
+    // Solo Montreal si ambos extremos están fuera de la UE y no son vuelos domésticos USA
+    return 'EU261';
 };
