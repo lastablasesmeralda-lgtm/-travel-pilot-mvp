@@ -445,7 +445,18 @@ export default function VIPAlternatives({
                         {/* OPCIÓN 1: TREN DE ALTA VELOCIDAD */}
                         <TouchableOpacity 
                             onPress={() => {
-                                handleSendMessage(`Deseo gestionar la reubicación en Tren de Alta Velocidad (AVE) para mi vuelo ${flightData?.flightNumber || ''}. Por favor, busca la próxima salida.`);
+                                const trainDoc = {
+                                    id: `train_${Date.now()}`,
+                                    t: 'BILLETE AVE PRIORITARIO',
+                                    s: `Reserva Tren Alta Velocidad · ${depIata} → ${arrIata}`,
+                                    i: 'demo-hotel-premium',
+                                    source: 'TRAVEL-PILOT CONCIERGE',
+                                    icon: '🚅',
+                                    verified: true,
+                                };
+                                setExtraDocs((prev: any) => [trainDoc, ...prev]);
+                                setHasNewDoc(true);
+                                handleSendMessage(`Deseo gestionar la reubicación en Tren de Alta Velocidad (AVE) para mi vuelo ${flightData?.flightNumber || ''}. Por favor, busca la próxima salida. He generado el documento en la sección DOCS.`);
                                 setDetailView(null);
                                 setChatOrigin('vip');
                                 handleClose();
@@ -471,7 +482,18 @@ export default function VIPAlternatives({
                         {/* OPCIÓN 2: CHÓFER PRIVADO */}
                         <TouchableOpacity 
                             onPress={() => {
-                                handleSendMessage(`Necesito reservar un Chófer Privado VIP (puerta a puerta) para mi vuelo ${flightData?.flightNumber || ''}. Por favor, coordina un conductor profesional.`);
+                                const chauffeurDoc = {
+                                    id: `chauffeur_${Date.now()}`,
+                                    t: 'RESERVA CHÓFER VIP',
+                                    s: `Servicio Puerta a Puerta · ${depIata} → ${arrIata}`,
+                                    i: 'demo-hotel-premium',
+                                    source: 'TRAVEL-PILOT CONCIERGE',
+                                    icon: '🤵',
+                                    verified: true,
+                                };
+                                setExtraDocs((prev: any) => [chauffeurDoc, ...prev]);
+                                setHasNewDoc(true);
+                                handleSendMessage(`Necesito reservar un Chófer Privado VIP (puerta a puerta) para mi vuelo ${flightData?.flightNumber || ''}. Por favor, coordina un conductor profesional. He generado el documento en la sección DOCS.`);
                                 setDetailView(null);
                                 setChatOrigin('vip');
                                 handleClose();
@@ -497,7 +519,18 @@ export default function VIPAlternatives({
                         {/* OPCIÓN 3: ALQUILER DE COCHE PREMIUM */}
                         <TouchableOpacity 
                             onPress={() => {
-                                handleSendMessage(`Quiero gestionar un Alquiler de Coche Premium para mi reubicación del vuelo ${flightData?.flightNumber || ''}. Por favor, busca disponibilidad de modelos SUV/Ejecutivos.`);
+                                const carDoc = {
+                                    id: `car_${Date.now()}`,
+                                    t: 'ALQUILER VEHÍCULO PREMIUM',
+                                    s: `SUV/Ejecutivo · Recogida en ${depIata}`,
+                                    i: 'demo-hotel-premium',
+                                    source: 'TRAVEL-PILOT CONCIERGE',
+                                    icon: '🏎️',
+                                    verified: true,
+                                };
+                                setExtraDocs((prev: any) => [carDoc, ...prev]);
+                                setHasNewDoc(true);
+                                handleSendMessage(`Quiero gestionar un Alquiler de Coche Premium para mi reubicación del vuelo ${flightData?.flightNumber || ''}. Por favor, busca disponibilidad de modelos SUV/Ejecutivos. He generado el documento en la sección DOCS.`);
                                 setDetailView(null);
                                 setChatOrigin('vip');
                                 handleClose();
