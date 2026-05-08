@@ -186,7 +186,14 @@ export default function VuelosScreen() {
                                     </View>
                                 </View>
                             </View>
-                            <Text style={{ color: '#B0B0B0', fontSize: 14, marginTop: 8 }}>{data.departure.airport} ({data.departure.iata}) → {data.arrival.airport} ({data.arrival.iata})</Text>
+                            <Text style={{ color: '#B0B0B0', fontSize: 14, marginTop: 8 }}>
+                                {data.departure?.airport ? `${data.departure.airport} (${data.departure.iata})` : data.departure?.iata} → {data.status === 'diverted' && data.original_arrival ? `${data.original_arrival}` : (data.arrival?.airport ? `${data.arrival.airport} (${data.arrival.iata})` : data.arrival?.iata)}
+                            </Text>
+                            {data.status === 'diverted' && (
+                                <View style={{ backgroundColor: 'rgba(255,149,0,0.15)', alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, marginTop: 4, borderWidth: 1, borderColor: '#FF9500' }}>
+                                    <Text style={{ color: '#FF9500', fontSize: 10, fontWeight: '900' }}>⚠️ DESVIADO A {data.arrival?.iata || 'VLC'}</Text>
+                                </View>
+                            )}
                             <View style={{ flexDirection: 'row', marginTop: 12 }}>
                                 <View style={{ flex: 1 }}>
                                     <Text style={{ color: '#B0B0B0', fontSize: 11 }}>SALIDA</Text>

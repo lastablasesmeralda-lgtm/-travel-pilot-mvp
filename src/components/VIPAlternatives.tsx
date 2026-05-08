@@ -35,14 +35,15 @@ export default function VIPAlternatives({
     }, [visible, initialDetailView]);
 
     const depIata = flightData?.departure?.iata || 'MAD';
-    const arrIata = flightData?.arrival?.iata || 'CDG';
+    const isDiverted = flightData?.status === 'diverted' || (flightData?.status || '').toLowerCase().includes('desvio');
+    const arrIata = isDiverted && flightData?.original_arrival ? flightData.original_arrival : (flightData?.arrival?.iata || 'CDG');
+    const divertedTo = isDiverted ? (flightData?.arrival?.iata || 'VLC') : null;
     const airline = flightData?.airline || 'Iberia';
     const now = new Date();
     const altDep = new Date(now.getTime() + 2 * 60 * 60 * 1000);
     const altArr = new Date(altDep.getTime() + 2.5 * 60 * 60 * 1000);
- 
+
     const delay = flightData?.delayMinutes || flightData?.departure?.delay || 0;
-    const isDiverted = flightData?.status === 'diverted' || (flightData?.status || '').toLowerCase().includes('desvio');
     const isMajorIssue = delay >= 120 || flightData?.status === 'cancelled' || isDiverted || flightData?.status === 'RETRASO-400';
 
     const handleClose = () => {
@@ -252,8 +253,8 @@ export default function VIPAlternatives({
                             <Text style={{ color: '#4CD964', fontSize: 10, fontWeight: '900', letterSpacing: 2, marginBottom: 6 }}>⚖️ INFO RECOPILADA</Text>
                             <Text style={{ color: '#FFF', fontSize: 22, fontWeight: '900' }}>
                                 {getRegulationName(flightData) === 'US DOT' ? 'Derechos del Pasajero (USA)' :
-                                 getRegulationName(flightData) === 'MONTREAL' ? 'Protección al Consumidor (Montreal)' :
-                                 'Reclamación EU261'}
+                                    getRegulationName(flightData) === 'MONTREAL' ? 'Protección al Consumidor (Montreal)' :
+                                        'Reclamación EU261'}
                             </Text>
                         </View>
                         <TouchableOpacity onPress={() => setDetailView(null)} style={{ padding: 10 }}>
@@ -267,12 +268,16 @@ export default function VIPAlternatives({
                                 { label: 'AEROLÍNEA', value: airline },
                                 { label: 'RUTA', value: `${depIata} → ${arrIata}` },
                                 { label: 'RETRASO', value: `${flightData?.departure?.delay || 185} min` },
-                                { label: 'COMPENSACIÓN', value: getRegulationName(flightData) === 'US DOT' ? 'DERECHOS DOT' :
-                                    getRegulationName(flightData) === 'MONTREAL' ? 'CONV. MONTREAL' :
-                                    `${getEU261Amount(flightData)}€` },
-                                { label: 'ESTADO', value: getRegulationName(flightData) === 'US DOT' ? 'DOT ELEGIBLE' :
-                                    getRegulationName(flightData) === 'MONTREAL' ? 'MONTREAL ELEGIBLE' :
-                                    'EU261 ELEGIBLE' },
+                                {
+                                    label: 'COMPENSACIÓN', value: getRegulationName(flightData) === 'US DOT' ? 'DERECHOS DOT' :
+                                        getRegulationName(flightData) === 'MONTREAL' ? 'CONV. MONTREAL' :
+                                            `${getEU261Amount(flightData)}€`
+                                },
+                                {
+                                    label: 'ESTADO', value: getRegulationName(flightData) === 'US DOT' ? 'DOT ELEGIBLE' :
+                                        getRegulationName(flightData) === 'MONTREAL' ? 'MONTREAL ELEGIBLE' :
+                                            'EU261 ELEGIBLE'
+                                },
                             ].map((item, idx) => (
                                 <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: idx < 5 ? 1 : 0, borderBottomColor: '#1A1A1A' }}>
                                     <Text style={{ color: '#666', fontSize: 10, fontWeight: '900', letterSpacing: 1 }}>{item.label}</Text>
@@ -284,11 +289,11 @@ export default function VIPAlternatives({
                         <View style={{ backgroundColor: 'rgba(76,217,100,0.06)', padding: 14, borderRadius: 12, borderWidth: 0.5, borderColor: 'rgba(76,217,100,0.2)', marginBottom: 20 }}>
                             <Text style={{ color: '#4CD964', fontSize: 11, fontWeight: '800', marginBottom: 6 }}>Notificación Legal Generada:</Text>
                             <Text style={{ color: '#999', fontSize: 11, lineHeight: 17 }}>
-                                {getRegulationName(flightData) === 'US DOT' 
+                                {getRegulationName(flightData) === 'US DOT'
                                     ? `Atención al cliente de ${airline}: Se formaliza ORDEN DE ASISTENCIA US DOT por interrupción en vuelo ${flightData?.flightNumber || '—'}. Se exige de forma inmediata el cumplimiento de los compromisos de servicio (manutención y reubicación).`
                                     : getRegulationName(flightData) === 'MONTREAL'
-                                    ? `Atención al cliente de ${airline}: Se formaliza RECLAMACIÓN BAJO CONVENIO DE MONTREAL por retraso en vuelo internacional ${flightData?.flightNumber || '—'}. Se exige la cobertura de daños y perjuicios y asistencia en tierra inmediata.`
-                                    : `Atención al cliente de ${airline}: Se formaliza ORDEN DE ASISTENCIA Y RECLAMACIÓN EU261 por retraso >3h en vuelo ${flightData?.flightNumber || '—'}. Se exige compensación de hasta 600€ (Art. 7) y asistencia obligatoria (Art. 9) inmediata.`
+                                        ? `Atención al cliente de ${airline}: Se formaliza RECLAMACIÓN BAJO CONVENIO DE MONTREAL por retraso en vuelo internacional ${flightData?.flightNumber || '—'}. Se exige la cobertura de daños y perjuicios y asistencia en tierra inmediata.`
+                                        : `Atención al cliente de ${airline}: Se formaliza ORDEN DE ASISTENCIA Y RECLAMACIÓN EU261 por retraso >3h en vuelo ${flightData?.flightNumber || '—'}. Se exige compensación de hasta 600€ (Art. 7) y asistencia obligatoria (Art. 9) inmediata.`
                                 }
                             </Text>
                         </View>
@@ -443,7 +448,7 @@ export default function VIPAlternatives({
                         </Text>
 
                         {/* OPCIÓN 1: TREN DE ALTA VELOCIDAD */}
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             onPress={() => {
                                 const trainDoc = {
                                     id: `train_${Date.now()}`,
@@ -456,7 +461,7 @@ export default function VIPAlternatives({
                                 };
                                 setExtraDocs((prev: any) => [trainDoc, ...prev]);
                                 setHasNewDoc(true);
-                                handleSendMessage(`Deseo gestionar la reubicación en Tren de Alta Velocidad (AVE) para mi vuelo ${flightData?.flightNumber || ''}. Por favor, busca la próxima salida. He generado el documento en la sección DOCS.`);
+                                handleSendMessage(`Deseo gestionar la reubicación en Tren de Alta Velocidad (AVE) para mi vuelo ${flightData?.flightNumber || ''}. Por favor, busca la próxima salida.`);
                                 setDetailView(null);
                                 setChatOrigin('vip');
                                 handleClose();
@@ -480,7 +485,7 @@ export default function VIPAlternatives({
                         </TouchableOpacity>
 
                         {/* OPCIÓN 2: CHÓFER PRIVADO */}
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             onPress={() => {
                                 const chauffeurDoc = {
                                     id: `chauffeur_${Date.now()}`,
@@ -493,7 +498,7 @@ export default function VIPAlternatives({
                                 };
                                 setExtraDocs((prev: any) => [chauffeurDoc, ...prev]);
                                 setHasNewDoc(true);
-                                handleSendMessage(`Necesito reservar un Chófer Privado VIP (puerta a puerta) para mi vuelo ${flightData?.flightNumber || ''}. Por favor, coordina un conductor profesional. He generado el documento en la sección DOCS.`);
+                                handleSendMessage(`Necesito reservar un Chófer Privado para mi vuelo ${flightData?.flightNumber || ''}. Por favor, coordina un conductor profesional.`);
                                 setDetailView(null);
                                 setChatOrigin('vip');
                                 handleClose();
@@ -517,7 +522,7 @@ export default function VIPAlternatives({
                         </TouchableOpacity>
 
                         {/* OPCIÓN 3: ALQUILER DE COCHE PREMIUM */}
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             onPress={() => {
                                 const carDoc = {
                                     id: `car_${Date.now()}`,
@@ -530,7 +535,7 @@ export default function VIPAlternatives({
                                 };
                                 setExtraDocs((prev: any) => [carDoc, ...prev]);
                                 setHasNewDoc(true);
-                                handleSendMessage(`Quiero gestionar un Alquiler de Coche Premium para mi reubicación del vuelo ${flightData?.flightNumber || ''}. Por favor, busca disponibilidad de modelos SUV/Ejecutivos. He generado el documento en la sección DOCS.`);
+                                handleSendMessage(`Quiero gestionar un Alquiler de Coche Premium para mi reubicación del vuelo ${flightData?.flightNumber || ''}. Por favor, busca disponibilidad de modelos SUV/Ejecutivos.`);
                                 setDetailView(null);
                                 setChatOrigin('vip');
                                 handleClose();
@@ -574,8 +579,8 @@ export default function VIPAlternatives({
                                 <Text style={{ color: '#D4AF37', fontSize: 10, fontWeight: '900', letterSpacing: 2, marginBottom: 8 }}>💎 TU ASISTENTE PERSONAL</Text>
                                 <Text style={{ color: '#FFF', fontSize: 22, fontWeight: '900', letterSpacing: 0.3 }}>{isMajorIssue ? 'TUS OPCIONES VIP' : 'TU PROTOCOLO DE CORTESÍA'}</Text>
                                 <Text style={{ color: '#777', fontSize: 12, marginTop: 10, lineHeight: 18 }}>
-                                    {isMajorIssue 
-                                        ? 'Hemos seleccionado lo mejor para tu situación. Elige la opción que más te convenga.' 
+                                    {isMajorIssue
+                                        ? 'Hemos seleccionado lo mejor para tu situación. Elige la opción que más te convenga.'
                                         : 'Esta incidencia es leve. Hemos activado tus privilegios para que esperes con total comodidad.'}
                                 </Text>
                             </View>
@@ -682,10 +687,10 @@ export default function VIPAlternatives({
                                 <TouchableOpacity
                                     onPress={() => setDetailView('transport')}
                                     activeOpacity={0.7}
-                                    style={{ 
-                                        backgroundColor: '#0F0F0F', borderRadius: 18, padding: 20, marginBottom: 15, 
-                                        borderLeftWidth: 4, borderLeftColor: isDiverted ? '#FF9F0A' : '#D4AF37', 
-                                        borderWidth: 1, borderColor: '#1A1A1A' 
+                                    style={{
+                                        backgroundColor: '#0F0F0F', borderRadius: 18, padding: 20, marginBottom: 15,
+                                        borderLeftWidth: 4, borderLeftColor: isDiverted ? '#FF9F0A' : '#D4AF37',
+                                        borderWidth: 1, borderColor: '#1A1A1A'
                                     }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
                                         <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: isDiverted ? 'rgba(255,159,10,0.1)' : 'rgba(212,175,55,0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
@@ -696,7 +701,7 @@ export default function VIPAlternatives({
                                         </Text>
                                     </View>
                                     <Text style={{ color: '#888', fontSize: 12, lineHeight: 18, marginBottom: 14, marginLeft: 52 }}>
-                                        {isDiverted 
+                                        {isDiverted
                                             ? 'Hemos priorizado opciones de Coche Premium y AVE para tu llegada a destino de forma segura y rápida.'
                                             : 'Continúa tu viaje mediante Tren de Alta Velocidad (AVE) o servicio de chófer privado.'}
                                     </Text>
@@ -752,7 +757,7 @@ export default function VIPAlternatives({
                                             </Text>
                                         </View>
                                         <Text style={{ color: '#888', fontSize: 12, lineHeight: 18, marginBottom: 14, marginLeft: 52 }}>
-                                            {isMajorIssue 
+                                            {isMajorIssue
                                                 ? `Hemos preparado tu reclamación de ${getEU261Amount(flightData)}€ lista para firma electrónica.`
                                                 : 'Tu incidencia ya está resumida para revisión y envío.'}
                                         </Text>

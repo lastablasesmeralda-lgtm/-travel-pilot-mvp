@@ -864,10 +864,9 @@ export default function GlobalOverlays() {
                                                         id: claimId,
                                                         aerolinea: flightData?.airline || 'Aerolínea',
                                                         vuelo: flightData?.flightNumber || '---',
-                                                        ruta: `${flightData?.departure?.iata || 'MAD'} > ${flightData?.arrival?.iata || 'VLC'}`,
+                                                        ruta: `${flightData?.departure?.iata || 'MAD'} > ${flightData?.original_arrival || flightData?.arrival?.iata || 'MAD'}`,
                                                         estado: 'PENDIENTE DE FIRMA',
                                                         compensacion: '250',
-                                                        statusOverride: 'diverted',
                                                         isDynamic: true
                                                     };
                                                     setClaims((prev: any) => {
@@ -964,7 +963,7 @@ export default function GlobalOverlays() {
                                 </View>
                             ) : (
                                 <>
-                                    { (viewDoc?.isPdf || viewDoc?.t?.includes('ASISTENCIA') || viewDoc?.t?.includes('PROPUESTA')) && (
+                                    {(viewDoc?.isPdf || viewDoc?.t?.includes('ASISTENCIA') || viewDoc?.t?.includes('PROPUESTA')) && (
                                         <>
                                             <TouchableOpacity
                                                 style={[s.bt, { backgroundColor: '#AF52DE', marginTop: 15, borderRadius: 12, width: '100%' }]}
