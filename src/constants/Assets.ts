@@ -9,4 +9,8 @@ export const DOC_IMAGES: Record<string, any> = {
     'ticket-equilibrado': require('../../assets/ticket_equilibrado_confort.jpg'),
     'ticket-economico': require('../../assets/ticket_economico.jpg'),
     'ticket-desvio': require('../../assets/protocolo_desvio.jpg'),
+    'doc-ave-vip': require('../../assets/billete_ave_vip.jpg'),
+    'doc-chofer-vip': require('../../assets/reserva_chofer_vip.jpg'),
+    'doc-coche-vip': require('../../assets/alquiler_coche_vip.jpg'),
+    'doc-hotel-vip': require('../../assets/certificado_alojamiento_vip.jpg'),
 };
