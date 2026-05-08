@@ -867,6 +867,7 @@ export default function GlobalOverlays() {
                                                         ruta: `${flightData?.departure?.iata || 'MAD'} > ${flightData?.arrival?.iata || 'VLC'}`,
                                                         estado: 'PENDIENTE DE FIRMA',
                                                         compensacion: '250',
+                                                        statusOverride: 'diverted',
                                                         isDynamic: true
                                                     };
                                                     setClaims((prev: any) => {

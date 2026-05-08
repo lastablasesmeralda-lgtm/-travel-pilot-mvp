@@ -1061,7 +1061,7 @@ fastify.post('/api/generateClaim', async (request, reply) => {
         const getRegulationInfo = (orig: string, dest: string) => {
             orig = orig.toUpperCase();
             dest = dest.toUpperCase();
-            const euAirports = ['MAD', 'BCN', 'CDG', 'ORY', 'FRA', 'MUC', 'AMS', 'LIS', 'BIO', 'TFN', 'TFS', 'LPA', 'BER', 'WAW', 'FCO', 'MXP', 'VIE', 'BRU', 'CPH', 'ATH', 'DUB'];
+            const euAirports = ['MAD', 'BCN', 'CDG', 'ORY', 'FRA', 'MUC', 'AMS', 'LIS', 'BIO', 'TFN', 'TFS', 'LPA', 'BER', 'WAW', 'FCO', 'MXP', 'VIE', 'BRU', 'CPH', 'ATH', 'DUB', 'VLC', 'AGP', 'SVQ', 'PMI', 'ACE', 'SCQ', 'OVD', 'ZAZ', 'SDR', 'IBZ', 'MAH', 'GRO', 'LEI', 'LHR', 'LGW', 'STN', 'MAN', 'EDI'];
             const usAirports = ['JFK', 'EWR', 'LAX', 'MIA', 'SFO', 'ORD', 'ATL', 'DFW', 'LAS', 'SEA', 'BOS', 'MCO'];
             
             if (euAirports.includes(orig) || euAirports.includes(dest)) {
@@ -1216,6 +1216,53 @@ fastify.post('/api/generateClaim', async (request, reply) => {
                     "Se exige la compensación inmediata por el incumplimiento del",
                     "contrato de transporte y los daños ocasionados por la pérdida del",
                     "transporte original, bajo las normas internacionales vigentes."
+                ];
+            }
+        } else if (sStatus === 'diverted') {
+            // CASO DESVÍO
+            pdfTitle = `RECLAMACIÓN ${regInfo.reg} — DESVÍO DE VUELO`;
+            if (regInfo.reg === 'EU261/2004') {
+                bodyLines = [
+                    "RECLAMACIÓN FORMAL POR DESVÍO DE VUELO",
+                    "--------------------------------------------------",
+                    `Se ha verificado el DESVÍO del vuelo ${sFlight}, obligando al pasajero`,
+                    `a aterrizar en un aeropuerto distinto al destino contratado.`,
+                    "",
+                    "Conforme al Reglamento (CE) 261/2004, Artículos 5, 7 y 8,",
+                    "el pasajero tiene derecho a:",
+                    "",
+                    "1. Transporte alternativo hasta el destino final contratado.",
+                    "2. Compensación económica de hasta 600€ según distancia.",
+                    "3. Asistencia completa: alojamiento, manutención y comunicaciones.",
+                    "4. Reembolso íntegro del billete si opta por no continuar el viaje.",
+                    "",
+                    "El desvío constituye un incumplimiento del contrato de transporte",
+                    "y la aerolínea debe asumir todos los costes derivados del mismo."
+                ];
+            } else if (regInfo.reg === 'US DOT') {
+                bodyLines = [
+                    "OFFICIAL DIVERSION CLAIM (US DOT)",
+                    "--------------------------------------------------",
+                    `Flight ${sFlight} has been DIVERTED to an alternate airport.`,
+                    "",
+                    "Under US DOT consumer protection rules, the passenger demands:",
+                    "• Ground transportation to the original destination.",
+                    "• Full refund if the diversion causes a significant delay.",
+                    "• Meals, accommodation, and communication during the wait.",
+                    "",
+                    "Failure to comply will be reported to the US DOT."
+                ];
+            } else {
+                bodyLines = [
+                    "RECLAMACIÓN POR DESVÍO (CONVENIO DE MONTREAL)",
+                    "--------------------------------------------------",
+                    `El vuelo ${sFlight} ha sido DESVIADO a un aeropuerto alternativo.`,
+                    "",
+                    "Bajo el Convenio de Montreal, el transportista es responsable de",
+                    "todos los daños derivados del desvío, incluyendo transporte terrestre,",
+                    "alojamiento y manutención hasta llegar al destino contratado.",
+                    "",
+                    "Se exige la cobertura inmediata de todos los gastos generados."
                 ];
             }
         } else {

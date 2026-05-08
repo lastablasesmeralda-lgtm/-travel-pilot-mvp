@@ -181,7 +181,9 @@ export default function VaultScreen() {
                     airline: currentClaimForSig?.aerolinea,
                     // Si es la demo (isDynamic), forzamos datos para PDF bonito. Si no, datos reales.
                     delayMinutes: currentClaimForSig?.isAssistance ? 60 : (currentClaimForSig?.isDynamic ? 240 : (currentClaimForSig?.delayActual || 0)),
-                    status: currentClaimForSig?.isDynamic ? 'delayed' : (currentClaimForSig?.status || 'delayed'),
+                    status: currentClaimForSig?.isDynamic
+                        ? (flightData?.status === 'diverted' || flightData?.status === 'DESVIADO' || currentClaimForSig?.statusOverride === 'diverted' ? 'diverted' : 'delayed')
+                        : (currentClaimForSig?.status || 'delayed'),
                     departureAirport: currentClaimForSig?.ruta?.split(/[>→]|\->/)[0]?.trim() || 'MAD',
                     arrivalAirport: currentClaimForSig?.ruta?.split(/[>→]|\->/)[1]?.trim() || 'VLC',
                     amount: currentClaimForSig?.isAssistance ? '0' : (currentClaimForSig?.isDynamic ? '250' : (currentClaimForSig?.compensacion || '0')),
